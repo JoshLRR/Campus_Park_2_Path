@@ -1,0 +1,34 @@
+name: runner-heartbeat
+on:
+  schedule:
+    - cron: "00 07 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  heartbeat:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 5
+    steps:
+      - name: Host snapshot
+        run: |
+          echo "Host: $(hostname)"
+          sw_vers || true
+          uname -a
+          date -u
+      - name: Node + tool versions
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: |
+          node -v
+          which node
+      - name: Disk space check
+        run: |
+          THRESH_GB=20
+          FREE_GB=$(df -Pk / | tail -1 | awk '{printf "%.0f", $4/1024/1024}')
+          echo "Free disk: ${FREE_GB} GB"
+          if [ "$FREE_GB" -lt "$THRESH_GB" ]; then
+            echo "ERROR: Free disk below ${THRESH_GB} GB"
+            exit 1
+          fi
+
