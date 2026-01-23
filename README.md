@@ -26,7 +26,7 @@ TODO : Add usage instructions
 
 ## Contributing
 
-Feel free to fork the repository, create issues, and submit pull requests. We welcome contributions and suggestions! Please start by checking out the README file and other contributing materials in the `Campus_Park_2_Path/CONTRIBUTING` folder. 
+Feel free to fork the repository, create issues, and submit pull requests. We welcome contributions and suggestions! Please start by checking out the README file and other contributing materials in the [`Campus_Park_2_Path/CONTRIBUTING`](https://github.com/JoshLRR/Campus_Park_2_Path/blob/ba67839d550a2325acf81e503b3ccdfffe07dca0/README.md) folder. 
 
 ## License
 

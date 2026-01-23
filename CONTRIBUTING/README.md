@@ -1,5 +1,7 @@
 # Creating a new branch
 
+> Documentation on existing tests can be found in [`tests/README.md`](https://github.com/JoshLRR/Campus_Park_2_Path/blob/ba67839d550a2325acf81e503b3ccdfffe07dca0/main/tests/README.md).
+
 ## Branch Name Formatting
 
 layer/feature_type/INITIALS/FEATURE/SUB_FEATURE
@@ -56,4 +58,3 @@ or
 npm test run
 ```
 
----
