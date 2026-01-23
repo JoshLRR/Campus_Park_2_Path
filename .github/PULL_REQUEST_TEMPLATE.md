@@ -16,3 +16,7 @@ Fixes #[ISSUENO]
 - [ ] The commit message follows the [style guidelines](https://www.conventionalcommits.org/en/v1.0.0)
 - [ ] This PR requires an update to the documentation
 - [ ] I have made the necessary updates to the documentation, or no documentation changes are required.
+
+## Relevant Images
+
+*Include images of the result of your work here*
