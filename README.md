@@ -1,64 +1,33 @@
-# Campus Park 2 Path
+# Campus | Park & Path
+Get to class fast with this Smart Map for Belleve College!
 
-## Creating a new branch
+## Overview
+ **Campus | Park & Path** is a smart map system for Bellevue College that allows users to map from one part of campus to another. This tool allows users to select accessible routing options, locate nearby amenities, and easily locate classrooms and offices.
 
-# Branch Name Formatting
+## Installation
 
-layer/feature_type/INITIALS/FEATURE/SUB_FEATURE
+To install **Campus | Park & Path**, run:
 
-ex. backend/feature/jlo/login_service/fix_account_retrieval
-or
-ex. frontend/feature/dom/login_view
-
-```
-git checkout -b <BRANCH_NAME>
-
-git push --set-upstream <BRANCH_NAME>
+```bash
+## TODO : Add installation instructions
 ```
 
-## Creating tests
+## Running CPP
 
-Name your test file `<CLASS_NAME>.test.ts`, for example, `Account.test.ts`
-At the beginning of your test file include the following imports
+TODO : Add running instructions
 
-```
-import { expect, test } from 'vitest'
-import { <TEST_NAMES } from './<FILE_NAME>.ts'
-```
+## Features
 
-Here's an example, in a file named sum.test.js
+- **In-browser**: Runs entirely in the browser.
 
-```
-import { expect, test } from 'vitest'
-import { sum } from './sum.js'
+## Usage
 
-test('adds 1 + 2 to equal 3', () => {
-  expect(sum(1, 2)).toBe(3)
-})
-```
+TODO : Add usage instructions
 
-Then in a file named sum.js
+## Contributing
 
-```
-export function sum(a, b) {
-  return a + b
-}
-```
+Feel free to fork the repository, create issues, and submit pull requests. We welcome contributions and suggestions! Please start by checking out the README file and other contributing materials in the [`Campus_Park_2_Path/CONTRIBUTING`](https://github.com/JoshLRR/Campus_Park_2_Path/blob/ba67839d550a2325acf81e503b3ccdfffe07dca0/README.md) folder. 
 
-The tests can then be run in the CLI with
-```
-npx vitest
-```
-or
-```
-npx vitest run
-```
-or
-```
-npm test run
-```
+## License
 
-=======
-
-
-
+This project is licensed under the MIT License Copyright (c) 2025
