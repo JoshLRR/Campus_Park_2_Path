@@ -1,11 +1,11 @@
-name: Lint and Build
+name: Lint Build Test
 
 on:
   push:
   pull_request:
 
 jobs:
-  lint-build:
+  lint-build-test:
     runs-on: [self-hosted, macOS]
     steps:
       - name: Checkout
@@ -25,3 +25,6 @@ jobs:
 
       - name: Build
         run: npm run compile
+
+      - name: Test
+        run: npm test -- --run
