@@ -2,10 +2,13 @@
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "build"
+    "outDir": "build",
+    "module": "Node16",
+    "moduleResolution": "node16"
   },
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts"
+    "tests/**/*.ts",
+    "vitest.config.ts"
   ]
 }
