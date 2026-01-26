@@ -38,6 +38,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "eslint-define-config": "^2.1.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   }
