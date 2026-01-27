@@ -1,21 +1,15 @@
-const { defineConfig } = require('eslint-define-config');
-const gtsConfig = require('gts/src/eslint'); // <-- import GTS config object directly
+let customConfig = [];
+let hasIgnoresFile = false;
+try {
+  require.resolve('./eslint.ignores.js');
+  hasIgnoresFile = true;
+} catch {
+  // eslint.ignores.js doesn't exist
+}
 
-module.exports = defineConfig([
-  gtsConfig, // include GTS rules directly
-  {
-    parserOptions: {
-      parser: '@typescript-eslint/parser',
-      project: './tsconfig.eslint.json',
-      tsconfigRootDir: __dirname,
-      sourceType: 'module',
-    },
-    ignorePatterns: ['./node_modules'],
-    overrides: [
-      {
-        files: ['vite.config.ts'],
-        parserOptions: { project: null },
-      },
-    ],
-  },
-]);
+if (hasIgnoresFile) {
+  const ignores = require('./eslint.ignores.js');
+  customConfig = [{ignores}];
+}
+
+module.exports = [...customConfig, ...require('gts')];
