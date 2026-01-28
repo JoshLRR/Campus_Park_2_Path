@@ -6,6 +6,6 @@ export default defineConfig({
     exclude: ['build/**', 'node_modules/**'],
   },
   esbuild: {
-    tsconfigRaw: undefined
-  }
+    tsconfigRaw: undefined,
+  },
 });
