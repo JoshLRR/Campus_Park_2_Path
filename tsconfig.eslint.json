@@ -4,6 +4,12 @@
     "src",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "vite.config.ts"
+    "vite.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage"
   ]
 }

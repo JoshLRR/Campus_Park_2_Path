@@ -1,7 +1,6 @@
-import './App.css'
+import './App.css';
 
 function App() {
-
   return (
     <>
       <div className="containerRectangle">
@@ -11,7 +10,7 @@ function App() {
         <div className="rectangleBuilding"></div>
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
