@@ -5,4 +5,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     exclude: ['build/**', 'node_modules/**'],
   },
+  esbuild: {
+    tsconfigRaw: undefined
+  }
 });
