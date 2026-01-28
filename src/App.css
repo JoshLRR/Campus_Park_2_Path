@@ -40,3 +40,17 @@
 .read-the-docs {
   color: #888;
 }
+
+.containerRectangle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rectangleBuilding {
+  width: 150px;
+  height: 100px;
+  background-color: skyblue;
+  border: 2px solid #333; /* Optional border for visibility */
+  border-radius: 8px;      /* Optional rounded corners */
+}
