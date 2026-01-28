@@ -1,6 +1,6 @@
 # Creating a new branch
 
-> Documentation on existing tests can be found in [`tests/README.md`](https://github.com/JoshLRR/Campus_Park_2_Path/blob/ba67839d550a2325acf81e503b3ccdfffe07dca0/main/tests/README.md).
+> Documentation on existing tests can be found in [`docs/testing/README.md`](../docs/testing/README.md).
 
 ## Branch Name Formatting
 
@@ -18,23 +18,25 @@ git push --set-upstream <BRANCH_NAME>
 
 ## Creating tests
 
-Name your test file `<CLASS_NAME>.test.ts`, for example, `Account.test.ts`
-At the beginning of your test file include the following imports
+All tests are written using Vitest and live in `src/__tests__/`.
 
-```
+### Naming
+- For TypeScript modules: `<ModuleName>.test.ts`
+- For React components: `<ComponentName>.test.tsx`
+
+### Imports
+Import the function/component from its location under `src/`.
+
+Example:
+
+```ts
 import { expect, test } from 'vitest'
-import { <TEST_NAMES } from './<FILE_NAME>.ts'
-```
-
-Here's an example, in a file named sum.test.js
-
-```
-import { expect, test } from 'vitest'
-import { sum } from './sum.js'
+import { sum } from '../logic/sum'
 
 test('adds 1 + 2 to equal 3', () => {
   expect(sum(1, 2)).toBe(3)
 })
+
 ```
 
 Then in a file named sum.js
@@ -45,16 +47,9 @@ export function sum(a, b) {
 }
 ```
 
-The tests can then be run in the CLI with
-```
-npx vitest
-```
-or
-```
-npx vitest run
-```
-or
-```
-npm test run
+Run tests from the project root:
+
+```bash
+npm test
 ```
 

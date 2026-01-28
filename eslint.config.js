@@ -1,5 +1,6 @@
 let customConfig = [];
 let hasIgnoresFile = false;
+
 try {
   require.resolve('./eslint.ignores.js');
   hasIgnoresFile = true;
@@ -12,4 +13,16 @@ if (hasIgnoresFile) {
   customConfig = [{ignores}];
 }
 
-module.exports = [...customConfig, ...require('gts')];
+const gtsConfig = require('gts');
+
+const tsProjectOverride = {
+  files: ['**/*.{ts,tsx}'],
+  languageOptions: {
+    parserOptions: {
+      project: ['./tsconfig.eslint.json'],
+      tsconfigRootDir: __dirname,
+    },
+  },
+};
+
+module.exports = [...customConfig, ...gtsConfig, tsProjectOverride];
