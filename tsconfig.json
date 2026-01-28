@@ -10,5 +10,5 @@
     "src/**/*.ts",
     "src/__tests__/**/*.ts",
     "vitest.config.ts"
-  ]
+, "src/__tests__/MapView.test.tsx"  ]
 }
