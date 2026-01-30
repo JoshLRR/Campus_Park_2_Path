@@ -9,6 +9,7 @@ function App() {
           <div className="rectangleBuilding"></div>
           <div className="rectangleBuilding"></div>
           <div className="rectangleBuilding"></div>
+          <div className="circleStart"></div>
         </div>
       </div>
     </>

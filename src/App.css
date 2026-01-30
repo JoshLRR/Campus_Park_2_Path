@@ -34,6 +34,9 @@
   color: #888;
 }
 
+
+
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -46,6 +49,13 @@
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 30px;
+}
+
+.circleStart {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: white;
 }
 
 .rectangleBuilding {
