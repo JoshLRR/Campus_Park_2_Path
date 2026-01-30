@@ -4,6 +4,12 @@ import './App.css';
 
 function App() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const doors = [
+    {edge: 'bottom', offset: -25},
+    {edge: 'top', offset: 15},
+    {edge: 'left', offset: -7},
+    {edge: 'right', offset: 9},
+    ] as const;
 
   return (
     <>
