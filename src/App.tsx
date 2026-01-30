@@ -3,7 +3,7 @@ import {useState} from 'react';
 import './App.css';
 
 function App() {
-  const [activeIndex, setActiveIndex] = useState(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   return (
     <>
