@@ -66,6 +66,10 @@
   /* border-radius: 8px; */      /* Optional rounded corners */
 }
 
+.rectangleBuilding.active {
+  background-color: purple;
+}
+
 .horizontalScroll {
   overflow-x: scroll;
   white-space: nowrap;
