@@ -4,6 +4,7 @@
   "description": "layer/feature_type/INITIALS/FEATURE/SUB_FEATURE",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
     "test": "vitest",
     "lint": "gts lint",
     "clean": "gts clean",
