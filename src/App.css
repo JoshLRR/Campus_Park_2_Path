@@ -58,6 +58,13 @@
   gap: 30px;
 }
 
+.door {
+  width: 25px;
+  height: 25px;
+  background-color: #7b4716;
+  position: absolute;
+}
+
 .circleStart {
   width: 10px;
   height: 10px;
@@ -70,6 +77,7 @@
   height: 200px;
   background-color: skyblue;
   border: 2px solid #333; /* Optional border for visibility */
+  position: relative;
   /* border-radius: 8px; */      /* Optional rounded corners */
 }
 
