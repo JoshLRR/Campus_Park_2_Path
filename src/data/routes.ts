@@ -12,4 +12,9 @@ export const routes: ApiRoute[] = [
     path: '/route',
     status: 204,
   },
+  {
+    method: 'GET',
+    path: '/rooms',
+    status: 204,
+  },
 ];
