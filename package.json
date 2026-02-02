@@ -27,10 +27,16 @@
   "homepage": "https://github.com/JoshLRR/Campus_Park_2_Path#readme",
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
     "@vitest/ui": "^4.0.18",
     "gts": "^7.0.0",
     "happy-dom": "^20.4.0",
     "typescript": "^5.6.3",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }
