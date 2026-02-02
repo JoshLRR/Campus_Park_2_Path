@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type {ReactNode} from 'react';
 
 type AppLayoutProps = {
   left: ReactNode;
@@ -6,7 +6,7 @@ type AppLayoutProps = {
   right: ReactNode;
 };
 
-export function AppLayout({ left, center, right }: AppLayoutProps) {
+export function AppLayout({left, center, right}: AppLayoutProps) {
   return (
     <div className="app-shell">
       <aside className="app-left" aria-label="Search and destination list">
