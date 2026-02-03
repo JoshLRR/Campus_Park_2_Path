@@ -4,6 +4,7 @@
     "rootDir": ".",
     "outDir": "build",
     "module": "Node16",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "moduleResolution": "node16",
     "jsx": "react-jsx",
   },
