@@ -4,6 +4,7 @@ import './App.css';
 
 function App() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const rooms = ['101', '102', '103', '104'] as const;
   const doors = [
     {edge: 'bottom', offset: -25},
     {edge: 'top', offset: 15},
@@ -40,6 +41,7 @@ function App() {
               onTouchStart={() => setActiveIndex(i)}
               onTouchEnd={() => setActiveIndex(null)}
             >
+              <div className="rectangleText">{rooms[i]}</div>
               <div className="door" style={style}></div>
             </div>
           );

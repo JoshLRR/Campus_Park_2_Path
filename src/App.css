@@ -19,6 +19,15 @@
   gap: 30px;
 }
 
+.rectangleText {
+  color: black;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .door {
   width: 25px;
   height: 25px;
