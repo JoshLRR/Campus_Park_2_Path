@@ -1,9 +1,9 @@
 import http from 'node:http';
 import {URL} from 'node:url';
-import {routes} from './data/routes';
+import {routes} from './api/productRoutes';
 
 export function createServer(): http.Server {
-  return http.createServer((req, res) => {
+  return http.createServer(async (req, res) => {
     if (!req.url || !req.method) {
       res.statusCode = 400;
       res.end();
@@ -16,8 +16,12 @@ export function createServer(): http.Server {
       entry => entry.method === req.method && entry.path === url.pathname,
     );
     if (route) {
-      res.statusCode = route.status;
-      res.end();
+      try {
+        await route.handler(req, res);
+      } catch {
+        res.statusCode = 500;
+        res.end();
+      }
       return;
     }
 
