@@ -1,0 +1,29 @@
+/* ===== App Shell Layout (1–2–1) ===== */
+
+.app-shell {
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.app-left,
+.app-center,
+.app-right {
+  border-radius: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* Scrolling behavior */
+.app-left,
+.app-right {
+  overflow-y: auto;
+}
+
+.app-center {
+  overflow: hidden;
+}
