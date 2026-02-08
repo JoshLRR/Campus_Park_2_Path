@@ -1,14 +1,15 @@
-import http from 'node:http';
-import {URL} from 'node:url';
+import http from 'http';
+import {URL} from 'url';
 import {routes} from './api/productRoutes';
 
 export function createServer(): http.Server {
-  return http.createServer(async (req, res) => {
-    if (!req.url || !req.method) {
-      res.statusCode = 400;
-      res.end();
-      return;
-    }
+  return http.createServer(
+    async (req: http.IncomingMessage, res: http.ServerResponse) => {
+      if (!req.url || !req.method) {
+        res.statusCode = 400;
+        res.end();
+        return;
+      }
 
     const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
 
@@ -27,5 +28,6 @@ export function createServer(): http.Server {
 
     res.statusCode = 404;
     res.end();
-  });
+    },
+  );
 }

@@ -1,4 +1,4 @@
-import type http from 'node:http';
+import type http from 'http';
 import {getRooms, getRoute} from '../handlers/routeHandlers';
 
 /**
