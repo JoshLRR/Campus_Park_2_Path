@@ -11,23 +11,23 @@ export function createServer(): http.Server {
         return;
       }
 
-    const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+      const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
 
-    const route = routes.find(
-      entry => entry.method === req.method && entry.path === url.pathname,
-    );
-    if (route) {
-      try {
-        await route.handler(req, res);
-      } catch {
-        res.statusCode = 500;
-        res.end();
+      const route = routes.find(
+        entry => entry.method === req.method && entry.path === url.pathname,
+      );
+      if (route) {
+        try {
+          await route.handler(req, res);
+        } catch {
+          res.statusCode = 500;
+          res.end();
+        }
+        return;
       }
-      return;
-    }
 
-    res.statusCode = 404;
-    res.end();
+      res.statusCode = 404;
+      res.end();
     },
   );
 }
