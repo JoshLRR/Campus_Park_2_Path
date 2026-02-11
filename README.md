@@ -16,7 +16,11 @@ Once you have cloned the repo onto your local device, navigate to the cloned fil
 
 ## Running CPP
 
-TODO : Add running instructions
+To run a local instance of our program,
+
+```
+npm run dev
+```
 
 ## Features
 
