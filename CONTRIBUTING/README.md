@@ -53,3 +53,10 @@ Run tests from the project root:
 npm test
 ```
 
+To run just one test:
+
+```bash
+npm test testName
+```
+
+*please remember to replace `testName` with your actual test name*

@@ -6,15 +6,21 @@ Get to class fast with this Smart Map for Belleve College!
 
 ## Installation
 
-To install **Campus | Park & Path**, run:
+To compile **Campus | Park & Path** on your own local device, fork the repo in github, select the green `<> Code` dropdown, and copy the SSH URL. Then, in your local terminal, navigate to the directory you would like to store the program. Please be sure to replace "SSH-URL-GOES-HERE" with your own ssh url, and type the command:
 
-```bash
-## TODO : Add installation instructions
 ```
+git clone SSH-URL-GOES-HERE
+```
+
+Once you have cloned the repo onto your local device, navigate to the cloned file in your terminal and type:
 
 ## Running CPP
 
-TODO : Add running instructions
+To run a local instance of our program,
+
+```
+npm run dev
+```
 
 ## Features
 
