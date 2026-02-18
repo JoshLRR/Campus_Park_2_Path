@@ -1,0 +1,75 @@
+@startuml
+
+package "Front End" #LightGray
+component "Path API"
+component "Path Orchestration"
+component "Path Post-Processing"
+database "Graph" #LightGray
+component "Context Decoration"
+component "Path Algorithm"
+component "Path Export"
+component "Edge Pruning"
+component "Edge Weighting"
+component "Line Export"
+component "Instruction Export"
+
+skinparam component {
+  backgroundColor LightBlue
+}
+
+"Front End" --> "Path API" : Request (JSON)
+"Line Export" --> "Path Post-Processing"
+"Path API" --> "Path Orchestration"
+"Path Orchestration" --> "Graph"
+"Path Orchestration" --> "Context Decoration"
+"Path Orchestration" --> "Path Algorithm"
+"Path Orchestration" --> "Path Export"
+"Context Decoration" --> "Edge Pruning"
+"Context Decoration" --> "Edge Weighting"
+"Path Export" --> "Line Export"
+"Path Export" --> "Instruction Export"
+
+note right of "Path API"
+    * Validates Request
+    * Calls Pathing Service
+    * Returns Response to Requester
+    * Returns viable origin and destination locations to Front End
+end note
+
+note left of "Path Orchestration"
+    * Decides Pathing Strategy (PtP or POI)
+    * Loads Graph
+end note
+
+note right of "Path Post-Processing"
+    * Clean up zig-zags of geometry
+    * Collapse Trivial Segments
+end note
+
+note left of "Context Decoration"
+    * Use a decorator to avoid mutating the graph
+end note
+
+note bottom of "Edge Pruning"
+    * Remove nodes with "hard" constraints
+       (i.e. accessability requirements)
+end note
+
+note bottom of "Edge Weighting"
+    * Add weight to nodes with "soft" constraints
+       (i.e. convered paths)
+end note
+
+note bottom of "Path Algorithm"
+    * PtP : A*
+    * POI : Djikstra
+end note
+
+note top of "Line Export"
+    * Polyline
+end note
+
+note bottom of "Instruction Export"
+    * English
+end note
+@enduml
