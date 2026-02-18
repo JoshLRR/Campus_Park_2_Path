@@ -139,8 +139,12 @@ describe('createBrowserLogger', () => {
     logger.trace('trace_message');
     logger.fatal('fatal_message');
 
-    expect(pinoTestState.baseLogger.trace).toHaveBeenCalledWith('trace_message');
-    expect(pinoTestState.baseLogger.fatal).toHaveBeenCalledWith('fatal_message');
+    expect(pinoTestState.baseLogger.trace).toHaveBeenCalledWith(
+      'trace_message',
+    );
+    expect(pinoTestState.baseLogger.fatal).toHaveBeenCalledWith(
+      'fatal_message',
+    );
   });
 
   it('creates child loggers through pino child', () => {
