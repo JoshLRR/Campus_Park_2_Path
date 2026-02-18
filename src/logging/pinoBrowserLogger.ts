@@ -72,7 +72,9 @@ class PinoBrowserLogger implements Logger {
   }
 }
 
-export function createBrowserLogger(options: BrowserLoggerOptions = {}): Logger {
+export function createBrowserLogger(
+  options: BrowserLoggerOptions = {},
+): Logger {
   const isDev = import.meta.env.DEV;
   const name = options.name ?? 'campus-park-2-path';
   const level = options.level ?? (isDev ? 'debug' : 'info');
