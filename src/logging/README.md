@@ -39,6 +39,17 @@ When `level` is not provided, the default is:
 - `debug` when `import.meta.env.DEV` is true
 - `info` otherwise
 
+## Vite mode
+
+`import.meta.env.MODE` and `import.meta.env.DEV` come from Vite's current mode.
+To force a mode locally, run:
+
+```sh
+npm run dev -- --mode development
+```
+
+You can also define custom modes with `.env.<mode>` files in the project root.
+
 ## Child loggers
 
 ```ts
