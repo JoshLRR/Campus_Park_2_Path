@@ -3,14 +3,17 @@ import {RoomNode} from '../types/RoomNode';
 import {PathNode} from '../types/PathNode';
 import {RoomFeatures} from '../types/RoomFeatures';
 import {PathFeatures} from '../types/PathFeatures';
+import {Room} from '../types/Room';
+
+// ================ ROOM NODE TESTS ================
 
 test('RoomNode constructor assigns defaults', () => {
   const position = {x: 1, y: 2, floorNum: 3};
-  const node = new RoomNode(1, position, '101');
+  const node = new RoomNode(1, position, Room.A109);
 
   expect(node.id).toBe(1);
   expect(node.position).toBe(position);
-  expect(node.roomNumber).toBe('101');
+  expect(node.roomNumber).toBe(Room.A109);
   expect(node.features).toEqual([]);
   expect(node.neighbors).toEqual([]);
 });
@@ -19,23 +22,25 @@ test('RoomNode constructor assigns provided values', () => {
   const position = {x: 10, y: 20, floorNum: 0};
   const neighbors = [{to: 2, distance: 5}];
   const features = [RoomFeatures.Cafe, RoomFeatures.Library];
-  const node = new RoomNode(7, position, 'B-12', features, neighbors);
+  const node = new RoomNode(7, position, Room.A110, features, neighbors);
 
   expect(node.id).toBe(7);
   expect(node.position).toBe(position);
-  expect(node.roomNumber).toBe('B-12');
+  expect(node.roomNumber).toBe(Room.A110);
   expect(node.features).toBe(features);
   expect(node.neighbors).toBe(neighbors);
 });
 
 test('RoomNode allows empty fields without validation', () => {
   const position = {x: 0, y: 0, floorNum: 0};
-  const node = new RoomNode(9, position, '', [], []);
+  const node = new RoomNode(9, position, Room.Parking_Lot_1B, [], []);
 
-  expect(node.roomNumber).toBe('');
+  expect(node.roomNumber).toBe(Room.Parking_Lot_1B);
   expect(node.features).toEqual([]);
   expect(node.neighbors).toEqual([]);
 });
+
+// ================ PATH NODE TESTS ================
 
 test('PathNode constructor assigns defaults', () => {
   const position = {x: 3, y: 4, floorNum: 1};
@@ -69,15 +74,17 @@ test('PathNode constructor preserves neighbors/features argument order', () => {
   expect(node.features).toBe(features);
 });
 
+// ================ GENERAL NODE TESTS ================
+
 test('node fields can be updated after construction', () => {
   const position = {x: 0, y: 0, floorNum: 0};
-  const node = new RoomNode(3, position, 'A-1');
+  const node = new RoomNode(3, position, Room.A109);
 
-  node.roomNumber = 'A-2';
+  node.roomNumber = Room.A110;
   node.features.push(RoomFeatures.Locker_room);
   node.neighbors.push({to: 4, distance: 7});
 
-  expect(node.roomNumber).toBe('A-2');
+  expect(node.roomNumber).toBe(Room.A110);
   expect(node.features).toEqual([RoomFeatures.Locker_room]);
   expect(node.neighbors).toEqual([{to: 4, distance: 7}]);
 });
