@@ -3,6 +3,10 @@
 import {IPathingAPI} from './I_PathingAPI';
 import {PathRequestDTO, PathResponseDTO} from './PathingAPI.dto';
 import {PathOrchestrator} from '../application/PathOrchestrator';
+import {
+  assertIsPathRequestDTO,
+  PathRequestValidationError,
+} from './PathRequestValidator';
 
 /**
  * Usage:
@@ -50,7 +54,7 @@ export class PathingAPI implements IPathingAPI {
    * @throws Does not propagate exceptions. All errors are caught
    *         and translated into a safe `PathResponseDTO`.
    */
-  async path(request: PathRequestDTO): Promise<PathResponseDTO> {
+  async path(request: unknown): Promise<PathResponseDTO> {
     const result: PathResponseDTO = {status: 'internal_error'};
     try {
       // TODO eventually JSON Schema validation (stub for now)
@@ -62,14 +66,16 @@ export class PathingAPI implements IPathingAPI {
       // TODO Actually send to orchestration
       // const result = await this.orchestrator.computePath(domainRequest);
     } catch (validation_error) {
-      console.log(validation_error);
+      if (validation_error instanceof PathRequestValidationError) {
+        result.status = 'validation_error';
+        result.message = 'Request failed schema validation';
+      }
     }
     return result;
   }
 
-  private validateRequest(request: PathRequestDTO): void {
-    // TODO: plug in JSON schema validation
-    request.origin.value = 'tk';
+  private validateRequest(request: unknown): void {
+    assertIsPathRequestDTO(request);
   }
 
   private transformToDomain(request: PathRequestDTO) {
