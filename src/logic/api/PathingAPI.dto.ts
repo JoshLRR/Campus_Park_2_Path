@@ -6,7 +6,7 @@ export type PositionDTO = {
 
 export type PathRequestDTO = {
   origin: {
-    type: 'node' | 'coordinate';
+    mode: 'node' | 'coordinate';
     value: string | PositionDTO;
   };
   destination: {

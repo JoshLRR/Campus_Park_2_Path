@@ -1,42 +1,40 @@
 {
   "$id": "PathRequest.schema.json",
-  "$schema": "https://json-schema.org/draft/2026-02/schema",
   "title": "PathRequestDTO",
   "type": "object",
   "additionalProperties": false,
   "required": ["origin", "destination"],
   "properties": {
     "origin": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mode", "value"],
-      "properties": {
-        "mode": { "type": "string", "enum": ["node", "position"] },
-        "value": {}
-      },
-      "allOf": [
-        {
-          "if": { "properties": { "mode": { "const": "node" } }, "required": ["mode"] },
-          "then": { "properties": { "value": { "type": "string", "minLength": 1 } } }
-        },
-        {
-          "if": { "properties": { "mode": { "const": "position" } }, "required": ["mode"] },
-          "then": {
+        "oneOf": [
+            {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode", "value"],
             "properties": {
-              "value": {
+                "mode": { "const": "node" },
+                "value": { "type": "string", "minLength": 1 }
+            }
+            },
+            {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode", "value"],
+            "properties": {
+                "mode": { "const": "coordinate" },
+                "value": {
                 "type": "object",
                 "additionalProperties": false,
                 "required": ["x", "y", "floorNum"],
                 "properties": {
-                  "x": { "type": "number" },
-                  "y": { "type": "number" },
-                  "floorNum": { "type": "integer" }
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "floorNum": { "type": "integer" }
                 }
-              }
+                }
             }
-          }
-        }
-      ]
+            }
+        ]
     },
 
     "destination": {
@@ -44,7 +42,7 @@
       "additionalProperties": false,
       "required": ["mode", "value"],
       "properties": {
-        "mode": { "type": "string", "enum": ["node", "poiType"] },
+        "mode": { "type": "string", "enum": ["node", "coordinate"] },
         "value": { "type": "string", "minLength": 1 }
       }
     },
