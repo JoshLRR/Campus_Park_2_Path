@@ -2,7 +2,7 @@
 
 import {IPathingAPI} from './I_PathingAPI';
 import {PathRequestDTO, PathResponseDTO} from './PathingAPI.dto';
-import {PathOrchestrator} from '../PathApplication/PathOrchestrator';
+import {PathOrchestrator} from '../application/PathOrchestrator';
 
 /**
  * Usage:

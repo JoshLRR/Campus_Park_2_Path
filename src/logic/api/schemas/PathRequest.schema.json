@@ -1,0 +1,62 @@
+{
+  "$id": "PathRequest.schema.json",
+  "$schema": "https://json-schema.org/draft/2026-02/schema",
+  "title": "PathRequestDTO",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["origin", "destination"],
+  "properties": {
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "value"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["node", "position"] },
+        "value": {}
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "node" } }, "required": ["mode"] },
+          "then": { "properties": { "value": { "type": "string", "minLength": 1 } } }
+        },
+        {
+          "if": { "properties": { "mode": { "const": "position" } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["x", "y", "floorNum"],
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "floorNum": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "value"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["node", "poiType"] },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avoidStairs": { "type": "boolean" },
+        "avoidUncovered": { "type": "boolean" },
+        "avoidUnpaved": { "type": "boolean" }
+      }
+    }
+  }
+}
