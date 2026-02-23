@@ -16,7 +16,7 @@ export type PathRequestDTO = {
   preferences?: {
     avoidStairs?: boolean;
     avoidUncovered?: boolean;
-    avoidUnpaved: boolean;
+    avoidUnpaved?: boolean;
   };
 };
 
