@@ -27,8 +27,10 @@ export function assertIsPathRequestDTO(
   const valid = validate(data);
 
   if (!valid) {
-    // eslint-disable-next-line no-console
-    console.log(validate.errors);
-    throw new PathRequestValidationError(validate.errors ?? []);
+    if (!valid) {
+      // eslint-disable-next-line no-console
+      // console.log('AJV ERRORS:', validate.errors);
+      throw new PathRequestValidationError(validate.errors ?? []);
+    }
   }
 }

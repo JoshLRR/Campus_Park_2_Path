@@ -42,7 +42,7 @@
       "additionalProperties": false,
       "required": ["mode", "value"],
       "properties": {
-        "mode": { "type": "string", "enum": ["node", "coordinate"] },
+        "mode": { "type": "string", "enum": ["node", "poiType"] },
         "value": { "type": "string", "minLength": 1 }
       }
     },
