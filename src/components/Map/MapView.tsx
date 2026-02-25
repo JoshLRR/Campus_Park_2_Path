@@ -74,8 +74,6 @@ export const MapView: React.FC<MapViewProps> = ({initialBuildings}) => {
     setDraggingId(null);
   };
 
-  // @ts-ignore
-  // @ts-ignore
   return (
     <div
       ref={containerRef}
@@ -92,25 +90,30 @@ export const MapView: React.FC<MapViewProps> = ({initialBuildings}) => {
         minScale={0.4}
         maxScale={4}
         limitToBounds={false}
-        >
+      >
         <TransformComponent
           wrapperStyle={{width: '100%', height: '100%'}}
-          contentStyle={{width: WORLD_WIDTH, height: WORLD_HEIGHT, position: 'relative'}}          >
-      {buildings.map(b => (
-        <div
-          key={b.id}
-          className="absolute bg-sky-500 border border-black flex items-center justify-center text-white font-semibold cursor-grab select-none"
-          style={{
-            left: b.x,
-            top: b.y,
-            width: b.width,
-            height: b.height,
+          contentStyle={{
+            width: WORLD_WIDTH,
+            height: WORLD_HEIGHT,
+            position: 'relative',
           }}
-          onPointerDown={e => handlePointerDown(e, b.id)}
         >
-          {b.name}
-        </div>
-      ))}
+          {buildings.map(b => (
+            <div
+              key={b.id}
+              className="absolute bg-sky-500 border border-black flex items-center justify-center text-white font-semibold cursor-grab select-none"
+              style={{
+                left: b.x,
+                top: b.y,
+                width: b.width,
+                height: b.height,
+              }}
+              onPointerDown={e => handlePointerDown(e, b.id)}
+            >
+              {b.name}
+            </div>
+          ))}
         </TransformComponent>
       </TransformWrapper>
     </div>
