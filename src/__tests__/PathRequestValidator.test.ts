@@ -22,6 +22,9 @@ function expectInvalid(data: unknown): PathRequestValidationError {
   return err as PathRequestValidationError;
 }
 
+/**
+ * Helper builders (keeps tests readable, and makes it easy to tweak if DTO evolves).
+ */
 function buildValidNodeRequest(
   overrides?: Partial<PathRequestDTO>,
 ): PathRequestDTO {
@@ -41,8 +44,8 @@ function buildValidCoordinateRequest(
   overrides?: Partial<PathRequestDTO>,
 ): PathRequestDTO {
   const base: PathRequestDTO = {
-    origin: {mode: 'coordinate', value: {x: 12.34, y: 56.78, floorNum: 1}},
-    destination: {mode: 'poiType', value: 'restroom'},
+    origin: {mode: 'node', value: {x: 12.34, y: 56.78, floorNum: 1}},
+    destination: {mode: 'coordinate', value: 'restroom'},
     preferences: {
       avoidStairs: true,
       avoidUncovered: true,
