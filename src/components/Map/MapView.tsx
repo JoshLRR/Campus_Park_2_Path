@@ -10,6 +10,12 @@ export interface Building {
   name: string;
 }
 
+export type Point = {x: number; y: number};
+
+export interface PolygonBuilding extends Building {
+  points: Point[];
+}
+
 // Props
 interface MapViewProps {
   initialBuildings: Building[];
