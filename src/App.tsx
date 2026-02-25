@@ -11,14 +11,9 @@ const initialBuildings: Building[] = [
 export default function App() {
   return (
     <div className="w-full h-screen flex">
-      {/* Left side: map */}
-      <div className="w-1/2 h-full relative">
-        {/* MapView with draggable buildings */}
-        <MapView initialBuildings={initialBuildings} />
-      </div>
 
-      {/* Right side: building info */}
-      <div className="w-1/2 h-full p-6 bg-gray-100 overflow-auto">
+      {/* Left side: building info */}
+      <div className="w-1/4 h-full p-6 bg-gray-100 overflow-auto">
         <h2 className="text-2xl font-bold mb-4">Building Info</h2>
         {initialBuildings.map(b => (
           <div
@@ -32,6 +27,13 @@ export default function App() {
           </div>
         ))}
       </div>
+
+      {/* Right side: map */}
+      <div className="w-1/2 h-full relative">
+        {/* MapView with draggable buildings */}
+        <MapView initialBuildings={initialBuildings} />
+      </div>
+
     </div>
   );
 }
