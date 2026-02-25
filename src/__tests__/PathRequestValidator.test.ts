@@ -3,9 +3,9 @@ import {describe, it, expect} from 'vitest';
 import {
   assertIsPathRequestDTO,
   PathRequestValidationError,
-} from '../logic/api/PathRequestValidator.ts';
+} from '../logic/PathingComponent/api/PathRequestValidator.ts';
 
-import type {PathRequestDTO} from '../logic/api/PathAPI.dto.ts';
+import type {PathRequestDTO} from '../logic/PathingComponent/api/PathAPI.dto.ts';
 
 function expectValid(data: unknown): asserts data is PathRequestDTO {
   expect(() => assertIsPathRequestDTO(data)).not.toThrow();

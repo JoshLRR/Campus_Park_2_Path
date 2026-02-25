@@ -1,5 +1,5 @@
 // PathAPI.ts
-
+import {appLogger} from '../../../logging/index';
 import {I_PathAPI} from './I_PathAPI';
 import {PathRequestDTO, PathResponseDTO} from './PathAPI.dto';
 import {PathOrchestrator} from '../application/PathOrchestrator';
@@ -57,29 +57,49 @@ export class PathAPI implements I_PathAPI {
   async path(request: unknown): Promise<PathResponseDTO> {
     const result: PathResponseDTO = {status: 'internal_error'};
     try {
-      // TODO eventually JSON Schema validation (stub for now)
       this.validateRequest(request);
 
       // TODO Semantic validation
-      // const domainRequest = this.transformToDomain(request);
+      const domainRequest = this.transformToDomain(request);
+      console.log(domainRequest);
 
       // TODO Actually send to orchestration
       // const result = await this.orchestrator.computePath(domainRequest);
     } catch (validation_error) {
       if (validation_error instanceof PathRequestValidationError) {
         result.status = 'validation_error';
-        result.message = 'Request failed schema validation';
+        result.message = 'Request failed: improper request syntax';
       }
     }
     return result;
   }
-
+  /**
+   * Performs syntactical validation for the Path Request
+   * @param request
+   */
   private validateRequest(request: unknown): void {
     assertIsPathRequestDTO(request);
   }
 
-  private transformToDomain(request: PathRequestDTO) {
-    // TODO: convert DTO -> Domain objects
-    return request;
+  /**
+   * Transforms a valid path Request into our domain specific data types
+   * @param request
+   * @returns PathRequestDTO
+   */
+  private transformToDomain(request: unknown): PathRequestDTO {
+    // TODO: convert DTO -> Domain objects, also perform semantic validation at the same time
+    console.log(request);
+    appLogger.error('hello');
+    const response: PathRequestDTO = {
+      origin: {
+        mode: 'coordinate',
+        value: '',
+      },
+      destination: {
+        mode: 'poiType',
+        value: 'cafe',
+      },
+    };
+    return response;
   }
 }
