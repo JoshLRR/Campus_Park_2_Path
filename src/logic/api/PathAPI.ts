@@ -1,6 +1,6 @@
-// PathingAPI.ts
+// PathAPI.ts
 
-import {IPathingAPI} from './I_PathAPI';
+import {I_PathAPI} from './I_PathAPI';
 import {PathRequestDTO, PathResponseDTO} from './PathAPI.dto';
 import {PathOrchestrator} from '../application/PathOrchestrator';
 import {
@@ -14,7 +14,7 @@ import {
  * The frontend should interact only with the `path()` method and
  * should not depend on any internal orchestration or domain types.
  *
- * PathingAPI
+ * PathAPI
  * -----------
  * Public boundary layer between the Frontend (Web/Kiosk UI) and the
  * internal Pathfinding subsystem.
@@ -38,9 +38,9 @@ import {
  * - Acts as a clean architectural boundary to isolate the UI from
  *   domain and algorithmic concerns.
  *
- * @implements IPathingAPI
+ * @implements I_PathAPI
  */
-export class PathingAPI implements IPathingAPI {
+export class PathAPI implements I_PathAPI {
   constructor(private readonly orchestrator: PathOrchestrator) {}
 
   /**

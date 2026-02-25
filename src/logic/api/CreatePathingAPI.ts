@@ -1,16 +1,16 @@
-// createPathingAPI.ts (in pathing subsystem, not in UI)
-import {PathingAPI} from './PathAPI';
+// createPathAPI.ts (in pathing subsystem, not in UI)
+import {PathAPI} from './PathAPI';
 import {PathOrchestrator} from '../application/PathOrchestrator';
 //import { buildGraph } from "./infrastructure/buildGraph";
 
 /**
  *
- * @returns a `PathingAPI` object, necessary for performing a pathing request
+ * @returns a `PathAPI` object, necessary for performing a pathing request
  */
-export function createPathingAPI() {
+export function createPathAPI() {
   //const graph = ... ;
   // TODO : Inject PathOrchestrator with the graph probably once that's finished
   // const orchestrator = new PathOrchestrator(graph);
   const orchestrator = new PathOrchestrator();
-  return new PathingAPI(orchestrator);
+  return new PathAPI(orchestrator);
 }

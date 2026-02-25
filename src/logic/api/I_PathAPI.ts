@@ -5,6 +5,6 @@ import {PathRequestDTO, PathResponseDTO} from './PathAPI.dto';
  * Accepts raw JSON request from frontend boundary.
  * Returns structured routing response.
  */
-export interface IPathingAPI {
+export interface I_PathAPI {
   path(request: PathRequestDTO): Promise<PathResponseDTO>;
 }
