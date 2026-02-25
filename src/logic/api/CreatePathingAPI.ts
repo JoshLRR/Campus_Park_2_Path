@@ -1,5 +1,5 @@
 // createPathingAPI.ts (in pathing subsystem, not in UI)
-import {PathingAPI} from './PathingAPI';
+import {PathingAPI} from './PathAPI';
 import {PathOrchestrator} from '../application/PathOrchestrator';
 //import { buildGraph } from "./infrastructure/buildGraph";
 

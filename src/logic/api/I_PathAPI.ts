@@ -1,4 +1,4 @@
-import {PathRequestDTO, PathResponseDTO} from './PathingAPI.dto';
+import {PathRequestDTO, PathResponseDTO} from './PathAPI.dto';
 
 /**
  * Entry point for route computation requests.

@@ -1,5 +1,5 @@
 import Ajv, {JSONSchemaType} from 'ajv';
-import type {PathRequestDTO} from './PathingAPI.dto';
+import type {PathRequestDTO} from './PathAPI.dto';
 import schema from './schemas/PathRequest.schema.json';
 
 const ajv = new Ajv({

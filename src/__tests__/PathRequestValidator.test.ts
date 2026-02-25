@@ -5,7 +5,7 @@ import {
   PathRequestValidationError,
 } from '../logic/api/PathRequestValidator.ts';
 
-import type {PathRequestDTO} from '../logic/api/PathingAPI.dto';
+import type {PathRequestDTO} from '../logic/api/PathAPI.dto.ts';
 
 function expectValid(data: unknown): asserts data is PathRequestDTO {
   expect(() => assertIsPathRequestDTO(data)).not.toThrow();

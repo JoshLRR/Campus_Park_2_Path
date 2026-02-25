@@ -1,7 +1,7 @@
 // PathingAPI.ts
 
-import {IPathingAPI} from './I_PathingAPI';
-import {PathRequestDTO, PathResponseDTO} from './PathingAPI.dto';
+import {IPathingAPI} from './I_PathAPI';
+import {PathRequestDTO, PathResponseDTO} from './PathAPI.dto';
 import {PathOrchestrator} from '../application/PathOrchestrator';
 import {
   assertIsPathRequestDTO,
