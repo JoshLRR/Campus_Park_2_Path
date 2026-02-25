@@ -11,7 +11,6 @@ const initialBuildings: Building[] = [
 export default function App() {
   return (
     <div className="w-full h-screen flex">
-
       {/* Left side: building info */}
       <div className="w-1/4 h-full p-6 bg-gray-100 overflow-auto">
         <h2 className="text-2xl font-bold mb-4">Building Info</h2>
@@ -33,7 +32,6 @@ export default function App() {
         {/* MapView with draggable buildings */}
         <MapView initialBuildings={initialBuildings} />
       </div>
-
     </div>
   );
 }
