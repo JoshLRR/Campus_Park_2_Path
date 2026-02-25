@@ -1,0 +1,52 @@
+@startuml
+skinparam actorStyle awesome
+actor User
+entity P2P
+entity Pathing_Stuff
+entity Graph_Stuff
+database McDatabaseFace
+entity Directions_Panel
+entity Directions_Arrow
+entity Frontend
+
+autonumber
+User -> P2P: User access P2P
+P2P -> P2P: User selects start and end locations
+P2P -> Pathing_Stuff: P2P calculates optimal route
+Pathing_Stuff -> Graph_Stuff: Request graph
+Graph_Stuff -> McDatabaseFace: Request graph (if it needs to be refreshed)
+McDatabaseFace -> Graph_Stuff: Return graph to graph module 
+McDatabaseFace -> Graph_Stuff: On event return new graph to graph module
+Graph_Stuff -> Pathing_Stuff: Return graph
+Pathing_Stuff -> Pathing_Stuff: Calculate optimal path
+Pathing_Stuff -> Directions_Panel: Send optimal path to directions list module
+Directions_Panel -> Directions_Panel: Translate path into list of directions
+Directions_Panel -> Directions_Arrow: Translate directions into path and send
+Directions_Arrow -> Directions_Arrow: Translate directions into arrows for overlay
+Directions_Arrow -> Frontend: Send path arrow overlay data to frontend
+Directions_Panel -> Frontend: Send list of directions to frontend
+Frontend -> User: User uses eyeballs :)
+
+
+' User -> Cognito: User logs in with\nvalid credentials
+' Cognito -> Cognito: Validate given credentials\nfrom user
+' Cognito -[#red]> User: Give invalid credentials error
+' Cognito -> User: Returns JWT
+' User -> API_Gateway: Redirect to GenEd endpoint(s)
+' API_Gateway -> Cognito: Validate JWT
+' Cognito -> API_Gateway: Confirms JWT is valid \nand gives information\non userID and role(s)
+' API_Gateway -[#red]> User: Unable to validate token\nuser gets signed out
+' API_Gateway -[#green]> GenEd: Sends request with\nuser and role information
+' GenEd -> GenEd: Validate the request with\n the given information
+' GenEd -[#red]> GenEd: Invalid request given
+' GenEd -[#red]> API_Gateway: Send bad request error and log
+' API_Gateway -[#red]> User: Display error on frontend
+' GenEd -[#green]> Resource_Server: Retrieve/Write to/from db
+' Resource_Server -[#red]> Resource_Server: Some database error occurs\nretries fail
+' Resource_Server -[#red]> API_Gateway: Send database error and log
+' API_Gateway -[#red]> User: Display database error on frontend
+' Resource_Server -[#green]> GenEd: Returns data or\nwrite confirmation
+' GenEd -[#green]> API_Gateway: Relays data
+' API_Gateway -[#green]> User: Frontend renders data
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+skinparam actorStyle awesome
+actor User
+entity P2P
+entity Frontend
+
+' Logging in for the first time
+autonumber
+User -> P2P: User opens P2P \nor they access via kiosk
+P2P -> P2P: User selects start position
+P2P -> P2P: User selects destination
+P2P -> P2P: (Optional) Button to load in QR code window
+P2P -> Frontend: Map with directions is displayed
+Frontend -> User: User uses their eyeballs to view the map
+Frontend -> User: (Optional) User clicks button to load in step-by-step directions
+
+' User -> Cognito: User logs in with\nvalid credentials
+' Cognito -> Cognito: Validate given credentials\nfrom user
+' Cognito -[#red]> User: Give invalid credentials error
+' Cognito -> User: Returns JWT
+' User -> API_Gateway: Redirect to GenEd endpoint(s)
+' API_Gateway -> Cognito: Validate JWT
+' Cognito -> API_Gateway: Confirms JWT is valid \nand gives information\non userID and role(s)
+' API_Gateway -[#red]> User: Unable to validate token\nuser gets signed out
+' API_Gateway -[#green]> GenEd: Sends request with\nuser and role information
+' GenEd -> GenEd: Validate the request with\n the given information
+' GenEd -[#red]> GenEd: Invalid request given
+' GenEd -[#red]> API_Gateway: Send bad request error and log
+' API_Gateway -[#red]> User: Display error on frontend
+' GenEd -[#green]> Resource_Server: Retrieve/Write to/from db
+' Resource_Server -[#red]> Resource_Server: Some database error occurs\nretries fail
+' Resource_Server -[#red]> API_Gateway: Send database error and log
+' API_Gateway -[#red]> User: Display database error on frontend
+' Resource_Server -[#green]> GenEd: Returns data or\nwrite confirmation
+' GenEd -[#green]> API_Gateway: Relays data
+' API_Gateway -[#green]> User: Frontend renders data
+
+@enduml

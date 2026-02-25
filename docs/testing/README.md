@@ -1,5 +1,21 @@
 # Writing and Recording Testing Data
 
+## Running Tests
+
+Run tests from the project root:
+
+```bash
+npm test
+```
+
+To run just one test:
+
+```bash
+npm test testName
+```
+
+*please remember to replace `testName` with your actual test name*
+
 ## Writing a new test
 
 TODO: How to read each table and use it to write tests when that feature is added.
