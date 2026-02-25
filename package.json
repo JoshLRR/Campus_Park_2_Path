@@ -52,9 +52,9 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "ajv": "^8.18.0",
     "@tailwindcss/cli": "^4.2.0",
     "eslint-define-config": "^2.1.0",
-    "ajv": "^8.18.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-zoom-pan-pinch": "^3.7.0",
