@@ -1,4 +1,5 @@
 import React, {useState, useRef} from 'react';
+import {TransformWrapper, TransformComponent} from 'react-zoom-pan-pinch';
 
 // Building type
 export interface Building {
@@ -23,6 +24,9 @@ interface MapViewProps {
 
 // Grid snap size
 const GRID_SIZE = 20;
+
+const WORLD_WIDTH = 2000;
+const WORLD_HEIGHT = 2000;
 
 export const MapView: React.FC<MapViewProps> = ({initialBuildings}) => {
   const [buildings, setBuildings] = useState<Building[]>(initialBuildings);
@@ -70,6 +74,8 @@ export const MapView: React.FC<MapViewProps> = ({initialBuildings}) => {
     setDraggingId(null);
   };
 
+  // @ts-ignore
+  // @ts-ignore
   return (
     <div
       ref={containerRef}
@@ -78,6 +84,18 @@ export const MapView: React.FC<MapViewProps> = ({initialBuildings}) => {
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
+      <TransformWrapper
+        panning={{disabled: draggingId !== null}}
+        wheel={{step: 0.08}}
+        doubleClick={{disabled: true}}
+        pinch={{step: 5}}
+        minScale={0.4}
+        maxScale={4}
+        limitToBounds={false}
+        >
+        <TransformComponent
+          wrapperStyle={{width: '100%', height: '100%'}}
+          contentStyle={{width: WORLD_WIDTH, height: WORLD_HEIGHT, position: 'relative'}}          >
       {buildings.map(b => (
         <div
           key={b.id}
@@ -93,6 +111,8 @@ export const MapView: React.FC<MapViewProps> = ({initialBuildings}) => {
           {b.name}
         </div>
       ))}
+        </TransformComponent>
+      </TransformWrapper>
     </div>
   );
 };
