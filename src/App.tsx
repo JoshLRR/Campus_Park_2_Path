@@ -1,47 +1,37 @@
-/**
- * Root application component.
- *
- * {@link App} composes the primary high-level layout of the application
- * by assembling core feature panels into the shared {@link AppLayout}.
- * It defines what content appears in the left, center, and right regions
- * of the UI.
- *
- * Layout regions:
- * - **Left panel**: Search and destination discovery
- *   ({@link SearchBar}, {@link DestinationList})
- * - **Center panel**: Interactive campus map
- *   ({@link MapView})
- * - **Right panel**: Route guidance and directions output
- *   ({@link DirectionsPanel})
- *
- * This component is intentionally kept free of business logic and state.
- * Its responsibility is orchestration and composition only; data fetching,
- * routing logic, and state management are delegated to child components.
- *
- * @remarks
- * {@link App} serves as the top-level UI boundary for the application.
- * Any global providers (context, routing, theming) should be introduced
- * here if needed in the future.
- */
+import React from 'react';
+import {MapView, Building} from './components/Map/MapView';
+import './index.css';
+import './App.css';
 
-import {AppLayout} from './components/AppLayout';
-
-import {SearchBar} from './components/Search/SearchBar';
-import {DestinationList} from './components/Search/DestinationList';
-import {MapView} from './components/Map/MapView';
-import {DirectionsPanel} from './components/Directions/DirectionsPanel';
+const initialBuildings: Building[] = [
+  {id: 1, x: 100, y: 100, width: 80, height: 60, name: 'Library'},
+  {id: 2, x: 250, y: 150, width: 120, height: 80, name: 'Building A'},
+];
 
 export default function App() {
   return (
-    <AppLayout
-      left={
-        <>
-          <SearchBar />
-          <DestinationList />
-        </>
-      }
-      center={<MapView />}
-      right={<DirectionsPanel />}
-    />
+    <div className="w-full h-screen flex">
+      {/* Left side: building info */}
+      <div className="w-1/4 h-full p-6 bg-gray-100 overflow-auto">
+        <h2 className="text-2xl font-bold mb-4">Building Info</h2>
+        {initialBuildings.map(b => (
+          <div
+            key={b.id}
+            className="p-2 mb-2 border rounded bg-white shadow-sm"
+          >
+            <p className="font-semibold">{b.name}</p>
+            <p>
+              Position: ({b.x}, {b.y}) | Size: ({b.width}x{b.height})
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Right side: map */}
+      <div className="w-1/2 h-full relative">
+        {/* MapView with draggable buildings */}
+        <MapView initialBuildings={initialBuildings} />
+      </div>
+    </div>
   );
 }
