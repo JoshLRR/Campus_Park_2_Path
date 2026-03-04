@@ -54,7 +54,7 @@ export class PathAPI implements I_PathAPI {
   /**
    * Entry point for routing requests from the frontend.
    *
-   * @param request - Transport-layer routing request from UI.
+   * @param request - Transport-layer routing request from UI. Schema for the validation of this request can be found in src/logic/PathingComponent/api/schemas/PathRequest.schema.json. That can be used to format the request on the frontend too.
    * @returns A `PathResponseDTO` representing either:
    *          - a successful path result, or
    *          - a structured error state.
@@ -68,14 +68,13 @@ export class PathAPI implements I_PathAPI {
     try {
       this.validateRequest(request);
 
-      // TODO Semantic validation
+      // Semantic validation
       const domainRequest = this.transformToDomain(request);
 
-      // TODO Actually send to orchestration
+      // Perform Orchestration
       const appResult = await this.orchestrator.resolvePath(domainRequest);
 
-      // TODO transform appResult(PathRequest) back into result (PathResultDTO)
-
+      // Transform appResult(PathRequest) back into result(PathResultDTO) for FrontEnd
       result = this.transformToPathResultDTO(appResult);
 
       if (result.status === 'not_found') {
@@ -148,6 +147,9 @@ export class PathAPI implements I_PathAPI {
         nodes: result.nodes.map(String),
         totalDistance: result.totalDistance,
       },
+      message: result.warnings?.length
+        ? result.warnings.map(w => w.message).join('; ')
+        : undefined,
     };
   }
 }

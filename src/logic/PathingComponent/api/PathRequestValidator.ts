@@ -18,9 +18,6 @@ export class PathRequestValidationError extends Error {
   }
 }
 
-/**
- * Runtime assertion + type narrowing.
- */
 export function assertIsPathRequestDTO(
   data: unknown,
 ): asserts data is PathRequestDTO {
