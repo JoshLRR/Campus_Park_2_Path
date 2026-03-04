@@ -17,50 +17,48 @@ import type {Position} from '../../../types/Node';
 import {PathFeatures} from '../../../types/PathFeatures';
 
 /**
- * Usage:
- * ------
- * The frontend should interact only with the `path()` method and
- * should not depend on any internal orchestration or domain types.
+ * Public boundary layer between the Frontend and the internal Pathfinding subsystem.
  *
- * PathAPI
- * -----------
- * Public boundary layer between the Frontend (Web/Kiosk UI) and the
- * internal Pathfinding subsystem.
+ * `PathAPI` is the sole entry point for all routing requests from the UI. It owns
+ * the full request lifecycle up to and including orchestration delegation:
  *
- * This class serves as the sole entry point for all routing requests
- * originating from the user interface. It is responsible for:
+ * 1. **Structural validation** — incoming JSON is validated against
+ *    `PathRequest.schema.json` via AJV before any processing occurs.
+ * 2. **Semantic validation** — (planned) verifies that referenced nodes and POI
+ *    types exist in the active graph.
+ * 3. **Domain transformation** — converts the validated `PathRequestDTO` into
+ *    typed internal domain objects (`PathRequest`) consumed by the orchestrator.
+ * 4. **Orchestration** — delegates path computation to `PathOrchestrator`.
+ * 5. **Response mapping** — converts the internal `PathResult` back into a
+ *    `PathResponseDTO` safe for frontend consumption.
  *
- * - Validating the structural integrity of incoming `PathRequestDTO` objects
- *   (JSON schema validation — planned integration).
- * - Performing semantic validation (e.g., origin existence, POI type validity).
- * - Transforming validated transport-layer DTOs into internal domain models.
- * - Delegating path computation to the `PathOrchestrator`.
- * - Converting internal results into a structured `PathResponseDTO`
- *   suitable for frontend consumption.
+ * No path computation logic lives here. All errors are caught and returned as
+ * structured `PathResponseDTO` values — exceptions are never propagated to the caller.
  *
- * Design Notes:
- * -------------
- * - This class contains NO path computation logic.
- * - All graph traversal and strategy selection occurs within the
- *   application layer (`PathOrchestrator`).
- * - Acts as a clean architectural boundary to isolate the UI from
- *   domain and algorithmic concerns.
- *
- * @implements I_PathAPI
+ * @see PathRequestValidator for structural validation details
+ * @see PathOrchestrator for routing strategy and algorithm selection
+ * @implements {I_PathAPI}
  */
 export class PathAPI implements I_PathAPI {
   constructor(private readonly orchestrator: PathOrchestrator) {}
 
   /**
-   * Entry point for routing requests from the frontend.
+   * Accepts a raw routing request from the frontend, validates it, and returns
+   * a structured routing response.
    *
-   * @param request - Transport-layer routing request from UI. Schema for the validation of this request can be found in src/logic/PathingComponent/api/schemas/PathRequest.schema.json. That can be used to format the request on the frontend too.
-   * @returns A `PathResponseDTO` representing either:
-   *          - a successful path result, or
-   *          - a structured error state.
+   * This method never throws. All error states are represented as a
+   * `PathResponseDTO` with an appropriate `status` field:
+   * - `'success'` — a path was found
+   * - `'not_found'` — the graph contains no valid path for the request
+   * - `'validation_error'` — the request failed structural validation
+   * - `'internal_error'` — an unexpected error occurred during processing
    *
-   * @throws Does not propagate exceptions. All errors are caught
-   *         and translated into a safe `PathResponseDTO`.
+   * The request schema is defined in:
+   * `src/logic/PathingComponent/api/schemas/PathRequest.schema.json`
+   * and can be used by the frontend to pre-validate requests before sending.
+   *
+   * @param request - Raw, unvalidated JSON payload from the UI.
+   * @returns A `PathResponseDTO` representing the result or a structured error.
    */
   async path(request: unknown): Promise<PathResponseDTO> {
     let result: PathResponseDTO = {status: 'internal_error'};
@@ -103,17 +101,30 @@ export class PathAPI implements I_PathAPI {
   }
 
   /**
-   * Performs syntactical validation for the Path Request.
-   * Acts as a type assertion — narrows `request` to `PathRequestDTO` at the call site.
+   * Validates the raw request against the PathRequest JSON schema.
+   *
+   * Acts as a TypeScript assertion function — if validation passes, the type of
+   * `request` is narrowed to `PathRequestDTO` at the call site. If validation
+   * fails, a `PathRequestValidationError` is thrown containing AJV error details.
+   *
+   * @param request - Raw unknown input to validate.
+   * @throws {PathRequestValidationError} If the request does not conform to the schema.
    */
   private validateRequest(request: unknown): asserts request is PathRequestDTO {
     assertIsPathRequestDTO(request);
   }
 
   /**
-   * Transforms a validated PathRequestDTO into domain objects for the orchestrator.
-   * @param request - A structurally validated PathRequestDTO
-   * @returns PathRequest domain object
+   * Converts a validated `PathRequestDTO` into the internal `PathRequest` domain type.
+   *
+   * - `origin.mode === 'node'` → `{kind: 'node', nodeId: number}`
+   * - `origin.mode === 'coordinate'` → `{kind: 'coordinate', position: Position}`
+   * - `destination.mode === 'node'` → `{kind: 'node', nodeId: number}`
+   * - `destination.mode === 'poiType'` → `{kind: 'poiType', poiType: string}`
+   * - `preferences` → mapped to a `PathFeatures[]` array of features to avoid
+   *
+   * @param request - A structurally validated `PathRequestDTO`.
+   * @returns The equivalent `PathRequest` domain object for the orchestrator.
    */
   private transformToDomain(request: PathRequestDTO): PathRequest {
     const origin: PathOrigin =
@@ -137,6 +148,17 @@ export class PathAPI implements I_PathAPI {
     return {origin, destination, avoidFeatures};
   }
 
+  /**
+   * Converts an internal `PathResult` from the orchestrator into a `PathResponseDTO`
+   * suitable for the frontend.
+   *
+   * - `'found'` → `status: 'success'` with path nodes (as strings) and total distance.
+   *   Any warnings are joined into a human-readable `message` string.
+   * - `'not_found'` → `status: 'not_found'` with a descriptive message.
+   *
+   * @param result - The domain result returned by `PathOrchestrator.resolvePath`.
+   * @returns A `PathResponseDTO` ready for frontend consumption.
+   */
   private transformToPathResultDTO(result: PathResult): PathResponseDTO {
     if (result.status === 'not_found') {
       return {status: 'not_found', message: 'No path found'};
