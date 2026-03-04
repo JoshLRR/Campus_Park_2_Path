@@ -94,13 +94,9 @@ export const MapView: React.FC<MapViewProps> = ({
     const building = buildings.find(b => b.id === id);
     if (!building || !containerRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const pointerX = e.clientX - rect.left;
-    const pointerY = e.clientY - rect.top;
-
-    setOffset({x: pointerX - building.x, y: pointerY - building.y});
-    setDraggingId(id);
-    setDraggingType('building');
+    //setOffset({x: pointerX - building.x, y: pointerY - building.y});
+    //setDraggingId(id);
+    //setDraggingType('building');
 
     e.currentTarget.setPointerCapture(e.pointerId);
   };
