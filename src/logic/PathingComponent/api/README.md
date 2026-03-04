@@ -6,71 +6,91 @@ The **Pathing API** serves as the public interface between the CPP Frontend and 
 
 It is responsible for validating path requests, enforcing structural and semantic correctness, and delegating execution to the Path Orchestration layer.
 
-The Pathing API does **not** implement routing algorithms. It acts strictly as a boundary and coordination layer.
+The Pathing API does **not** implement routing algorithms. It acts strictly as a boundary layer.
+
+---
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `PathAPI.ts` | Main boundary class. Owns the full request lifecycle. |
+| `I_PathAPI.ts` | Interface contract for `PathAPI`. |
+| `CreatePathingAPI.ts` | Factory function that wires `PathAPI` with its dependencies. |
+| `PathAPI.dto.ts` | `PathRequestDTO` and `PathResponseDTO` type definitions. |
+| `PathRequestValidator.ts` | AJV-based JSON schema validator and assertion function. |
+| `schemas/PathRequest.schema.json` | JSON Schema definition for incoming requests. |
 
 ---
 
 ## Responsibilities
 
-The Pathing API performs the following functions:
+The Pathing API performs the following functions in order:
 
-- Accepts `PathRequest` JSON payloads
-- Validates requests against the PathRequest JSON Schema
-- Performs semantic validation:
-  - Verifies origin and destination nodes exist
-  - Verifies POI type identifiers exist in the POI repository
-  - Ensures compatibility with the active graph version
-- Transforms validated requests into internal domain objects
-- Invokes the `PathOrchestrator` service
-- Returns structured `PathResponse` objects
-- Returns structured error responses for invalid requests
+1. **Structural validation** — validates incoming JSON against the `PathRequest` JSON Schema via AJV
+2. **Semantic validation** — *(planned)* verifies that referenced nodes and POI types exist in the active graph
+3. **Domain transformation** — converts the validated `PathRequestDTO` into internal domain objects (`PathRequest`)
+4. **Orchestration** — delegates path computation to `PathOrchestrator`
+5. **Response mapping** — converts the internal `PathResult` into a `PathResponseDTO` for the frontend
 
 ---
 
 ## Request Contract
 
-The API accepts a JSON `PathRequest` containing:
+The API accepts a JSON payload conforming to [`PathRequest.schema.json`](./schemas/PathRequest.schema.json).
 
-- `origin`
-- `mode` (`point_to_point` | `nearest_poi`)
-- `destination` (for point-to-point)
-- `poiTypeId` (for nearest POI)
-- `constraints`
-- `preferences`
+### Structure
 
-All incoming requests must conform to the defined JSON Schema (`TODO schema coming soon`).
+```json
+{
+  "origin": {
+    "mode": "node | coordinate",
+    "value": "<nodeId string> | { x, y, floorNum }"
+  },
+  "destination": {
+    "mode": "node | poiType",
+    "value": "<nodeId string> | <poiType string>"
+  },
+  "preferences": {
+    "avoidStairs": false,
+    "avoidUncovered": false,
+    "avoidUnpaved": false
+  }
+}
+```
 
-Requests failing schema validation are rejected with HTTP 400.
+`preferences` is optional. All preference fields default to `false` when omitted.
 
 ---
 
 ## Response Contract
 
-Successful requests return a `PathResponse` containing:
+All responses conform to `PathResponseDTO`:
 
-- Path status
-- Path geometry (an ordered list of nodes and edges)
-- Human-readable instructions
-- Path summary metadata
+```typescript
+{
+  status: 'success' | 'not_found' | 'validation_error' | 'internal_error';
+  message?: string;   // human-readable summary or warning string
+  path?: {
+    nodes: string[];        // ordered node IDs along the route
+    totalDistance: number;  // total path distance
+  };
+}
+```
 
-Unsuccessful requests return structured error responses including:
+### Status values
 
-- Error code
-- Human-readable message
-- Validation failure details (if applicable)
+| Status | Meaning |
+|--------|---------|
+| `success` | A valid path was found |
+| `not_found` | The graph contains no valid path for the request |
+| `validation_error` | The request failed structural schema validation |
+| `internal_error` | An unexpected error occurred during processing |
 
 ---
 
 ## Error Handling Philosophy
 
-The Pathing API does not expose internal exceptions or stack traces.
+The Pathing API never exposes internal exceptions or stack traces to the caller.
 
-All errors are returned as structured responses with error codes such as:
-
-- `INVALID_REQUEST`
-- `UNKNOWN_NODE`
-- `UNKNOWN_POI_TYPE`
-- `NO_PATH_FOUND`
-- `INTERNAL_ERROR`
-
-This ensures predictable failure modes.
+All error states are encoded in `PathResponseDTO.status`. The `message` field provides a human-readable description where applicable. This ensures predictable failure modes regardless of what occurs internally.
