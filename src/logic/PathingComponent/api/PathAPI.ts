@@ -7,6 +7,13 @@ import {
   assertIsPathRequestDTO,
   PathRequestValidationError,
 } from './PathRequestValidator';
+import type {
+  PathRequest,
+  PathOrigin,
+  PathDestination,
+} from '../../../types/PathRequest';
+import type {Position} from '../../../types/Node';
+import {PathFeatures} from '../../../types/PathFeatures';
 
 /**
  * Usage:
@@ -64,7 +71,7 @@ export class PathAPI implements I_PathAPI {
       console.log(domainRequest);
 
       // TODO Actually send to orchestration
-      // const result = await this.orchestrator.computePath(domainRequest);
+      result = await this.orchestrator.resolvePath(domainRequest);
     } catch (validation_error) {
       if (validation_error instanceof PathRequestValidationError) {
         result.status = 'validation_error';
@@ -82,24 +89,29 @@ export class PathAPI implements I_PathAPI {
   }
 
   /**
-   * Transforms a valid path Request into our domain specific data types
-   * @param request
-   * @returns PathRequestDTO
+   * Transforms a validated PathRequestDTO into domain objects for the orchestrator.
+   * @param request - A structurally validated PathRequestDTO
+   * @returns PathRequest domain object
    */
-  private transformToDomain(request: unknown): PathRequestDTO {
-    // TODO: convert DTO -> Domain objects, also perform semantic validation at the same time
-    console.log(request);
-    appLogger.error('hello');
-    const response: PathRequestDTO = {
-      origin: {
-        mode: 'coordinate',
-        value: '',
-      },
-      destination: {
-        mode: 'poiType',
-        value: 'cafe',
-      },
-    };
-    return response;
+  private transformToDomain(request: PathRequestDTO): PathRequest {
+    const origin: PathOrigin =
+      request.origin.mode === 'node'
+        ? {kind: 'node', nodeId: parseInt(request.origin.value as string, 10)}
+        : {kind: 'coordinate', position: request.origin.value as Position};
+
+    const destination: PathDestination =
+      request.destination.mode === 'node'
+        ? {kind: 'node', nodeId: parseInt(request.destination.value, 10)}
+        : {kind: 'poiType', poiType: request.destination.value};
+
+    const avoidFeatures: PathFeatures[] = [];
+    if (request.preferences?.avoidStairs)
+      avoidFeatures.push(PathFeatures.Stairs);
+    if (request.preferences?.avoidUncovered)
+      avoidFeatures.push(PathFeatures.Covered);
+    if (request.preferences?.avoidUnpaved)
+      avoidFeatures.push(PathFeatures.Paved);
+
+    return {origin, destination, avoidFeatures};
   }
 }
