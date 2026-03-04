@@ -375,6 +375,3 @@ export const MapView: React.FC<MapViewProps> = ({
     </div>
   );
 };
-
-// Export NavigationPoint for use in other components
-export type {NavigationPoint};
