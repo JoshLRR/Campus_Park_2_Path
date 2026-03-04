@@ -12,6 +12,7 @@ import type {
   PathOrigin,
   PathDestination,
 } from '../../../types/PathRequest';
+import type {PathResult} from '../../../types/PathResponse';
 import type {Position} from '../../../types/Node';
 import {PathFeatures} from '../../../types/PathFeatures';
 
@@ -62,29 +63,51 @@ export class PathAPI implements I_PathAPI {
    *         and translated into a safe `PathResponseDTO`.
    */
   async path(request: unknown): Promise<PathResponseDTO> {
-    const result: PathResponseDTO = {status: 'internal_error'};
+    let result: PathResponseDTO = {status: 'internal_error'};
+    appLogger.info('PathAPI: incoming path request');
     try {
       this.validateRequest(request);
 
       // TODO Semantic validation
       const domainRequest = this.transformToDomain(request);
-      console.log(domainRequest);
 
       // TODO Actually send to orchestration
-      result = await this.orchestrator.resolvePath(domainRequest);
+      const appResult = await this.orchestrator.resolvePath(domainRequest);
+
+      // TODO transform appResult(PathRequest) back into result (PathResultDTO)
+
+      result = this.transformToPathResultDTO(appResult);
+
+      if (result.status === 'not_found') {
+        appLogger.warn('PathAPI: no path found for request');
+      } else {
+        appLogger.info('PathAPI: path resolved successfully');
+      }
     } catch (validation_error) {
       if (validation_error instanceof PathRequestValidationError) {
-        result.status = 'validation_error';
-        result.message = 'Request failed: improper request syntax';
+        appLogger.warn('PathAPI: request failed validation', {
+          errors: validation_error.details,
+        });
+        result = {
+          status: 'validation_error',
+          message: 'Request failed: improper request syntax',
+        };
+      } else {
+        appLogger.error(
+          'PathAPI: unexpected internal error',
+          {},
+          validation_error instanceof Error ? validation_error : undefined,
+        );
       }
     }
     return result;
   }
+
   /**
-   * Performs syntactical validation for the Path Request
-   * @param request
+   * Performs syntactical validation for the Path Request.
+   * Acts as a type assertion — narrows `request` to `PathRequestDTO` at the call site.
    */
-  private validateRequest(request: unknown): void {
+  private validateRequest(request: unknown): asserts request is PathRequestDTO {
     assertIsPathRequestDTO(request);
   }
 
@@ -113,5 +136,18 @@ export class PathAPI implements I_PathAPI {
       avoidFeatures.push(PathFeatures.Paved);
 
     return {origin, destination, avoidFeatures};
+  }
+
+  private transformToPathResultDTO(result: PathResult): PathResponseDTO {
+    if (result.status === 'not_found') {
+      return {status: 'not_found', message: 'No path found'};
+    }
+    return {
+      status: 'success',
+      path: {
+        nodes: result.nodes.map(String),
+        totalDistance: result.totalDistance,
+      },
+    };
   }
 }
