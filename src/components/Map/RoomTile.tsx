@@ -30,7 +30,12 @@ export interface RoomTileProps {
   height: number;
   name: string;
   isDragging: boolean;
+  isSelected?: boolean;
+  isHighlighted?: boolean;
+  building?: string;
+  floor?: number;
   onPointerDown: (e: React.PointerEvent<SVGRectElement>, id: number) => void;
+  onClick?: (id: number) => void;
 }
 
 export const RoomTile: React.FC<RoomTileProps> = ({
@@ -41,36 +46,103 @@ export const RoomTile: React.FC<RoomTileProps> = ({
   height,
   name,
   isDragging,
+  isSelected = false,
+  isHighlighted = false,
+  building,
+  floor,
   onPointerDown,
+  onClick,
 }) => {
+  // Determine fill color based on state
+  const getFillColor = () => {
+    if (isSelected) return '#ef4444'; // red-500
+    if (isHighlighted) return '#3b82f6'; // blue-500
+    return '#0ea5e9'; // sky-500
+  };
+
+  // Determine stroke color based on state
+  const getStrokeColor = () => {
+    if (isSelected) return '#dc2626'; // red-600
+    if (isHighlighted) return '#2563eb'; // blue-600
+    return '#000000'; // black
+  };
+
+  // Handle click events
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick(id);
+    }
+  };
+
   return (
-    <>
+    <g>
+      {/* Room rectangle */}
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
-        fill="blue"
-        stroke="black"
-        strokeWidth={2}
+        fill={getFillColor()}
+        stroke={getStrokeColor()}
+        strokeWidth={isSelected ? 3 : 2}
         rx={4}
         ry={4}
-        style={{cursor: isDragging ? 'grabbing' : 'grab'}}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          filter: isSelected
+            ? 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+            : 'none',
+          transition: 'all 0.2s ease-in-out',
+        }}
         onPointerDown={e => onPointerDown(e, id)}
+        onClick={handleClick}
       />
-      /* This text below is just here to fix a lint issue with name being unused
-      */
+
+      {/* Selection indicator */}
+      {isSelected && (
+        <circle
+          cx={x + width - 6}
+          cy={y + 6}
+          r={4}
+          fill="#dc2626"
+          stroke="white"
+          strokeWidth={1}
+        >
+          <animate
+            attributeName="r"
+            values="3;5;3"
+            dur="1.5s"
+            repeatCount="indefinite"
+          />
+        </circle>
+      )}
+
+      {/* Room name text */}
       <text
         x={x + width / 2}
         y={y + height / 2}
         textAnchor="middle"
         alignmentBaseline="middle"
         fill="white"
-        fontSize={14}
+        fontSize={Math.min(12, (width / name.length) * 1.2)}
+        fontWeight={isSelected ? 'bold' : 'normal'}
         pointerEvents="none"
+        style={{
+          textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+        }}
       >
-        {name}
+        {name.length > 10 ? `${name.slice(0, 8)}...` : name}
       </text>
-    </>
+
+      {/* Tooltip on hover */}
+      {(building || floor) && (
+        <title>
+          {name}
+          {building && ` - ${building}`}
+          {floor && ` (Floor ${floor})`}
+        </title>
+      )}
+    </g>
   );
 };
