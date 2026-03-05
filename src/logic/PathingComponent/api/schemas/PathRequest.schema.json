@@ -1,0 +1,60 @@
+{
+  "$id": "PathRequest.schema.json",
+  "title": "PathRequestDTO",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["origin", "destination"],
+  "properties": {
+    "origin": {
+        "oneOf": [
+            {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode", "value"],
+            "properties": {
+                "mode": { "const": "node" },
+                "value": { "type": "string", "minLength": 1 }
+            }
+            },
+            {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode", "value"],
+            "properties": {
+                "mode": { "const": "coordinate" },
+                "value": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["x", "y", "floorNum"],
+                "properties": {
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "floorNum": { "type": "integer" }
+                }
+                }
+            }
+            }
+        ]
+    },
+
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "value"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["node", "poiType"] },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avoidStairs": { "type": "boolean" },
+        "avoidUncovered": { "type": "boolean" },
+        "avoidUnpaved": { "type": "boolean" }
+      }
+    }
+  }
+}
