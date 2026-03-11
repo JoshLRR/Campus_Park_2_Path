@@ -45,9 +45,25 @@ export class PathOrchestrator implements IPathOrchestrator {
   async resolvePath(request: PathRequest): Promise<PathResult> {
     appLogger.debug('PathOrchestrator: resolving path', {request});
     try {
+      // refactor once things make sense
       const result: PathResult = {status: 'not_found'};
 
-      // TODO: strategy selection, decoration, algorithm invocation
+      // TODO: implement Context Decoration
+
+      // TODO: implement strategy
+      if (request.destination.kind === 'node') {
+        // TODO : implement ptp strategy
+        console.log('node destination selected');
+      } else if (request.destination.kind === 'poiType') {
+        // TODO : implement poi strategy
+        console.log('poiType destination selected');
+      } else {
+        throw appLogger.error('PathOrchestrator: unexpected destination');
+      }
+
+      // TODO: implement Path Algorithm
+
+      // TODO: implement Path Export
 
       if (result.status === 'not_found') {
         appLogger.warn('PathOrchestrator: no path found', {request});
