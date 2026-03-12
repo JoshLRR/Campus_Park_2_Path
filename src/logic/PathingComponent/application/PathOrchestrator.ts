@@ -1,8 +1,10 @@
 import {IPathOrchestrator} from './I_PathOrchestrator';
 import {appLogger} from '../../../logging/index';
-import type {Node} from '../../../types/Node';
+import type {Node, NodeId} from '../../../types/Node';
 import {PathRequest} from '../../../types/PathRequest';
 import {PathResult} from '../../../types/PathResponse';
+import {DijkstraAlgorithm} from './DijkstraAlgorithm';
+import type {PathAlgorithm} from './PathAlgorithm';
 
 /**
  * Coordinates the full routing workflow for a given `PathRequest`.
@@ -45,23 +47,20 @@ export class PathOrchestrator implements IPathOrchestrator {
   async resolvePath(request: PathRequest): Promise<PathResult> {
     appLogger.debug('PathOrchestrator: resolving path', {request});
     try {
-      // refactor once things make sense
-      const result: PathResult = {status: 'not_found'};
-
       // TODO: implement Context Decoration
 
-      // TODO: implement strategy
-      if (request.destination.kind === 'node') {
-        // TODO : implement ptp strategy
-        console.log('node destination selected');
-      } else if (request.destination.kind === 'poiType') {
-        // TODO : implement poi strategy
-        console.log('poiType destination selected');
+      let startNodeId: NodeId;
+      if (request.origin.kind === 'node') {
+        startNodeId = request.origin.nodeId;
       } else {
-        throw appLogger.error('PathOrchestrator: unexpected destination');
+        // TODO: implement coordinate-to-node resolution
+        throw new Error(
+          'PathOrchestrator: coordinate origin not yet supported',
+        );
       }
 
-      // TODO: implement Path Algorithm
+      const algorithm: PathAlgorithm = new DijkstraAlgorithm(this.graph);
+      const result = await algorithm.findPath(startNodeId, request.destination);
 
       // TODO: implement Path Export
 
