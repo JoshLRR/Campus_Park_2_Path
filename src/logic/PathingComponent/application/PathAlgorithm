@@ -1,5 +1,0 @@
-import type {GraphRepository} from '../../../repositories/GraphRepository';
-
-export interface PathAlgorithm {
-    findPath(): Promise<GraphRepository>
-}
