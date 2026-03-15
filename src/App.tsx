@@ -359,6 +359,9 @@ export default function App() {
           {/* Buildings List */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Buildings</h3>
+            <p className="text-xs text-gray-600 mb-3 italic">
+              All rooms are always visible. Click buildings to highlight their rooms.
+            </p>
             {initialBuildings.map(b => (
               <div
                 key={b.id}
@@ -381,7 +384,7 @@ export default function App() {
                 {focusBuilding === b.id && (
                   <div className="mt-2">
                     <p className="text-xs text-blue-600 font-medium">
-                      📍 Currently focused - Click to hide rooms
+                      🔍 Rooms are highlighted - Click to remove highlight
                     </p>
                   </div>
                 )}
@@ -516,7 +519,7 @@ export default function App() {
               {focusBuilding && (
                 <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
                   <p className="text-sm font-medium text-blue-700">
-                    Focused Building Rooms
+                    Highlighted Building Rooms
                   </p>
                   <p className="text-2xl font-bold text-blue-600">
                     {
@@ -529,7 +532,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Room List for Focused Building */}
+          {/* Room List for Highlighted Building */}
           {focusBuilding && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-2">
@@ -569,7 +572,7 @@ export default function App() {
                 <strong>Click & drag:</strong> Pan around map
               </p>
               <p>
-                <strong>Click buildings:</strong> Show/hide rooms
+                <strong>Click buildings:</strong> Highlight rooms
               </p>
               <p>
                 <strong>Click rooms:</strong> Select and get info
