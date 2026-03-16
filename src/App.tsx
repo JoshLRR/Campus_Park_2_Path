@@ -360,7 +360,8 @@ export default function App() {
           <div>
             <h3 className="text-lg font-semibold mb-2">Buildings</h3>
             <p className="text-xs text-gray-600 mb-3 italic">
-              All rooms are always visible. Click buildings to highlight their rooms.
+              All rooms are always visible. Click buildings to highlight their
+              rooms.
             </p>
             {initialBuildings.map(b => (
               <div

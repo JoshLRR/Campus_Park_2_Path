@@ -99,25 +99,6 @@ export const RoomTile: React.FC<RoomTileProps> = ({
         onClick={handleClick}
       />
 
-      {/* Selection indicator */}
-      {isSelected && (
-        <circle
-          cx={x + width - 6}
-          cy={y + 6}
-          r={4}
-          fill="#dc2626"
-          stroke="white"
-          strokeWidth={1}
-        >
-          <animate
-            attributeName="r"
-            values="3;5;3"
-            dur="1.5s"
-            repeatCount="indefinite"
-          />
-        </circle>
-      )}
-
       {/* Room name text */}
       <text
         x={x + width / 2}

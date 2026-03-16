@@ -66,16 +66,16 @@ const WORLD_WIDTH = 2000;
 const WORLD_HEIGHT = 2000;
 
 export const MapView: React.FC<MapViewProps> = ({
-                                                  initialBuildings,
-                                                  selectedRoomId,
-                                                  focusBuildingId,
-                                                  rooms = [],
-                                                  startPoint,
-                                                  destinationPoint,
-                                                  onRoomSelect,
-                                                  onStartPointClear,
-                                                  onDestinationPointClear
-                                                }) => {
+  initialBuildings,
+  selectedRoomId,
+  focusBuildingId,
+  rooms = [],
+  startPoint,
+  destinationPoint,
+  onRoomSelect,
+  onStartPointClear,
+  onDestinationPointClear,
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Handle room click
@@ -86,7 +86,11 @@ export const MapView: React.FC<MapViewProps> = ({
   };
 
   // Handle room pointer down (for potential future dragging if needed)
-  const handleRoomPointerDown = (e: React.PointerEvent<SVGRectElement>, id: number) => {
+  // Will probably be removed later
+  const handleRoomPointerDown = (
+    e: React.PointerEvent<SVGRectElement>,
+    id: number, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     // Currently no dragging functionality - just prevent event bubbling
@@ -121,7 +125,9 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Buildings - Static, no movement */}
             {initialBuildings.map(building => {
               const isFocused = focusBuildingId === building.id;
-              const buildingRooms = rooms.filter(room => room.buildingId === building.id);
+              const buildingRooms = rooms.filter(
+                room => room.buildingId === building.id,
+              );
 
               return (
                 <g key={building.id}>
@@ -156,8 +162,11 @@ export const MapView: React.FC<MapViewProps> = ({
                     ry={6}
                     style={{
                       cursor: 'pointer',
-                      filter: isFocused ? 'drop-shadow(0 8px 25px rgba(59, 130, 246, 0.5))' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
-                      transition: 'fill 0.3s ease-in-out, stroke 0.3s ease-in-out, filter 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
+                      filter: isFocused
+                        ? 'drop-shadow(0 8px 25px rgba(59, 130, 246, 0.5))'
+                        : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
+                      transition:
+                        'fill 0.3s ease-in-out, stroke 0.3s ease-in-out, filter 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
                     }}
                   />
 
@@ -262,7 +271,13 @@ export const MapView: React.FC<MapViewProps> = ({
             <span>Destination</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-1 bg-purple-500" style={{background: 'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)'}}></div>
+            <div
+              className="w-6 h-1 bg-purple-500"
+              style={{
+                background:
+                  'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)',
+              }}
+            ></div>
             <span>Route</span>
           </div>
         </div>
@@ -270,7 +285,9 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* Instructions */}
       <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs max-w-48">
-        <p><strong>Controls:</strong></p>
+        <p>
+          <strong>Controls:</strong>
+        </p>
         <p>• Mouse wheel: Zoom</p>
         <p>• Drag: Pan around map</p>
         <p>• Click buildings: Highlight rooms</p>
