@@ -2,10 +2,10 @@ import {expect, test} from 'vitest';
 import {DijkstraAlgorithm} from '../logic/PathingComponent/application/DijkstraAlgorithm';
 import {RoomNode} from '../types/RoomNode';
 import {PathNode} from '../types/PathNode';
-import {RoomFeatures} from '../types/RoomFeatures';
 import {PathFeatures} from '../types/PathFeatures';
 import {Room} from '../types/Room';
 import type {Node} from '../types/Node';
+import {HardcodedGraphRepository} from '../repositories/HardcodedGraphRepository';
 
 /**
  * Shared test graph — mirrors the layout in HardcodedGraphRepository:
@@ -27,76 +27,7 @@ import type {Node} from '../types/Node';
  *   3 → 7   (3→2→1→4→7)     cost = 51
  */
 function buildTestGraph(): Node[] {
-  return [
-    new RoomNode(
-      0,
-      {x: 0, y: 0, floorNum: 0},
-      Room.A109,
-      [RoomFeatures.Classroom],
-      [{to: 1, distance: 10}],
-    ),
-    new PathNode(
-      1,
-      {x: 10, y: 0, floorNum: 0},
-      [
-        {to: 0, distance: 10},
-        {to: 2, distance: 15},
-        {to: 4, distance: 12},
-      ],
-      [PathFeatures.Paved, PathFeatures.Covered],
-    ),
-    new PathNode(
-      2,
-      {x: 25, y: 0, floorNum: 0},
-      [
-        {to: 1, distance: 15},
-        {to: 3, distance: 8},
-        {to: 5, distance: 14},
-      ],
-      [PathFeatures.Paved],
-    ),
-    new RoomNode(
-      3,
-      {x: 33, y: 0, floorNum: 0},
-      Room.A110,
-      [RoomFeatures.Classroom],
-      [{to: 2, distance: 8}],
-    ),
-    new PathNode(
-      4,
-      {x: 10, y: 12, floorNum: 0},
-      [
-        {to: 1, distance: 12},
-        {to: 5, distance: 20},
-        {to: 7, distance: 16},
-      ],
-      [PathFeatures.Paved, PathFeatures.ADA_Access],
-    ),
-    new PathNode(
-      5,
-      {x: 25, y: 14, floorNum: 0},
-      [
-        {to: 4, distance: 20},
-        {to: 2, distance: 14},
-        {to: 6, distance: 10},
-      ],
-      [PathFeatures.Paved],
-    ),
-    new RoomNode(
-      6,
-      {x: 45, y: 14, floorNum: 0},
-      Room.Parking_Lot_1A,
-      [RoomFeatures.Parking_Lot],
-      [{to: 5, distance: 10}],
-    ),
-    new RoomNode(
-      7,
-      {x: 10, y: 28, floorNum: 0},
-      Room.Parking_Lot_1B,
-      [RoomFeatures.Parking_Lot, RoomFeatures.Bus_Stop],
-      [{to: 4, distance: 16}],
-    ),
-  ];
+  return new HardcodedGraphRepository().getGraph();
 }
 
 // ================ POINT-TO-POINT TESTS ================

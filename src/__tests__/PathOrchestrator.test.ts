@@ -1,4 +1,16 @@
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
+
+vi.mock('../logging/index', () => ({
+  appLogger: {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+    child: vi.fn(),
+  },
+}));
 
 import {PathOrchestrator} from '../logic/PathingComponent/application/PathOrchestrator';
 import type {PathRequest} from '../types/PathRequest';
