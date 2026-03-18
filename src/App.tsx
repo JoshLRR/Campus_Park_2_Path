@@ -1,19 +1,25 @@
-
 import React, {useState, useEffect} from 'react';
-import {MapView, Room, NavigationPoint, Building} from './components/Map/MapView';
+import {
+  MapView,
+  Room,
+  NavigationPoint,
+  Building,
+} from './components/Map/MapView';
 import {GraphNode} from './components/Map/GraphOverlay';
 import './index.css';
 import './App.css';
 
-const initialBuildings: (Building & { id: number })[] = [];
+const initialBuildings: (Building & {id: number})[] = [];
 
 // Sample room data with positions within buildings
-const sampleRooms: (Room & { id: number })[] = [];
+const sampleRooms: (Room & {id: number})[] = [];
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-  const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(null);
+  const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(
+    null,
+  );
   const [focusBuilding, setFocusBuilding] = useState<number | null>(null);
   const [startPoint, setStartPoint] = useState<NavigationPoint | null>(null);
   const [destinationPoint, setDestinationPoint] =
@@ -41,7 +47,7 @@ export default function App() {
         console.error('Error loading graph data:', error);
       }
     };
-
+    // eslint-disable-next-line
     loadGraphData();
   }, []);
 
@@ -53,7 +59,7 @@ export default function App() {
   );
 
   // Helper function to get room position on map
-  const getRoomPosition = (room: Room & { id: number }) => {
+  const getRoomPosition = (room: Room & {id: number}) => {
     const building = initialBuildings.find(b => b.id === room.buildingId);
     if (!building) return {x: 0, y: 0};
     return {
@@ -81,7 +87,7 @@ export default function App() {
   };
 
   // Handle setting start point from regular room
-  const handleSetStartPoint = (room: Room & { id: number }) => {
+  const handleSetStartPoint = (room: Room & {id: number}) => {
     const position = getRoomPosition(room);
     setStartPoint({
       roomId: room.id,
@@ -104,7 +110,7 @@ export default function App() {
   };
 
   // Handle setting destination point from regular room
-  const handleSetDestination = (room: Room & { id: number }) => {
+  const handleSetDestination = (room: Room & {id: number}) => {
     const position = getRoomPosition(room);
     setDestinationPoint({
       roomId: room.id,
@@ -205,27 +211,70 @@ export default function App() {
             {/* Debug Information */}
             {showGraphDebug && (
               <div className="mt-3 p-3 bg-indigo-100 border border-indigo-300 rounded text-xs">
-                <h4 className="font-semibold text-indigo-800 mb-2">Debug Info</h4>
+                <h4 className="font-semibold text-indigo-800 mb-2">
+                  Debug Info
+                </h4>
                 <div className="space-y-1">
-                  <p><strong>Total Edges:</strong> {graphNodes.reduce((acc, node) => acc + node.neighbors.length, 0)}</p>
-                  <p><strong>Avg Connections per Node:</strong> {
-                    graphNodes.length > 0
-                      ? (graphNodes.reduce((acc, node) => acc + node.neighbors.length, 0) / graphNodes.length).toFixed(1)
-                      : '0'
-                  }</p>
-                  <p><strong>Rooms with Numbers:</strong> {graphNodes.filter(n => n.kind === 'room' && n.roomNumber).length}</p>
-                  <p><strong>Path Features Used:</strong> {[...new Set(graphNodes.flatMap(n => n.features || []))].length}</p>
+                  <p>
+                    <strong>Total Edges:</strong>{' '}
+                    {graphNodes.reduce(
+                      (acc, node) => acc + node.neighbors.length,
+                      0,
+                    )}
+                  </p>
+                  <p>
+                    <strong>Avg Connections per Node:</strong>{' '}
+                    {graphNodes.length > 0
+                      ? (
+                          graphNodes.reduce(
+                            (acc, node) => acc + node.neighbors.length,
+                            0,
+                          ) / graphNodes.length
+                        ).toFixed(1)
+                      : '0'}
+                  </p>
+                  <p>
+                    <strong>Rooms with Numbers:</strong>{' '}
+                    {
+                      graphNodes.filter(n => n.kind === 'room' && n.roomNumber)
+                        .length
+                    }
+                  </p>
+                  <p>
+                    <strong>Path Features Used:</strong>{' '}
+                    {
+                      [...new Set(graphNodes.flatMap(n => n.features || []))]
+                        .length
+                    }
+                  </p>
                 </div>
 
                 {/* Sample node details */}
                 {graphNodes.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-indigo-200">
-                    <p className="font-semibold text-indigo-800">Sample Node:</p>
-                    <p><strong>ID:</strong> {graphNodes[0].id}</p>
-                    <p><strong>Type:</strong> {graphNodes[0].kind}</p>
-                    <p><strong>Position:</strong> ({graphNodes[0].position.x.toFixed(1)}, {graphNodes[0].position.y.toFixed(1)})</p>
-                    <p><strong>Neighbors:</strong> {graphNodes[0].neighbors.length}</p>
-                    {graphNodes[0].roomNumber && <p><strong>Room:</strong> {graphNodes[0].roomNumber}</p>}
+                    <p className="font-semibold text-indigo-800">
+                      Sample Node:
+                    </p>
+                    <p>
+                      <strong>ID:</strong> {graphNodes[0].id}
+                    </p>
+                    <p>
+                      <strong>Type:</strong> {graphNodes[0].kind}
+                    </p>
+                    <p>
+                      <strong>Position:</strong> (
+                      {graphNodes[0].position.x.toFixed(1)},{' '}
+                      {graphNodes[0].position.y.toFixed(1)})
+                    </p>
+                    <p>
+                      <strong>Neighbors:</strong>{' '}
+                      {graphNodes[0].neighbors.length}
+                    </p>
+                    {graphNodes[0].roomNumber && (
+                      <p>
+                        <strong>Room:</strong> {graphNodes[0].roomNumber}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -295,7 +344,8 @@ export default function App() {
                 Type: {selectedGraphNode.kind} • ID: {selectedGraphNode.id}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Position: ({selectedGraphNode.position.x.toFixed(1)}, {selectedGraphNode.position.y.toFixed(1)})
+                Position: ({selectedGraphNode.position.x.toFixed(1)},{' '}
+                {selectedGraphNode.position.y.toFixed(1)})
               </p>
               <p className="text-xs text-gray-500">
                 Floor: {selectedGraphNode.position.floorNum}
@@ -303,11 +353,12 @@ export default function App() {
               <p className="text-xs text-gray-500">
                 Connections: {selectedGraphNode.neighbors.length}
               </p>
-              {selectedGraphNode.features && selectedGraphNode.features.length > 0 && (
-                <p className="text-xs text-gray-500">
-                  Features: {selectedGraphNode.features.join(', ')}
-                </p>
-              )}
+              {selectedGraphNode.features &&
+                selectedGraphNode.features.length > 0 && (
+                  <p className="text-xs text-gray-500">
+                    Features: {selectedGraphNode.features.join(', ')}
+                  </p>
+                )}
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => handleSetStartPointFromNode(selectedGraphNode)}
@@ -316,7 +367,9 @@ export default function App() {
                   Set as Start
                 </button>
                 <button
-                  onClick={() => handleSetDestinationFromNode(selectedGraphNode)}
+                  onClick={() =>
+                    handleSetDestinationFromNode(selectedGraphNode)
+                  }
                   className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
                 >
                   Set as Destination
@@ -595,34 +648,37 @@ export default function App() {
               </p>
               <div className="text-xs text-gray-500">
                 <p>
-                  Position: ({selectedGraphNode.position.x.toFixed(1)}, {selectedGraphNode.position.y.toFixed(1)})
+                  Position: ({selectedGraphNode.position.x.toFixed(1)},{' '}
+                  {selectedGraphNode.position.y.toFixed(1)})
                 </p>
-                <p>
-                  Floor: {selectedGraphNode.position.floorNum}
-                </p>
-                <p>
-                  Connections: {selectedGraphNode.neighbors.length}
-                </p>
-                {selectedGraphNode.features && selectedGraphNode.features.length > 0 && (
-                  <p>
-                    Features: {selectedGraphNode.features.join(', ')}
-                  </p>
-                )}
+                <p>Floor: {selectedGraphNode.position.floorNum}</p>
+                <p>Connections: {selectedGraphNode.neighbors.length}</p>
+                {selectedGraphNode.features &&
+                  selectedGraphNode.features.length > 0 && (
+                    <p>Features: {selectedGraphNode.features.join(', ')}</p>
+                  )}
               </div>
               {selectedGraphNode.neighbors.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-red-200">
-                  <p className="text-xs font-semibold text-red-700 mb-1">Connected to:</p>
+                  <p className="text-xs font-semibold text-red-700 mb-1">
+                    Connected to:
+                  </p>
                   <div className="text-xs text-gray-600 max-h-20 overflow-y-auto">
                     {selectedGraphNode.neighbors.slice(0, 5).map(neighbor => {
-                      const neighborNode = graphNodes.find(n => n.id === neighbor.to);
+                      const neighborNode = graphNodes.find(
+                        n => n.id === neighbor.to,
+                      );
                       return (
                         <p key={neighbor.to}>
-                          Node {neighbor.to} ({neighborNode?.kind || 'unknown'}) - {neighbor.distance.toFixed(1)}
+                          Node {neighbor.to} ({neighborNode?.kind || 'unknown'})
+                          - {neighbor.distance.toFixed(1)}
                         </p>
                       );
                     })}
                     {selectedGraphNode.neighbors.length > 5 && (
-                      <p className="text-gray-500">... and {selectedGraphNode.neighbors.length - 5} more</p>
+                      <p className="text-gray-500">
+                        ... and {selectedGraphNode.neighbors.length - 5} more
+                      </p>
                     )}
                   </div>
                 </div>
@@ -635,9 +691,7 @@ export default function App() {
             <h3 className="text-lg font-semibold mb-3">Graph Statistics</h3>
             <div className="space-y-3">
               <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">
-                  Total Nodes
-                </p>
+                <p className="text-sm font-medium text-gray-700">Total Nodes</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {graphNodes.length}
                 </p>
@@ -657,7 +711,10 @@ export default function App() {
               <div className="p-3 bg-gray-50 rounded-md">
                 <p className="text-sm font-medium text-gray-700">Total Edges</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {graphNodes.reduce((acc, node) => acc + node.neighbors.length, 0)}
+                  {graphNodes.reduce(
+                    (acc, node) => acc + node.neighbors.length,
+                    0,
+                  )}
                 </p>
               </div>
             </div>
@@ -672,12 +729,19 @@ export default function App() {
                   <div
                     key={node.id}
                     className={`p-2 border-b border-gray-100 text-xs cursor-pointer transition-colors ${
-                      selectedGraphNodeId === node.id ? 'bg-red-100 border-red-200' : 'hover:bg-gray-50'
+                      selectedGraphNodeId === node.id
+                        ? 'bg-red-100 border-red-200'
+                        : 'hover:bg-gray-50'
                     }`}
                     onClick={() => handleGraphNodeSelect(node.id)}
                   >
-                    <p><strong>#{node.id}</strong> ({node.kind})</p>
-                    <p>Pos: ({node.position.x.toFixed(1)}, {node.position.y.toFixed(1)})</p>
+                    <p>
+                      <strong>#{node.id}</strong> ({node.kind})
+                    </p>
+                    <p>
+                      Pos: ({node.position.x.toFixed(1)},{' '}
+                      {node.position.y.toFixed(1)})
+                    </p>
                     <p>Connections: {node.neighbors.length}</p>
                     {node.roomNumber && <p>Room: {node.roomNumber}</p>}
                   </div>

@@ -1,4 +1,3 @@
-
 /**
  * Map view component.
  *
@@ -52,11 +51,11 @@ export interface NavigationPoint {
 
 // Props - Accept buildings and rooms with external IDs but use indices internally
 interface MapViewProps {
-  initialBuildings: (Building & { id: number })[];
+  initialBuildings: (Building & {id: number})[];
   selectedRoomId?: number | null;
   selectedGraphNodeId?: number | null;
   focusBuildingId?: number | null;
-  rooms?: (Room & { id: number })[];
+  rooms?: (Room & {id: number})[];
   startPoint?: NavigationPoint | null;
   destinationPoint?: NavigationPoint | null;
   graphNodes?: GraphNode[];
@@ -71,24 +70,28 @@ const WORLD_WIDTH = 2500;
 const WORLD_HEIGHT = 2500;
 
 export const MapView: React.FC<MapViewProps> = ({
-                                                  initialBuildings,
-                                                  selectedRoomId,
-                                                  selectedGraphNodeId,
-                                                  focusBuildingId,
-                                                  rooms = [],
-                                                  startPoint,
-                                                  destinationPoint,
-                                                  graphNodes = [],
-                                                  showGraphDebug = false,
-                                                  onRoomSelect,
-                                                  onGraphNodeSelect,
-                                                  onStartPointClear,
-                                                  onDestinationPointClear
-                                                }) => {
+  initialBuildings,
+  selectedRoomId,
+  selectedGraphNodeId,
+  focusBuildingId,
+  rooms = [],
+  startPoint,
+  destinationPoint,
+  graphNodes = [],
+  showGraphDebug = false,
+  onRoomSelect,
+  onGraphNodeSelect,
+  onStartPointClear,
+  onDestinationPointClear,
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Handle room pointer down (for potential future dragging if needed)
-  const handleRoomPointerDown = (e: React.PointerEvent<SVGRectElement>, id: number) => {
+  // Will probably be deleted later
+  const handleRoomPointerDown = (
+    e: React.PointerEvent<SVGRectElement>, //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: number,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     // Currently no dragging functionality - just prevent event bubbling
@@ -160,7 +163,9 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Buildings - Static, no movement */}
             {initialBuildings.map((building, index) => {
               const isFocused = focusBuildingId === building.id;
-              const buildingRooms = rooms.filter(room => room.buildingId === building.id);
+              const buildingRooms = rooms.filter(
+                room => room.buildingId === building.id,
+              );
 
               return (
                 <g key={index}>
@@ -196,8 +201,11 @@ export const MapView: React.FC<MapViewProps> = ({
                     opacity={0.8} // Slightly transparent to show background
                     style={{
                       cursor: 'pointer',
-                      filter: isFocused ? 'drop-shadow(0 8px 25px rgba(59, 130, 246, 0.5))' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
-                      transition: 'fill 0.3s ease-in-out, stroke 0.3s ease-in-out, filter 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
+                      filter: isFocused
+                        ? 'drop-shadow(0 8px 25px rgba(59, 130, 246, 0.5))'
+                        : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
+                      transition:
+                        'fill 0.3s ease-in-out, stroke 0.3s ease-in-out, filter 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
                     }}
                   />
 
@@ -216,7 +224,7 @@ export const MapView: React.FC<MapViewProps> = ({
                       isDragging={false} // No dragging functionality
                       isSelected={selectedRoomId === room.id}
                       isHighlighted={focusBuildingId === room.buildingId}
-                      onPointerDown={(e) => handleRoomPointerDown(e, room.id)}
+                      onPointerDown={e => handleRoomPointerDown(e, room.id)}
                       onClick={() => handleRoomClick(room.id)}
                     />
                   ))}
@@ -286,7 +294,13 @@ export const MapView: React.FC<MapViewProps> = ({
             <span>Path Edge</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-1 bg-indigo-600" style={{background: 'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)'}}></div>
+            <div
+              className="w-6 h-1 bg-indigo-600"
+              style={{
+                background:
+                  'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)',
+              }}
+            ></div>
             <span>Room Connection</span>
           </div>
           <div className="flex items-center gap-2">
@@ -302,7 +316,13 @@ export const MapView: React.FC<MapViewProps> = ({
             <span>Destination</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-1 bg-purple-500" style={{background: 'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)'}}></div>
+            <div
+              className="w-6 h-1 bg-purple-500"
+              style={{
+                background:
+                  'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)',
+              }}
+            ></div>
             <span>Route</span>
           </div>
         </div>
@@ -310,7 +330,9 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* Instructions */}
       <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs max-w-48">
-        <p><strong>Controls:</strong></p>
+        <p>
+          <strong>Controls:</strong>
+        </p>
         <p>• Mouse wheel: Zoom</p>
         <p>• Drag: Pan around map</p>
         <p>• Click buildings: Highlight rooms</p>

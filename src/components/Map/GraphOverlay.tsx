@@ -29,15 +29,15 @@ interface GraphOverlayProps {
 const SCALE_FACTOR = 10; // Adjust this to fit your map scale
 
 export const GraphOverlay: React.FC<GraphOverlayProps> = ({
-                                                            nodes,
-                                                            worldWidth,
-                                                            worldHeight,
-                                                            showDebugInfo = false,
-                                                            selectedNodeId = null,
-                                                            onNodeClick,
-                                                          }) => {
+  nodes, //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  worldWidth, //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  worldHeight,
+  showDebugInfo = false,
+  selectedNodeId = null,
+  onNodeClick,
+}) => {
   // Convert graph coordinates to map coordinates
-  const scalePosition = (pos: { x: number; y: number }) => ({
+  const scalePosition = (pos: {x: number; y: number}) => ({
     x: pos.x * SCALE_FACTOR,
     y: pos.y * SCALE_FACTOR,
   });
@@ -49,7 +49,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
   };
 
   return (
-    <g style={{ zIndex: 3 }}>
+    <g style={{zIndex: 3}}>
       {/* Render edges first (so they appear behind nodes) */}
       {nodes.map(node => {
         const nodePos = scalePosition(node.position);
@@ -67,10 +67,14 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
               y1={nodePos.y}
               x2={neighborPos.x}
               y2={neighborPos.y}
-              stroke={showDebugInfo ? "#ec4899" : "#4f46e5"}
+              stroke={showDebugInfo ? '#ec4899' : '#4f46e5'}
               strokeWidth={showDebugInfo ? 3 : 2}
               opacity={showDebugInfo ? 0.8 : 0.6}
-              strokeDasharray={node.kind === 'path' && neighborNode.kind === 'path' ? "none" : "4,4"}
+              strokeDasharray={
+                node.kind === 'path' && neighborNode.kind === 'path'
+                  ? 'none'
+                  : '4,4'
+              }
             />
           );
         });
@@ -109,11 +113,27 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
             <circle
               cx={nodePos.x}
               cy={nodePos.y}
-              r={isRoom ? (showDebugInfo ? 10 : 8) : (showDebugInfo ? 8 : 6)}
-              fill={isRoom ? (showDebugInfo ? '#dc2626' : '#ef4444') : (showDebugInfo ? '#1d4ed8' : '#3b82f6')}
-              stroke={isSelected ? (isRoom ? '#dc2626' : '#1d4ed8') : (isRoom ? '#dc2626' : '#1d4ed8')}
-              strokeWidth={isSelected ? 3 : (showDebugInfo ? 3 : 2)}
-              opacity={isSelected ? 1.0 : (showDebugInfo ? 1.0 : 0.8)}
+              r={isRoom ? (showDebugInfo ? 10 : 8) : showDebugInfo ? 8 : 6}
+              fill={
+                isRoom
+                  ? showDebugInfo
+                    ? '#dc2626'
+                    : '#ef4444'
+                  : showDebugInfo
+                    ? '#1d4ed8'
+                    : '#3b82f6'
+              }
+              stroke={
+                isSelected
+                  ? isRoom
+                    ? '#dc2626'
+                    : '#1d4ed8'
+                  : isRoom
+                    ? '#dc2626'
+                    : '#1d4ed8'
+              }
+              strokeWidth={isSelected ? 3 : showDebugInfo ? 3 : 2}
+              opacity={isSelected ? 1.0 : showDebugInfo ? 1.0 : 0.8}
               style={{
                 cursor: 'pointer',
                 filter: isSelected
@@ -123,13 +143,13 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
                     : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                 transition: 'all 0.2s ease-in-out',
               }}
-              onClick={(e) => handleNodeClick(node.id, e)}
-              onMouseOver={(e) => {
+              onClick={e => handleNodeClick(node.id, e)}
+              onMouseOver={e => {
                 const target = e.target as SVGCircleElement;
                 target.style.transform = 'scale(1.2)';
                 target.style.transformOrigin = `${nodePos.x}px ${nodePos.y}px`;
               }}
-              onMouseOut={(e) => {
+              onMouseOut={e => {
                 const target = e.target as SVGCircleElement;
                 target.style.transform = 'scale(1)';
               }}
@@ -141,8 +161,12 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
               y={nodePos.y - (showDebugInfo ? 15 : 12)}
               textAnchor="middle"
               fontSize={showDebugInfo ? 12 : 10}
-              fontWeight={isSelected ? "bold" : (showDebugInfo ? "bold" : "normal")}
-              fill={isSelected ? "#000000" : (showDebugInfo ? "#000000" : "#1f2937")}
+              fontWeight={
+                isSelected ? 'bold' : showDebugInfo ? 'bold' : 'normal'
+              }
+              fill={
+                isSelected ? '#000000' : showDebugInfo ? '#000000' : '#1f2937'
+              }
               style={{
                 textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
                 pointerEvents: 'none',
@@ -169,32 +193,33 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
             )}
 
             {/* Distance labels on edges - only show in debug mode or for selected nodes */}
-            {(showDebugInfo || isSelected) && node.neighbors.map(neighbor => {
-              const neighborNode = nodes.find(n => n.id === neighbor.to);
-              if (!neighborNode) return null;
+            {(showDebugInfo || isSelected) &&
+              node.neighbors.map(neighbor => {
+                const neighborNode = nodes.find(n => n.id === neighbor.to);
+                if (!neighborNode) return null;
 
-              const neighborPos = scalePosition(neighborNode.position);
-              const midX = (nodePos.x + neighborPos.x) / 2;
-              const midY = (nodePos.y + neighborPos.y) / 2;
+                const neighborPos = scalePosition(neighborNode.position);
+                const midX = (nodePos.x + neighborPos.x) / 2;
+                const midY = (nodePos.y + neighborPos.y) / 2;
 
-              return (
-                <text
-                  key={`distance-${node.id}-${neighbor.to}`}
-                  x={midX}
-                  y={midY}
-                  textAnchor="middle"
-                  fontSize={showDebugInfo ? 9 : 8}
-                  fill={showDebugInfo ? "#000000" : "#6b7280"}
-                  fontWeight={showDebugInfo ? "bold" : "normal"}
-                  style={{
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  {neighbor.distance.toFixed(1)}
-                </text>
-              );
-            })}
+                return (
+                  <text
+                    key={`distance-${node.id}-${neighbor.to}`}
+                    x={midX}
+                    y={midY}
+                    textAnchor="middle"
+                    fontSize={showDebugInfo ? 9 : 8}
+                    fill={showDebugInfo ? '#000000' : '#6b7280'}
+                    fontWeight={showDebugInfo ? 'bold' : 'normal'}
+                    style={{
+                      textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {neighbor.distance.toFixed(1)}
+                  </text>
+                );
+              })}
 
             {/* Debug: Show neighbor count */}
             {showDebugInfo && (
@@ -221,7 +246,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
                 y={nodePos.y + (showDebugInfo ? 35 : 25)}
                 textAnchor="middle"
                 fontSize={10}
-                fill={isRoom ? "#dc2626" : "#1d4ed8"}
+                fill={isRoom ? '#dc2626' : '#1d4ed8'}
                 fontWeight="bold"
                 style={{
                   textShadow: '1px 1px 3px rgba(255,255,255,0.9)',

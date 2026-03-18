@@ -39,20 +39,20 @@ export interface RoomTileProps {
 }
 
 export const RoomTile: React.FC<RoomTileProps> = ({
-                                                    id: _id, // Mark as intentionally unused with underscore prefix
-                                                    x,
-                                                    y,
-                                                    width,
-                                                    height,
-                                                    name,
-                                                    isDragging,
-                                                    isSelected = false,
-                                                    isHighlighted = false,
-                                                    building,
-                                                    floor,
-                                                    onPointerDown,
-                                                    onClick,
-                                                  }) => {
+  id: _id, // Mark as intentionally unused with underscore prefix
+  x,
+  y,
+  width,
+  height,
+  name,
+  isDragging,
+  isSelected = false,
+  isHighlighted = false,
+  building,
+  floor,
+  onPointerDown,
+  onClick,
+}) => {
   // Determine fill color based on state
   const getFillColor = () => {
     if (isSelected) return '#ef4444'; // red-500
