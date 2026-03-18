@@ -92,7 +92,7 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-green-100 relative overflow-hidden"
+      className="w-full h-full bg-white relative overflow-hidden"
     >
       <TransformWrapper
         wheel={{step: 0.08}}
