@@ -34,25 +34,25 @@ export interface RoomTileProps {
   isHighlighted?: boolean;
   building?: string;
   floor?: number;
-  onPointerDown: (e: React.PointerEvent<SVGRectElement>, id: number) => void;
-  onClick?: (id: number) => void;
+  onPointerDown: (e: React.PointerEvent<SVGRectElement>) => void;
+  onClick?: () => void;
 }
 
 export const RoomTile: React.FC<RoomTileProps> = ({
-  id,
-  x,
-  y,
-  width,
-  height,
-  name,
-  isDragging,
-  isSelected = false,
-  isHighlighted = false,
-  building,
-  floor,
-  onPointerDown,
-  onClick,
-}) => {
+                                                    id: _id, // Mark as intentionally unused with underscore prefix
+                                                    x,
+                                                    y,
+                                                    width,
+                                                    height,
+                                                    name,
+                                                    isDragging,
+                                                    isSelected = false,
+                                                    isHighlighted = false,
+                                                    building,
+                                                    floor,
+                                                    onPointerDown,
+                                                    onClick,
+                                                  }) => {
   // Determine fill color based on state
   const getFillColor = () => {
     if (isSelected) return '#ef4444'; // red-500
@@ -71,12 +71,12 @@ export const RoomTile: React.FC<RoomTileProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onClick) {
-      onClick(id);
+      onClick();
     }
   };
 
   return (
-    <g>
+    <g data-room-id={_id}>
       {/* Room rectangle */}
       <rect
         x={x}
@@ -88,6 +88,7 @@ export const RoomTile: React.FC<RoomTileProps> = ({
         strokeWidth={isSelected ? 3 : 2}
         rx={4}
         ry={4}
+        opacity={0.9} // Slightly transparent to show background map
         style={{
           cursor: isDragging ? 'grabbing' : 'grab',
           filter: isSelected
@@ -95,7 +96,7 @@ export const RoomTile: React.FC<RoomTileProps> = ({
             : 'none',
           transition: 'all 0.2s ease-in-out',
         }}
-        onPointerDown={e => onPointerDown(e, id)}
+        onPointerDown={onPointerDown}
         onClick={handleClick}
       />
 

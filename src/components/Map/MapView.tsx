@@ -11,10 +11,10 @@ import {TransformWrapper, TransformComponent} from 'react-zoom-pan-pinch';
 import {RoomTile} from './RoomTile';
 import {StartMarker} from './StartMarker';
 import {DestinationMarker} from './DestinationMarker';
+import mapImage from '../../assets/map.png';
 
 // Building type
 export interface Building {
-  id: number;
   x: number;
   y: number;
   width: number;
@@ -30,7 +30,6 @@ export interface PolygonBuilding extends Building {
 
 // Room interface
 export interface Room {
-  id: number;
   name: string;
   building: string;
   buildingId: number;
@@ -49,12 +48,12 @@ export interface NavigationPoint {
   label: string;
 }
 
-// Props
+// Props - Accept buildings and rooms with external IDs but use indices internally
 interface MapViewProps {
-  initialBuildings: Building[];
+  initialBuildings: (Building & { id: number })[];
   selectedRoomId?: number | null;
   focusBuildingId?: number | null;
-  rooms?: Room[];
+  rooms?: (Room & { id: number })[];
   startPoint?: NavigationPoint | null;
   destinationPoint?: NavigationPoint | null;
   onRoomSelect?: (roomId: number) => void;
@@ -66,34 +65,28 @@ const WORLD_WIDTH = 2000;
 const WORLD_HEIGHT = 2000;
 
 export const MapView: React.FC<MapViewProps> = ({
-  initialBuildings,
-  selectedRoomId,
-  focusBuildingId,
-  rooms = [],
-  startPoint,
-  destinationPoint,
-  onRoomSelect,
-  onStartPointClear,
-  onDestinationPointClear,
-}) => {
+                                                  initialBuildings,
+                                                  selectedRoomId,
+                                                  focusBuildingId,
+                                                  rooms = [],
+                                                  startPoint,
+                                                  destinationPoint,
+                                                  onRoomSelect,
+                                                  onStartPointClear,
+                                                  onDestinationPointClear
+                                                }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Handle room click
-  const handleRoomClick = (roomId: number) => {
-    if (onRoomSelect) {
-      onRoomSelect(roomId);
-    }
-  };
-
   // Handle room pointer down (for potential future dragging if needed)
-  // Will probably be removed later
-  const handleRoomPointerDown = (
-    e: React.PointerEvent<SVGRectElement>,
-    id: number, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ) => {
+  const handleRoomPointerDown = (e: React.PointerEvent<SVGRectElement>, id: number) => {
     e.preventDefault();
     e.stopPropagation();
     // Currently no dragging functionality - just prevent event bubbling
+  };
+
+  // Handle room click
+  const handleRoomClick = (roomId: number) => {
+    onRoomSelect?.(roomId);
   };
 
   return (
@@ -117,20 +110,40 @@ export const MapView: React.FC<MapViewProps> = ({
             position: 'relative',
           }}
         >
+          {/* Background map image as HTML img element */}
+          <img
+            src={mapImage}
+            alt="Campus Map"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: WORLD_WIDTH,
+              height: WORLD_HEIGHT,
+              objectFit: 'cover',
+              opacity: 0.7,
+              pointerEvents: 'none', // Allow clicks to pass through to SVG elements
+              zIndex: 1,
+            }}
+          />
+
           <svg
             width={WORLD_WIDTH}
             height={WORLD_HEIGHT}
-            style={{position: 'absolute', top: 0, left: 0}}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 2, // Above the background image
+            }}
           >
             {/* Buildings - Static, no movement */}
-            {initialBuildings.map(building => {
+            {initialBuildings.map((building, index) => {
               const isFocused = focusBuildingId === building.id;
-              const buildingRooms = rooms.filter(
-                room => room.buildingId === building.id,
-              );
+              const buildingRooms = rooms.filter(room => room.buildingId === building.id);
 
               return (
-                <g key={building.id}>
+                <g key={index}>
                   {/* Building name - Positioned above the rectangle */}
                   <text
                     x={building.x + building.width / 2}
@@ -160,20 +173,18 @@ export const MapView: React.FC<MapViewProps> = ({
                     strokeWidth={isFocused ? 3 : 2}
                     rx={6}
                     ry={6}
+                    opacity={0.8} // Slightly transparent to show background
                     style={{
                       cursor: 'pointer',
-                      filter: isFocused
-                        ? 'drop-shadow(0 8px 25px rgba(59, 130, 246, 0.5))'
-                        : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
-                      transition:
-                        'fill 0.3s ease-in-out, stroke 0.3s ease-in-out, filter 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
+                      filter: isFocused ? 'drop-shadow(0 8px 25px rgba(59, 130, 246, 0.5))' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
+                      transition: 'fill 0.3s ease-in-out, stroke 0.3s ease-in-out, filter 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
                     }}
                   />
 
                   {/* All rooms within building - Always visible */}
-                  {buildingRooms.map(room => (
+                  {buildingRooms.map((room, roomIndex) => (
                     <RoomTile
-                      key={room.id}
+                      key={roomIndex}
                       id={room.id}
                       x={building.x + room.x}
                       y={building.y + room.y}
@@ -185,8 +196,8 @@ export const MapView: React.FC<MapViewProps> = ({
                       isDragging={false} // No dragging functionality
                       isSelected={selectedRoomId === room.id}
                       isHighlighted={focusBuildingId === room.buildingId}
-                      onPointerDown={handleRoomPointerDown}
-                      onClick={handleRoomClick}
+                      onPointerDown={(e) => handleRoomPointerDown(e, room.id)}
+                      onClick={() => handleRoomClick(room.id)}
                     />
                   ))}
                 </g>
@@ -271,13 +282,7 @@ export const MapView: React.FC<MapViewProps> = ({
             <span>Destination</span>
           </div>
           <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-1 bg-purple-500"
-              style={{
-                background:
-                  'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)',
-              }}
-            ></div>
+            <div className="w-6 h-1 bg-purple-500" style={{background: 'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)'}}></div>
             <span>Route</span>
           </div>
         </div>
@@ -285,9 +290,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* Instructions */}
       <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs max-w-48">
-        <p>
-          <strong>Controls:</strong>
-        </p>
+        <p><strong>Controls:</strong></p>
         <p>• Mouse wheel: Zoom</p>
         <p>• Drag: Pan around map</p>
         <p>• Click buildings: Highlight rooms</p>
