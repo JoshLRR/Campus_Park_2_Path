@@ -67,8 +67,8 @@ interface MapViewProps {
   onDestinationPointClear?: () => void;
 }
 
-const WORLD_WIDTH = 2000;
-const WORLD_HEIGHT = 2000;
+const WORLD_WIDTH = 2500;
+const WORLD_HEIGHT = 2500;
 
 export const MapView: React.FC<MapViewProps> = ({
                                                   initialBuildings,
@@ -126,8 +126,8 @@ export const MapView: React.FC<MapViewProps> = ({
             alt="Campus Map"
             style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
+              top: -30,
+              left: 100,
               width: WORLD_WIDTH,
               height: WORLD_HEIGHT,
               objectFit: 'cover',
