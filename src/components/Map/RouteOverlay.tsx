@@ -10,29 +10,29 @@ interface RouteOverlayProps {
 }
 
 export const RouteOverlay: React.FC<RouteOverlayProps> = ({
-  nodes,
-  routePath,
-  scalePosition,
-  totalDistance = 0
-}) => {
+                                                            nodes,
+                                                            routePath,
+                                                            scalePosition,
+                                                            totalDistance = 0
+                                                          }) => {
   if (routePath.length < 2) return null;
 
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
-  
+
   // Create path segments following the actual graph edges
   const pathSegments = [];
   for (let i = 0; i < routePath.length - 1; i++) {
     const currentNode = nodeMap.get(routePath[i]);
     const nextNode = nodeMap.get(routePath[i + 1]);
-    
+
     if (currentNode && nextNode) {
       // Verify that there's actually an edge between these nodes
       const edgeExists = currentNode.neighbors.some(neighbor => neighbor.to === nextNode.id);
-      
+
       if (edgeExists) {
         const startPos = scalePosition(currentNode.position);
         const endPos = scalePosition(nextNode.position);
-        
+
         pathSegments.push({
           start: startPos,
           end: endPos,
@@ -48,79 +48,56 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
 
   if (pathSegments.length === 0) return null;
 
+  // Create a single continuous path string for smooth animation
+  const createPathString = () => {
+    if (pathSegments.length === 0) return '';
+
+    let pathString = `M ${pathSegments[0].start.x} ${pathSegments[0].start.y}`;
+
+    for (const segment of pathSegments) {
+      pathString += ` L ${segment.end.x} ${segment.end.y}`;
+    }
+
+    return pathString;
+  };
+
+  const pathString = createPathString();
+
   return (
     <g style={{ zIndex: 15 }}>
-      {/* Route line segments following graph edges */}
-      {pathSegments.map((segment, index) => (
-        <g key={`route-segment-${index}`}>
-          {/* Background line (wider, darker) for better visibility */}
-          <line
-            x1={segment.start.x}
-            y1={segment.start.y}
-            x2={segment.end.x}
-            y2={segment.end.y}
-            stroke="#1f2937"
-            strokeWidth={10}
-            opacity={0.8}
-            strokeLinecap="round"
-          />
-          
-          {/* Main route line */}
-          <line
-            x1={segment.start.x}
-            y1={segment.start.y}
-            x2={segment.end.x}
-            y2={segment.end.y}
-            stroke="#fbbf24"
-            strokeWidth={6}
-            opacity={1.0}
-            strokeLinecap="round"
-          >
-            {/* Animated flow effect */}
-            <animate
-              attributeName="stroke-dasharray"
-              values="0,20;20,20;40,20"
-              dur="3s"
-              repeatCount="indefinite"
-            />
-          </line>
+      {/* Single continuous route path for smooth animation */}
+      <g>
+        {/* Background path (wider, darker) for better visibility */}
+        <path
+          d={pathString}
+          fill="none"
+          stroke="#1f2937"
+          strokeWidth={10}
+          opacity={0.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
-          {/* Direction indicators on longer segments */}
-          {index % 3 === 1 && ( // Show arrows on every 3rd segment to avoid clutter
-            <g>
-              <defs>
-                <marker
-                  id={`route-arrow-${index}`}
-                  markerWidth="12"
-                  markerHeight="8"
-                  refX="10"
-                  refY="4"
-                  orient="auto"
-                  markerUnits="strokeWidth"
-                >
-                  <polygon
-                    points="0 0, 12 4, 0 8"
-                    fill="#fbbf24"
-                    stroke="#1f2937"
-                    strokeWidth="1"
-                  />
-                </marker>
-              </defs>
-              
-              {/* Invisible line for arrow placement */}
-              <line
-                x1={segment.start.x}
-                y1={segment.start.y}
-                x2={segment.end.x}
-                y2={segment.end.y}
-                stroke="transparent"
-                strokeWidth={1}
-                markerEnd={`url(#route-arrow-${index})`}
-              />
-            </g>
-          )}
-        </g>
-      ))}
+        {/* Main route path with smooth flowing animation */}
+        <path
+          d={pathString}
+          fill="none"
+          stroke="#fbbf24"
+          strokeWidth={6}
+          opacity={1.0}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="15,10"
+        >
+          {/* Smooth continuous animation across entire path */}
+          <animate
+            attributeName="stroke-dashoffset"
+            values="25;0;-25"
+            dur="2s"
+            repeatCount="indefinite"
+          />
+        </path>
+      </g>
 
       {/* Route waypoint indicators */}
       {routePath.map((nodeId, index) => {
@@ -160,7 +137,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                 />
               )}
             </circle>
-            
+
             {/* Start/End labels */}
             {(isStart || isEnd) && (
               <>
@@ -178,7 +155,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                 >
                   {isStart ? 'START' : 'DESTINATION'}
                 </text>
-                
+
                 {/* Node type indicator */}
                 <text
                   x={pos.x}
@@ -225,7 +202,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
             const midSegment = pathSegments[midIndex];
             const midX = (midSegment.start.x + midSegment.end.x) / 2;
             const midY = (midSegment.start.y + midSegment.end.y) / 2;
-            
+
             return (
               <g>
                 {/* Background for route info */}
@@ -242,7 +219,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                     filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))'
                   }}
                 />
-                
+
                 {/* Distance text */}
                 <text
                   x={midX}
@@ -257,7 +234,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                 >
                   {totalDistance.toFixed(1)} units
                 </text>
-                
+
                 {/* Route segment count */}
                 <text
                   x={midX}
