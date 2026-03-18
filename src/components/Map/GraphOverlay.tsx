@@ -86,6 +86,15 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
 
   return (
     <g style={{zIndex: 3}}>
+      {/* Define gradients for glow effects */}
+      <defs>
+        <radialGradient id="roomGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.8" />
+          <stop offset="70%" stopColor="#dc2626" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
       {/* Render edges first (so they appear behind nodes) */}
       {visibleNodes.map(node => {
         const nodePos = scalePosition(node.position);
@@ -129,25 +138,73 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
 
         return (
           <g key={`node-${node.id}`}>
-            {/* Selection highlight ring */}
+            {/* Selection highlight - different for rooms vs path nodes */}
             {isSelected && (
-              <circle
-                cx={nodePos.x}
-                cy={nodePos.y}
-                r={isRoom ? 18 : 16}
-                fill="none"
-                stroke={isRoom ? '#dc2626' : '#1d4ed8'}
-                strokeWidth={4}
-                opacity={0.6}
-                strokeDasharray="6,4"
-              >
-                <animate
-                  attributeName="stroke-dashoffset"
-                  values="0;10"
-                  dur="1s"
-                  repeatCount="indefinite"
-                />
-              </circle>
+              <>
+                {isRoom ? (
+                  // Glow effect for room nodes
+                  <>
+                    {/* Outer glow rings */}
+                    <circle
+                      cx={nodePos.x}
+                      cy={nodePos.y}
+                      r={20}
+                      fill="url(#roomGlow)"
+                    >
+                      <animate
+                        attributeName="r"
+                        values="20;25;20"
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0.6;0.3;0.6"
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                    <circle
+                      cx={nodePos.x}
+                      cy={nodePos.y}
+                      r={15}
+                      fill="url(#roomGlow)"
+                    >
+                      <animate
+                        attributeName="r"
+                        values="15;20;15"
+                        dur="1.5s"
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0.8;0.4;0.8"
+                        dur="1.5s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  </>
+                ) : (
+                  // Keep dashed circle for path nodes
+                  <circle
+                    cx={nodePos.x}
+                    cy={nodePos.y}
+                    r={16}
+                    fill="none"
+                    stroke="#1d4ed8"
+                    strokeWidth={4}
+                    opacity={0.6}
+                    strokeDasharray="6,4"
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      values="0;10"
+                      dur="1s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                )}
+              </>
             )}
 
             {/* Node circle */}
