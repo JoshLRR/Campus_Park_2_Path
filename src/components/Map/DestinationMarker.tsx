@@ -1,4 +1,3 @@
-
 /**
  * Destination marker component.
  *
@@ -23,12 +22,12 @@ interface DestinationMarkerProps {
 }
 
 export const DestinationMarker: React.FC<DestinationMarkerProps> = ({
-                                                                      x,
-                                                                      y,
-                                                                      label,
-                                                                      isAnimated = false,
-                                                                      onClick,
-                                                                    }) => {
+  x,
+  y,
+  label,
+  isAnimated = false,
+  onClick,
+}) => {
   return (
     <g onClick={onClick} style={{cursor: onClick ? 'pointer' : 'default'}}>
       {/* Animated ring effect */}

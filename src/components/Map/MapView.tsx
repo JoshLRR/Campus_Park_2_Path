@@ -1,4 +1,3 @@
-
 /**
  * Map view component.
  *
@@ -80,26 +79,26 @@ const WORLD_HEIGHT = 2500;
 const SCALE_FACTOR = 10; // Same as in GraphOverlay
 
 export const MapView: React.FC<MapViewProps> = ({
-                                                  initialBuildings,
-                                                  selectedRoomId,
-                                                  selectedGraphNodeId,
-                                                  focusBuildingId,
-                                                  rooms = [],
-                                                  startPoint,
-                                                  destinationPoint,
-                                                  graphNodes = [],
-                                                  showGraphDebug = false,
-                                                  showPathNodes = true,
-                                                  showPathEdges = true,
-                                                  showRoomConnections = true,
-                                                  showRoomNodes = true,
-                                                  currentRoute = null,
-                                                  showRoute = true,
-                                                  onRoomSelect,
-                                                  onGraphNodeSelect,
-                                                  onStartPointClear,
-                                                  onDestinationPointClear,
-                                                }) => {
+  initialBuildings,
+  selectedRoomId,
+  selectedGraphNodeId,
+  focusBuildingId,
+  rooms = [],
+  startPoint,
+  destinationPoint,
+  graphNodes = [],
+  showGraphDebug = false,
+  showPathNodes = true,
+  showPathEdges = true,
+  showRoomConnections = true,
+  showRoomNodes = true,
+  currentRoute = null,
+  showRoute = true,
+  onRoomSelect,
+  onGraphNodeSelect,
+  onStartPointClear,
+  onDestinationPointClear,
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Handle room pointer down (for potential future dragging if needed)
@@ -119,7 +118,7 @@ export const MapView: React.FC<MapViewProps> = ({
   };
 
   // Scale position function for route overlay
-  const scalePosition = (pos: { x: number; y: number }) => ({
+  const scalePosition = (pos: {x: number; y: number}) => ({
     x: pos.x * SCALE_FACTOR,
     y: pos.y * SCALE_FACTOR,
   });

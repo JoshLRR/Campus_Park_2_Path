@@ -1,5 +1,5 @@
 // src/components/Map/pathfinding.ts
-import { GraphNode } from './GraphOverlay';
+import {GraphNode} from './GraphOverlay';
 
 export interface PathResult {
   path: number[];
@@ -19,11 +19,11 @@ export class Pathfinder {
    */
   findPath(startNodeId: number, endNodeId: number): PathResult {
     if (!this.nodes.has(startNodeId) || !this.nodes.has(endNodeId)) {
-      return { path: [], totalDistance: 0, success: false };
+      return {path: [], totalDistance: 0, success: false};
     }
 
     if (startNodeId === endNodeId) {
-      return { path: [startNodeId], totalDistance: 0, success: true };
+      return {path: [startNodeId], totalDistance: 0, success: true};
     }
 
     // Initialize distances and previous nodes
@@ -95,14 +95,18 @@ export class Pathfinder {
     return {
       path: success ? path : [],
       totalDistance,
-      success
+      success,
     };
   }
 
   /**
    * Find the closest node to a given position
    */
-  findClosestNode(x: number, y: number, scaleInverse: number = 0.1): number | null {
+  findClosestNode(
+    x: number,
+    y: number,
+    scaleInverse: number = 0.1,
+  ): number | null {
     let closestNodeId: number | null = null;
     let minDistance = Infinity;
 
@@ -112,8 +116,8 @@ export class Pathfinder {
       const nodeY = node.position.y;
 
       const distance = Math.sqrt(
-        Math.pow(nodeX - (x * scaleInverse), 2) +
-        Math.pow(nodeY - (y * scaleInverse), 2)
+        Math.pow(nodeX - x * scaleInverse, 2) +
+          Math.pow(nodeY - y * scaleInverse, 2),
       );
 
       if (distance < minDistance) {

@@ -1,20 +1,19 @@
-
 import React from 'react';
-import { GraphNode } from './GraphOverlay';
+import {GraphNode} from './GraphOverlay';
 
 interface RouteOverlayProps {
   nodes: GraphNode[];
   routePath: number[];
-  scalePosition: (pos: { x: number; y: number }) => { x: number; y: number };
+  scalePosition: (pos: {x: number; y: number}) => {x: number; y: number};
   totalDistance?: number;
 }
 
 export const RouteOverlay: React.FC<RouteOverlayProps> = ({
-                                                            nodes,
-                                                            routePath,
-                                                            scalePosition,
-                                                            totalDistance = 0
-                                                          }) => {
+  nodes,
+  routePath,
+  scalePosition,
+  totalDistance = 0,
+}) => {
   if (routePath.length < 2) return null;
 
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
@@ -27,7 +26,9 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
 
     if (currentNode && nextNode) {
       // Verify that there's actually an edge between these nodes
-      const edgeExists = currentNode.neighbors.some(neighbor => neighbor.to === nextNode.id);
+      const edgeExists = currentNode.neighbors.some(
+        neighbor => neighbor.to === nextNode.id,
+      );
 
       if (edgeExists) {
         const startPos = scalePosition(currentNode.position);
@@ -38,10 +39,12 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
           end: endPos,
           index: i,
           startNode: currentNode,
-          endNode: nextNode
+          endNode: nextNode,
         });
       } else {
-        console.warn(`No edge found between nodes ${currentNode.id} and ${nextNode.id}`);
+        console.warn(
+          `No edge found between nodes ${currentNode.id} and ${nextNode.id}`,
+        );
       }
     }
   }
@@ -64,7 +67,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
   const pathString = createPathString();
 
   return (
-    <g style={{ zIndex: 15 }}>
+    <g style={{zIndex: 15}}>
       {/* Single continuous route path for smooth animation */}
       <g>
         {/* Background path (wider, darker) for better visibility */}
@@ -107,7 +110,8 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
         const pos = scalePosition(node.position);
         const isStart = index === 0;
         const isEnd = index === routePath.length - 1;
-        const isKeyWaypoint = isStart || isEnd || (index % 5 === 0 && index > 0); // Show every 5th waypoint
+        const isKeyWaypoint =
+          isStart || isEnd || (index % 5 === 0 && index > 0); // Show every 5th waypoint
 
         // Only show start, end, and key waypoints to avoid clutter
         if (!isKeyWaypoint) return null;
@@ -124,7 +128,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
               strokeWidth={3}
               opacity={1.0}
               style={{
-                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))'
+                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))',
               }}
             >
               {/* Pulsing animation for start and end points */}
@@ -216,7 +220,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                   strokeWidth={2}
                   rx={12}
                   style={{
-                    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))'
+                    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))',
                   }}
                 />
 
