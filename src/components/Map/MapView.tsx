@@ -1,3 +1,4 @@
+
 /**
  * Map view component.
  *
@@ -11,6 +12,7 @@ import {TransformWrapper, TransformComponent} from 'react-zoom-pan-pinch';
 import {RoomTile} from './RoomTile';
 import {StartMarker} from './StartMarker';
 import {DestinationMarker} from './DestinationMarker';
+import {GraphOverlay, GraphNode} from './GraphOverlay';
 import mapImage from '../../assets/map.png';
 
 // Building type
@@ -52,11 +54,15 @@ export interface NavigationPoint {
 interface MapViewProps {
   initialBuildings: (Building & { id: number })[];
   selectedRoomId?: number | null;
+  selectedGraphNodeId?: number | null;
   focusBuildingId?: number | null;
   rooms?: (Room & { id: number })[];
   startPoint?: NavigationPoint | null;
   destinationPoint?: NavigationPoint | null;
+  graphNodes?: GraphNode[];
+  showGraphDebug?: boolean;
   onRoomSelect?: (roomId: number) => void;
+  onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
   onDestinationPointClear?: () => void;
 }
@@ -67,11 +73,15 @@ const WORLD_HEIGHT = 2000;
 export const MapView: React.FC<MapViewProps> = ({
                                                   initialBuildings,
                                                   selectedRoomId,
+                                                  selectedGraphNodeId,
                                                   focusBuildingId,
                                                   rooms = [],
                                                   startPoint,
                                                   destinationPoint,
+                                                  graphNodes = [],
+                                                  showGraphDebug = false,
                                                   onRoomSelect,
+                                                  onGraphNodeSelect,
                                                   onStartPointClear,
                                                   onDestinationPointClear
                                                 }) => {
@@ -137,6 +147,16 @@ export const MapView: React.FC<MapViewProps> = ({
               zIndex: 2, // Above the background image
             }}
           >
+            {/* Graph overlay with nodes and edges */}
+            <GraphOverlay
+              nodes={graphNodes}
+              worldWidth={WORLD_WIDTH}
+              worldHeight={WORLD_HEIGHT}
+              showDebugInfo={showGraphDebug}
+              selectedNodeId={selectedGraphNodeId}
+              onNodeClick={onGraphNodeSelect}
+            />
+
             {/* Buildings - Static, no movement */}
             {initialBuildings.map((building, index) => {
               const isFocused = focusBuildingId === building.id;
@@ -254,24 +274,24 @@ export const MapView: React.FC<MapViewProps> = ({
         <h4 className="font-semibold mb-2">Legend</h4>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <span>Path Node</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span>Room Node</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-1 bg-indigo-600"></div>
+            <span>Path Edge</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-1 bg-indigo-600" style={{background: 'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)'}}></div>
+            <span>Room Connection</span>
+          </div>
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-sky-500 border border-black rounded-sm"></div>
             <span>Building</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 border-2 border-blue-600 rounded-sm"></div>
-            <span>Highlighted Building</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-sky-500 border border-gray-600 rounded-sm"></div>
-            <span>Room (Default)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-cyan-500 border border-cyan-600 rounded-sm"></div>
-            <span>Room (Highlighted)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 border-2 border-red-600 rounded-sm"></div>
-            <span>Selected Room</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
@@ -295,6 +315,7 @@ export const MapView: React.FC<MapViewProps> = ({
         <p>• Drag: Pan around map</p>
         <p>• Click buildings: Highlight rooms</p>
         <p>• Click rooms: Select</p>
+        <p>• Click graph nodes: Select node</p>
         <p>• Click markers: Remove</p>
       </div>
     </div>

@@ -1,26 +1,49 @@
-import React, {useState} from 'react';
-import {MapView, Room, NavigationPoint} from './components/Map/MapView';
+
+import React, {useState, useEffect} from 'react';
+import {MapView, Room, NavigationPoint, Building} from './components/Map/MapView';
+import {GraphNode} from './components/Map/GraphOverlay';
 import './index.css';
 import './App.css';
 
-const initialBuildings = [
-];
+const initialBuildings: (Building & { id: number })[] = [];
 
 // Sample room data with positions within buildings
-const sampleRooms: Room[] = [
-];
+const sampleRooms: (Room & { id: number })[] = [];
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+  const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(null);
   const [focusBuilding, setFocusBuilding] = useState<number | null>(null);
   const [startPoint, setStartPoint] = useState<NavigationPoint | null>(null);
   const [destinationPoint, setDestinationPoint] =
     useState<NavigationPoint | null>(null);
+  const [graphNodes, setGraphNodes] = useState<GraphNode[]>([]);
+
+  // Debug mode toggle
+  const [showGraphDebug, setShowGraphDebug] = useState(false);
 
   // Toggle states for sidebars
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
+
+  // Load graph data from graph.json
+  useEffect(() => {
+    const loadGraphData = async () => {
+      try {
+        const response = await fetch('/graph.json');
+        const data = await response.json();
+
+        if (data.nodes && Array.isArray(data.nodes)) {
+          setGraphNodes(data.nodes);
+        }
+      } catch (error) {
+        console.error('Error loading graph data:', error);
+      }
+    };
+
+    loadGraphData();
+  }, []);
 
   // Filter rooms based on search term
   const filteredRooms = sampleRooms.filter(
@@ -30,7 +53,7 @@ export default function App() {
   );
 
   // Helper function to get room position on map
-  const getRoomPosition = (room: Room) => {
+  const getRoomPosition = (room: Room & { id: number }) => {
     const building = initialBuildings.find(b => b.id === room.buildingId);
     if (!building) return {x: 0, y: 0};
     return {
@@ -44,13 +67,21 @@ export default function App() {
     const room = sampleRooms.find(r => r.id === roomId);
     if (room) {
       setSelectedRoomId(roomId);
+      setSelectedGraphNodeId(null); // Clear graph node selection
       setFocusBuilding(room.buildingId);
       setSearchTerm(''); // Clear search after selection
     }
   };
 
-  // Handle setting start point
-  const handleSetStartPoint = (room: Room) => {
+  // Handle graph node selection
+  const handleGraphNodeSelect = (nodeId: number) => {
+    setSelectedGraphNodeId(nodeId);
+    setSelectedRoomId(null); // Clear room selection
+    setFocusBuilding(null); // Clear building focus
+  };
+
+  // Handle setting start point from regular room
+  const handleSetStartPoint = (room: Room & { id: number }) => {
     const position = getRoomPosition(room);
     setStartPoint({
       roomId: room.id,
@@ -61,8 +92,19 @@ export default function App() {
     setSearchTerm('');
   };
 
-  // Handle setting destination point
-  const handleSetDestination = (room: Room) => {
+  // Handle setting start point from graph node
+  const handleSetStartPointFromNode = (node: GraphNode) => {
+    const SCALE_FACTOR = 10; // Same as in GraphOverlay
+    setStartPoint({
+      roomId: node.id,
+      x: node.position.x * SCALE_FACTOR,
+      y: node.position.y * SCALE_FACTOR,
+      label: node.roomNumber || `Node ${node.id}`,
+    });
+  };
+
+  // Handle setting destination point from regular room
+  const handleSetDestination = (room: Room & { id: number }) => {
     const position = getRoomPosition(room);
     setDestinationPoint({
       roomId: room.id,
@@ -73,9 +115,21 @@ export default function App() {
     setSearchTerm('');
   };
 
+  // Handle setting destination point from graph node
+  const handleSetDestinationFromNode = (node: GraphNode) => {
+    const SCALE_FACTOR = 10; // Same as in GraphOverlay
+    setDestinationPoint({
+      roomId: node.id,
+      x: node.position.x * SCALE_FACTOR,
+      y: node.position.y * SCALE_FACTOR,
+      label: node.roomNumber || `Node ${node.id}`,
+    });
+  };
+
   // Handle clearing selection
   const clearSelection = () => {
     setSelectedRoomId(null);
+    setSelectedGraphNodeId(null);
     setFocusBuilding(null);
   };
 
@@ -86,6 +140,11 @@ export default function App() {
   // Get selected room details
   const selectedRoom = selectedRoomId
     ? sampleRooms.find(r => r.id === selectedRoomId)
+    : null;
+
+  // Get selected graph node details
+  const selectedGraphNode = selectedGraphNodeId
+    ? graphNodes.find(n => n.id === selectedGraphNodeId)
     : null;
 
   // Calculate map width based on sidebar states
@@ -113,6 +172,64 @@ export default function App() {
             >
               ×
             </button>
+          </div>
+
+          {/* Graph Info with Debug Toggle */}
+          <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-md">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold text-indigo-800">
+                Graph Network
+              </h3>
+              <button
+                onClick={() => setShowGraphDebug(!showGraphDebug)}
+                className={`text-xs px-3 py-1 rounded transition-colors ${
+                  showGraphDebug
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-200 text-indigo-700 hover:bg-indigo-300'
+                }`}
+                title={showGraphDebug ? 'Hide debug info' : 'Show debug info'}
+              >
+                {showGraphDebug ? 'Debug ON' : 'Debug OFF'}
+              </button>
+            </div>
+            <p className="text-sm text-indigo-700">
+              {graphNodes.length} nodes loaded
+            </p>
+            <p className="text-xs text-indigo-600 mt-1">
+              Path nodes: {graphNodes.filter(n => n.kind === 'path').length}
+            </p>
+            <p className="text-xs text-indigo-600">
+              Room nodes: {graphNodes.filter(n => n.kind === 'room').length}
+            </p>
+
+            {/* Debug Information */}
+            {showGraphDebug && (
+              <div className="mt-3 p-3 bg-indigo-100 border border-indigo-300 rounded text-xs">
+                <h4 className="font-semibold text-indigo-800 mb-2">Debug Info</h4>
+                <div className="space-y-1">
+                  <p><strong>Total Edges:</strong> {graphNodes.reduce((acc, node) => acc + node.neighbors.length, 0)}</p>
+                  <p><strong>Avg Connections per Node:</strong> {
+                    graphNodes.length > 0
+                      ? (graphNodes.reduce((acc, node) => acc + node.neighbors.length, 0) / graphNodes.length).toFixed(1)
+                      : '0'
+                  }</p>
+                  <p><strong>Rooms with Numbers:</strong> {graphNodes.filter(n => n.kind === 'room' && n.roomNumber).length}</p>
+                  <p><strong>Path Features Used:</strong> {[...new Set(graphNodes.flatMap(n => n.features || []))].length}</p>
+                </div>
+
+                {/* Sample node details */}
+                {graphNodes.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-indigo-200">
+                    <p className="font-semibold text-indigo-800">Sample Node:</p>
+                    <p><strong>ID:</strong> {graphNodes[0].id}</p>
+                    <p><strong>Type:</strong> {graphNodes[0].kind}</p>
+                    <p><strong>Position:</strong> ({graphNodes[0].position.x.toFixed(1)}, {graphNodes[0].position.y.toFixed(1)})</p>
+                    <p><strong>Neighbors:</strong> {graphNodes[0].neighbors.length}</p>
+                    {graphNodes[0].roomNumber && <p><strong>Room:</strong> {graphNodes[0].roomNumber}</p>}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Navigation Status */}
@@ -154,6 +271,57 @@ export default function App() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Selected Graph Node Info */}
+          {selectedGraphNode && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold text-red-800">
+                  Selected Graph Node
+                </h3>
+                <button
+                  onClick={clearSelection}
+                  className="text-red-600 hover:text-red-800 font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="font-medium">
+                {selectedGraphNode.roomNumber || `Node ${selectedGraphNode.id}`}
+              </p>
+              <p className="text-sm text-gray-600">
+                Type: {selectedGraphNode.kind} • ID: {selectedGraphNode.id}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Position: ({selectedGraphNode.position.x.toFixed(1)}, {selectedGraphNode.position.y.toFixed(1)})
+              </p>
+              <p className="text-xs text-gray-500">
+                Floor: {selectedGraphNode.position.floorNum}
+              </p>
+              <p className="text-xs text-gray-500">
+                Connections: {selectedGraphNode.neighbors.length}
+              </p>
+              {selectedGraphNode.features && selectedGraphNode.features.length > 0 && (
+                <p className="text-xs text-gray-500">
+                  Features: {selectedGraphNode.features.join(', ')}
+                </p>
+              )}
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => handleSetStartPointFromNode(selectedGraphNode)}
+                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                >
+                  Set as Start
+                </button>
+                <button
+                  onClick={() => handleSetDestinationFromNode(selectedGraphNode)}
+                  className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
+                >
+                  Set as Destination
+                </button>
+              </div>
             </div>
           )}
 
@@ -335,11 +503,15 @@ export default function App() {
         <MapView
           initialBuildings={initialBuildings}
           selectedRoomId={selectedRoomId}
+          selectedGraphNodeId={selectedGraphNodeId}
           focusBuildingId={focusBuilding}
           rooms={sampleRooms}
           startPoint={startPoint}
           destinationPoint={destinationPoint}
+          graphNodes={graphNodes}
+          showGraphDebug={showGraphDebug}
           onRoomSelect={handleRoomSelect}
+          onGraphNodeSelect={handleGraphNodeSelect}
           onStartPointClear={clearStartPoint}
           onDestinationPointClear={clearDestination}
         />
@@ -392,7 +564,7 @@ export default function App() {
           {selectedRoom && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                Current Selection
+                Current Selection (Room)
               </h3>
               <p className="font-medium">{selectedRoom.name}</p>
               <p className="text-sm text-gray-600 mb-2">
@@ -409,65 +581,112 @@ export default function App() {
             </div>
           )}
 
-          {/* Building Statistics */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Campus Statistics</h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">
-                  Total Buildings
+          {/* Current Graph Node Selection Info */}
+          {selectedGraphNode && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">
+                Current Selection (Graph Node)
+              </h3>
+              <p className="font-medium">
+                {selectedGraphNode.roomNumber || `Node ${selectedGraphNode.id}`}
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                Type: {selectedGraphNode.kind} • ID: {selectedGraphNode.id}
+              </p>
+              <div className="text-xs text-gray-500">
+                <p>
+                  Position: ({selectedGraphNode.position.x.toFixed(1)}, {selectedGraphNode.position.y.toFixed(1)})
                 </p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {initialBuildings.length}
+                <p>
+                  Floor: {selectedGraphNode.position.floorNum}
                 </p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Total Rooms</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {sampleRooms.length}
+                <p>
+                  Connections: {selectedGraphNode.neighbors.length}
                 </p>
-              </div>
-              {focusBuilding && (
-                <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
-                  <p className="text-sm font-medium text-blue-700">
-                    Highlighted Building Rooms
+                {selectedGraphNode.features && selectedGraphNode.features.length > 0 && (
+                  <p>
+                    Features: {selectedGraphNode.features.join(', ')}
                   </p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {
-                      sampleRooms.filter(r => r.buildingId === focusBuilding)
-                        .length
-                    }
-                  </p>
+                )}
+              </div>
+              {selectedGraphNode.neighbors.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-red-200">
+                  <p className="text-xs font-semibold text-red-700 mb-1">Connected to:</p>
+                  <div className="text-xs text-gray-600 max-h-20 overflow-y-auto">
+                    {selectedGraphNode.neighbors.slice(0, 5).map(neighbor => {
+                      const neighborNode = graphNodes.find(n => n.id === neighbor.to);
+                      return (
+                        <p key={neighbor.to}>
+                          Node {neighbor.to} ({neighborNode?.kind || 'unknown'}) - {neighbor.distance.toFixed(1)}
+                        </p>
+                      );
+                    })}
+                    {selectedGraphNode.neighbors.length > 5 && (
+                      <p className="text-gray-500">... and {selectedGraphNode.neighbors.length - 5} more</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
+          )}
+
+          {/* Graph Statistics */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3">Graph Statistics</h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-gray-50 rounded-md">
+                <p className="text-sm font-medium text-gray-700">
+                  Total Nodes
+                </p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {graphNodes.length}
+                </p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md">
+                <p className="text-sm font-medium text-gray-700">Path Nodes</p>
+                <p className="text-2xl font-bold text-indigo-600">
+                  {graphNodes.filter(n => n.kind === 'path').length}
+                </p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md">
+                <p className="text-sm font-medium text-gray-700">Room Nodes</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {graphNodes.filter(n => n.kind === 'room').length}
+                </p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md">
+                <p className="text-sm font-medium text-gray-700">Total Edges</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {graphNodes.reduce((acc, node) => acc + node.neighbors.length, 0)}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Room List for Highlighted Building */}
-          {focusBuilding && (
+          {/* Debug Node List */}
+          {showGraphDebug && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">
-                {initialBuildings.find(b => b.id === focusBuilding)?.name} Rooms
-              </h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {sampleRooms
-                  .filter(room => room.buildingId === focusBuilding)
-                  .map(room => (
-                    <div
-                      key={room.id}
-                      className={`p-2 rounded border text-sm cursor-pointer transition-colors ${
-                        selectedRoomId === room.id
-                          ? 'bg-blue-100 border-blue-300'
-                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                      }`}
-                      onClick={() => handleRoomSelect(room.id)}
-                    >
-                      <p className="font-medium">{room.name}</p>
-                      <p className="text-xs text-gray-600">
-                        Floor {room.floor}
-                      </p>
-                    </div>
-                  ))}
+              <h3 className="text-lg font-semibold mb-3">Debug: Node List</h3>
+              <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
+                {graphNodes.slice(0, 20).map(node => (
+                  <div
+                    key={node.id}
+                    className={`p-2 border-b border-gray-100 text-xs cursor-pointer transition-colors ${
+                      selectedGraphNodeId === node.id ? 'bg-red-100 border-red-200' : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleGraphNodeSelect(node.id)}
+                  >
+                    <p><strong>#{node.id}</strong> ({node.kind})</p>
+                    <p>Pos: ({node.position.x.toFixed(1)}, {node.position.y.toFixed(1)})</p>
+                    <p>Connections: {node.neighbors.length}</p>
+                    {node.roomNumber && <p>Room: {node.roomNumber}</p>}
+                  </div>
+                ))}
+                {graphNodes.length > 20 && (
+                  <div className="p-2 text-xs text-gray-500 text-center">
+                    ... and {graphNodes.length - 20} more nodes
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -483,13 +702,13 @@ export default function App() {
                 <strong>Click & drag:</strong> Pan around map
               </p>
               <p>
-                <strong>Click buildings:</strong> Highlight rooms
+                <strong>Blue circles:</strong> Path nodes (clickable)
               </p>
               <p>
-                <strong>Click rooms:</strong> Select and get info
+                <strong>Red circles:</strong> Room nodes (clickable)
               </p>
               <p>
-                <strong>Click markers:</strong> Remove start/destination
+                <strong>Lines:</strong> Connections between nodes
               </p>
             </div>
           </div>
