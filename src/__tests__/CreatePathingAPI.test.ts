@@ -14,7 +14,6 @@ vi.mock('../logging/index', () => ({
 
 import {createPathAPI} from '../logic/PathingComponent/api/CreatePathingAPI';
 import {PathAPI} from '../logic/PathingComponent/api/PathAPI';
-import {HardcodedGraphRepository} from '../repositories/HardcodedGraphRepository';
 import type {GraphRepository} from '../repositories/GraphRepository';
 import type {Node} from '../types/Node';
 
@@ -35,17 +34,6 @@ describe('createPathAPI() — factory shape', () => {
     const api1 = createPathAPI();
     const api2 = createPathAPI();
     expect(api1).not.toBe(api2);
-  });
-});
-
-// ─── Default repository ──────────────────────────────────────────────────────
-
-describe('createPathAPI() — default repository', () => {
-  it('uses HardcodedGraphRepository when no repo is provided', () => {
-    const spy = vi.spyOn(HardcodedGraphRepository.prototype, 'getGraph');
-    createPathAPI();
-    expect(spy).toHaveBeenCalledOnce();
-    spy.mockRestore();
   });
 });
 

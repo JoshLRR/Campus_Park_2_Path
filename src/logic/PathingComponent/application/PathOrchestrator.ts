@@ -25,8 +25,7 @@ import type {PathAlgorithm} from './PathAlgorithm';
  */
 export class PathOrchestrator implements IPathOrchestrator {
   /**
-   * @param graph - Read-only campus graph used for all path computations.
-   *                Injected at construction time; the orchestrator does not mutate it.
+   * @param graph
    */
   constructor(private readonly graph: Node[]) {}
 
