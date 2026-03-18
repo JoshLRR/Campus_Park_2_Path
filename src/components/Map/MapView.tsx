@@ -14,7 +14,7 @@ import {DestinationMarker} from './DestinationMarker';
 import {GraphOverlay, GraphNode} from './GraphOverlay';
 import {RouteOverlay} from './RouteOverlay';
 import {PathResult} from './pathfinding';
-import mapImage from '../../assets/map.png';
+import mapImage from '../../assets/map-line-only.png';
 
 // Building type
 export interface Building {
