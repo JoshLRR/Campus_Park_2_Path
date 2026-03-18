@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react';
+
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   MapView,
   Room,
@@ -6,6 +7,7 @@ import {
   Building,
 } from './components/Map/MapView';
 import {GraphNode} from './components/Map/GraphOverlay';
+import {Pathfinder, PathResult} from './components/Map/pathfinding';
 import './index.css';
 import './App.css';
 
@@ -29,9 +31,19 @@ export default function App() {
   // Debug mode toggle
   const [showGraphDebug, setShowGraphDebug] = useState(false);
 
+  // Graph element visibility toggles
+  const [showPathNodes, setShowPathNodes] = useState(true);
+  const [showPathEdges, setShowPathEdges] = useState(true);
+  const [showRoomConnections, setShowRoomConnections] = useState(true);
+  const [showRoomNodes, setShowRoomNodes] = useState(true);
+  const [showRoute, setShowRoute] = useState(true);
+
   // Toggle states for sidebars
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
+
+  // Route state
+  const [currentRoute, setCurrentRoute] = useState<PathResult | null>(null);
 
   // Load graph data from graph.json
   useEffect(() => {
@@ -47,9 +59,33 @@ export default function App() {
         console.error('Error loading graph data:', error);
       }
     };
-    // eslint-disable-next-line
     loadGraphData();
   }, []);
+
+  // Create pathfinder instance
+  const pathfinder = useMemo(() => {
+    return graphNodes.length > 0 ? new Pathfinder(graphNodes) : null;
+  }, [graphNodes]);
+
+  // Calculate route when start and destination points change
+  useEffect(() => {
+    if (startPoint && destinationPoint && pathfinder) {
+      const SCALE_INVERSE = 0.1; // Inverse of SCALE_FACTOR from GraphOverlay
+
+      // Find closest nodes to start and destination points
+      const startNodeId = pathfinder.findClosestNode(startPoint.x, startPoint.y, SCALE_INVERSE);
+      const endNodeId = pathfinder.findClosestNode(destinationPoint.x, destinationPoint.y, SCALE_INVERSE);
+
+      if (startNodeId !== null && endNodeId !== null) {
+        const route = pathfinder.findPath(startNodeId, endNodeId);
+        setCurrentRoute(route);
+      } else {
+        setCurrentRoute(null);
+      }
+    } else {
+      setCurrentRoute(null);
+    }
+  }, [startPoint, destinationPoint, pathfinder]);
 
   // Filter rooms based on search term
   const filteredRooms = sampleRooms.filter(
@@ -140,8 +176,22 @@ export default function App() {
   };
 
   // Clear navigation points
-  const clearStartPoint = () => setStartPoint(null);
-  const clearDestination = () => setDestinationPoint(null);
+  const clearStartPoint = () => {
+    setStartPoint(null);
+    setCurrentRoute(null);
+  };
+
+  const clearDestination = () => {
+    setDestinationPoint(null);
+    setCurrentRoute(null);
+  };
+
+  // Clear route
+  const clearRoute = () => {
+    setStartPoint(null);
+    setDestinationPoint(null);
+    setCurrentRoute(null);
+  };
 
   // Get selected room details
   const selectedRoom = selectedRoomId
@@ -179,6 +229,164 @@ export default function App() {
               ×
             </button>
           </div>
+
+          {/* Graph Visibility Controls */}
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+            <h3 className="text-lg font-semibold text-green-800 mb-3">
+              Graph Display
+            </h3>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showPathNodes}
+                  onChange={(e) => setShowPathNodes(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  Show Path Nodes
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showRoomNodes}
+                  onChange={(e) => setShowRoomNodes(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  Show Room Nodes
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showPathEdges}
+                  onChange={(e) => setShowPathEdges(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="flex items-center gap-2">
+                  <div className="w-6 h-1 bg-indigo-600"></div>
+                  Show Path Edges
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showRoomConnections}
+                  onChange={(e) => setShowRoomConnections(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="flex items-center gap-2">
+                  <div
+                    className="w-6 h-1 bg-indigo-600"
+                    style={{
+                      background:
+                        'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)',
+                    }}
+                  ></div>
+                  Show Room Connections
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showRoute}
+                  onChange={(e) => setShowRoute(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="flex items-center gap-2">
+                  <div className="w-6 h-1 bg-yellow-500"></div>
+                  Show Route
+                </span>
+              </label>
+            </div>
+
+            <div className="mt-3 pt-2 border-t border-green-200 flex gap-2">
+              <button
+                onClick={() => {
+                  setShowPathNodes(true);
+                  setShowRoomNodes(true);
+                  setShowPathEdges(true);
+                  setShowRoomConnections(true);
+                  setShowRoute(true);
+                }}
+                className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors"
+              >
+                Show All
+              </button>
+              <button
+                onClick={() => {
+                  setShowPathNodes(false);
+                  setShowRoomNodes(false);
+                  setShowPathEdges(false);
+                  setShowRoomConnections(false);
+                  setShowRoute(false);
+                }}
+                className="text-xs bg-gray-600 text-white px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+              >
+                Hide All
+              </button>
+            </div>
+          </div>
+
+          {/* Route Information */}
+          {currentRoute && currentRoute.success && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                Current Route
+              </h3>
+              <div className="text-sm space-y-1">
+                <p><strong>Status:</strong> Route found!</p>
+                <p><strong>Distance:</strong> {currentRoute.totalDistance.toFixed(1)} units</p>
+                <p><strong>Waypoints:</strong> {currentRoute.path.length}</p>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={clearRoute}
+                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                >
+                  Clear Route
+                </button>
+                <button
+                  onClick={() => setShowRoute(!showRoute)}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    showRoute
+                      ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                      : 'bg-gray-400 text-white hover:bg-gray-500'
+                  }`}
+                >
+                  {showRoute ? 'Hide Route' : 'Show Route'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Route Error Display */}
+          {currentRoute && !currentRoute.success && startPoint && destinationPoint && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">
+                Route Error
+              </h3>
+              <p className="text-sm text-red-600">
+                No route could be found between the selected start and destination points.
+              </p>
+              <div className="mt-3">
+                <button
+                  onClick={clearRoute}
+                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                >
+                  Clear Points
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Graph Info with Debug Toggle */}
           <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-md">
@@ -226,11 +434,11 @@ export default function App() {
                     <strong>Avg Connections per Node:</strong>{' '}
                     {graphNodes.length > 0
                       ? (
-                          graphNodes.reduce(
-                            (acc, node) => acc + node.neighbors.length,
-                            0,
-                          ) / graphNodes.length
-                        ).toFixed(1)
+                        graphNodes.reduce(
+                          (acc, node) => acc + node.neighbors.length,
+                          0,
+                        ) / graphNodes.length
+                      ).toFixed(1)
                       : '0'}
                   </p>
                   <p>
@@ -246,6 +454,10 @@ export default function App() {
                       [...new Set(graphNodes.flatMap(n => n.features || []))]
                         .length
                     }
+                  </p>
+                  <p>
+                    <strong>Pathfinder Status:</strong>{' '}
+                    {pathfinder ? 'Ready' : 'Loading...'}
                   </p>
                 </div>
 
@@ -315,7 +527,13 @@ export default function App() {
               )}
               {startPoint && destinationPoint && (
                 <div className="mt-3 pt-2 border-t border-purple-200">
-                  <button className="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors">
+                  <button
+                    onClick={() => {
+                      // Future: Show detailed turn-by-turn directions
+                      console.log('Route details:', currentRoute);
+                    }}
+                    className="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors"
+                  >
                     Get Detailed Directions
                   </button>
                 </div>
@@ -563,6 +781,12 @@ export default function App() {
           destinationPoint={destinationPoint}
           graphNodes={graphNodes}
           showGraphDebug={showGraphDebug}
+          showPathNodes={showPathNodes}
+          showPathEdges={showPathEdges}
+          showRoomConnections={showRoomConnections}
+          showRoomNodes={showRoomNodes}
+          currentRoute={currentRoute}
+          showRoute={showRoute}
           onRoomSelect={handleRoomSelect}
           onGraphNodeSelect={handleGraphNodeSelect}
           onStartPointClear={clearStartPoint}
@@ -613,168 +837,69 @@ export default function App() {
             </button>
           </div>
 
-          {/* Current Selection Info */}
-          {selectedRoom && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                Current Selection (Room)
-              </h3>
-              <p className="font-medium">{selectedRoom.name}</p>
-              <p className="text-sm text-gray-600 mb-2">
-                {selectedRoom.building} • Floor {selectedRoom.floor}
-              </p>
-              <div className="text-xs text-gray-500">
-                <p>
-                  Position: ({selectedRoom.x}, {selectedRoom.y})
-                </p>
-                <p>
-                  Size: {selectedRoom.width || 30} × {selectedRoom.height || 20}
-                </p>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Map Statistics</h3>
+              <div className="text-sm space-y-1">
+                <p>Buildings: {initialBuildings.length}</p>
+                <p>Rooms: {sampleRooms.length}</p>
+                <p>Graph Nodes: {graphNodes.length}</p>
+                <p>Visible Path Nodes: {showPathNodes ? graphNodes.filter(n => n.kind === 'path').length : 0}</p>
+                <p>Visible Room Nodes: {showRoomNodes ? graphNodes.filter(n => n.kind === 'room').length : 0}</p>
+                <p>Pathfinder: {pathfinder ? 'Ready' : 'Loading...'}</p>
               </div>
             </div>
-          )}
 
-          {/* Current Graph Node Selection Info */}
-          {selectedGraphNode && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <h3 className="text-lg font-semibold text-red-800 mb-2">
-                Current Selection (Graph Node)
-              </h3>
-              <p className="font-medium">
-                {selectedGraphNode.roomNumber || `Node ${selectedGraphNode.id}`}
-              </p>
-              <p className="text-sm text-gray-600 mb-2">
-                Type: {selectedGraphNode.kind} • ID: {selectedGraphNode.id}
-              </p>
-              <div className="text-xs text-gray-500">
-                <p>
-                  Position: ({selectedGraphNode.position.x.toFixed(1)},{' '}
-                  {selectedGraphNode.position.y.toFixed(1)})
-                </p>
-                <p>Floor: {selectedGraphNode.position.floorNum}</p>
-                <p>Connections: {selectedGraphNode.neighbors.length}</p>
-                {selectedGraphNode.features &&
-                  selectedGraphNode.features.length > 0 && (
-                    <p>Features: {selectedGraphNode.features.join(', ')}</p>
-                  )}
-              </div>
-              {selectedGraphNode.neighbors.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-red-200">
-                  <p className="text-xs font-semibold text-red-700 mb-1">
-                    Connected to:
-                  </p>
-                  <div className="text-xs text-gray-600 max-h-20 overflow-y-auto">
-                    {selectedGraphNode.neighbors.slice(0, 5).map(neighbor => {
-                      const neighborNode = graphNodes.find(
-                        n => n.id === neighbor.to,
-                      );
+            {currentRoute && currentRoute.success && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Route Details</h3>
+                <div className="text-sm space-y-1">
+                  <p><strong>Status:</strong> Active route found</p>
+                  <p><strong>Total Distance:</strong> {currentRoute.totalDistance.toFixed(2)} units</p>
+                  <p><strong>Waypoints:</strong> {currentRoute.path.length}</p>
+                  <p><strong>Route Visible:</strong> {showRoute ? 'Yes' : 'No'}</p>
+                </div>
+
+                {/* Route waypoint list */}
+                <div className="mt-3">
+                  <h4 className="font-semibold mb-2">Waypoints:</h4>
+                  <div className="max-h-32 overflow-y-auto text-xs space-y-1">
+                    {currentRoute.path.map((nodeId, index) => {
+                      const node = graphNodes.find(n => n.id === nodeId);
                       return (
-                        <p key={neighbor.to}>
-                          Node {neighbor.to} ({neighborNode?.kind || 'unknown'})
-                          - {neighbor.distance.toFixed(1)}
-                        </p>
+                        <div key={nodeId} className="flex justify-between">
+                          <span>
+                            {index + 1}. {node?.roomNumber || `Node ${nodeId}`}
+                          </span>
+                          <span className="text-gray-500">
+                            {node?.kind}
+                          </span>
+                        </div>
                       );
                     })}
-                    {selectedGraphNode.neighbors.length > 5 && (
-                      <p className="text-gray-500">
-                        ... and {selectedGraphNode.neighbors.length - 5} more
-                      </p>
-                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* Graph Statistics */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Graph Statistics</h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Total Nodes</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {graphNodes.length}
-                </p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Path Nodes</p>
-                <p className="text-2xl font-bold text-indigo-600">
-                  {graphNodes.filter(n => n.kind === 'path').length}
-                </p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Room Nodes</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {graphNodes.filter(n => n.kind === 'room').length}
-                </p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-md">
-                <p className="text-sm font-medium text-gray-700">Total Edges</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {graphNodes.reduce(
-                    (acc, node) => acc + node.neighbors.length,
-                    0,
+            {selectedGraphNode && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Node Details</h3>
+                <div className="text-sm space-y-1">
+                  <p><strong>ID:</strong> {selectedGraphNode.id}</p>
+                  <p><strong>Type:</strong> {selectedGraphNode.kind}</p>
+                  <p><strong>Position:</strong> ({selectedGraphNode.position.x}, {selectedGraphNode.position.y})</p>
+                  <p><strong>Floor:</strong> {selectedGraphNode.position.floorNum}</p>
+                  <p><strong>Connections:</strong> {selectedGraphNode.neighbors.length}</p>
+                  {selectedGraphNode.roomNumber && (
+                    <p><strong>Room:</strong> {selectedGraphNode.roomNumber}</p>
                   )}
-                </p>
+                  {selectedGraphNode.features && selectedGraphNode.features.length > 0 && (
+                    <p><strong>Features:</strong> {selectedGraphNode.features.join(', ')}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Debug Node List */}
-          {showGraphDebug && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3">Debug: Node List</h3>
-              <div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
-                {graphNodes.slice(0, 20).map(node => (
-                  <div
-                    key={node.id}
-                    className={`p-2 border-b border-gray-100 text-xs cursor-pointer transition-colors ${
-                      selectedGraphNodeId === node.id
-                        ? 'bg-red-100 border-red-200'
-                        : 'hover:bg-gray-50'
-                    }`}
-                    onClick={() => handleGraphNodeSelect(node.id)}
-                  >
-                    <p>
-                      <strong>#{node.id}</strong> ({node.kind})
-                    </p>
-                    <p>
-                      Pos: ({node.position.x.toFixed(1)},{' '}
-                      {node.position.y.toFixed(1)})
-                    </p>
-                    <p>Connections: {node.neighbors.length}</p>
-                    {node.roomNumber && <p>Room: {node.roomNumber}</p>}
-                  </div>
-                ))}
-                {graphNodes.length > 20 && (
-                  <div className="p-2 text-xs text-gray-500 text-center">
-                    ... and {graphNodes.length - 20} more nodes
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Map Controls Help */}
-          <div className="mt-auto pt-4 border-t border-gray-200">
-            <h3 className="text-lg font-semibold mb-2">Map Controls</h3>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>
-                <strong>Mouse wheel:</strong> Zoom in/out
-              </p>
-              <p>
-                <strong>Click & drag:</strong> Pan around map
-              </p>
-              <p>
-                <strong>Blue circles:</strong> Path nodes (clickable)
-              </p>
-              <p>
-                <strong>Red circles:</strong> Room nodes (clickable)
-              </p>
-              <p>
-                <strong>Lines:</strong> Connections between nodes
-              </p>
-            </div>
+            )}
           </div>
         </div>
       </div>

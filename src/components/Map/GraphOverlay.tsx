@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export interface GraphNode {
@@ -22,6 +23,10 @@ interface GraphOverlayProps {
   worldHeight: number;
   showDebugInfo?: boolean;
   selectedNodeId?: number | null;
+  showPathNodes?: boolean;
+  showPathEdges?: boolean;
+  showRoomConnections?: boolean;
+  showRoomNodes?: boolean;
   onNodeClick?: (nodeId: number) => void;
 }
 
@@ -29,13 +34,17 @@ interface GraphOverlayProps {
 const SCALE_FACTOR = 10; // Adjust this to fit your map scale
 
 export const GraphOverlay: React.FC<GraphOverlayProps> = ({
-  nodes, //eslint-disable-next-line @typescript-eslint/no-unused-vars
-  worldWidth, //eslint-disable-next-line @typescript-eslint/no-unused-vars
-  worldHeight,
-  showDebugInfo = false,
-  selectedNodeId = null,
-  onNodeClick,
-}) => {
+                                                            nodes, //eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                                            worldWidth, //eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                                            worldHeight,
+                                                            showDebugInfo = false,
+                                                            selectedNodeId = null,
+                                                            showPathNodes = true,
+                                                            showPathEdges = true,
+                                                            showRoomConnections = true,
+                                                            showRoomNodes = true,
+                                                            onNodeClick,
+                                                          }) => {
   // Convert graph coordinates to map coordinates
   const scalePosition = (pos: {x: number; y: number}) => ({
     x: pos.x * SCALE_FACTOR,
@@ -48,17 +57,50 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
     onNodeClick?.(nodeId);
   };
 
+  // Filter nodes based on visibility settings
+  const getVisibleNodes = () => {
+    return nodes.filter(node => {
+      if (node.kind === 'path' && !showPathNodes) return false;
+      if (node.kind === 'room' && !showRoomNodes) return false;
+      return true;
+    });
+  };
+
+  const visibleNodes = getVisibleNodes();
+
+  // Check if an edge should be visible based on its endpoints and connection type
+  const isEdgeVisible = (sourceNode: GraphNode, targetNode: GraphNode) => {
+    // If either node is not visible, don't show the edge
+    if (!visibleNodes.includes(sourceNode) || !visibleNodes.includes(targetNode)) {
+      return false;
+    }
+
+    const isPathToPath = sourceNode.kind === 'path' && targetNode.kind === 'path';
+    const isRoomConnection = sourceNode.kind === 'room' || targetNode.kind === 'room';
+
+    if (isPathToPath && !showPathEdges) return false;
+    if (isRoomConnection && !showRoomConnections) return false;
+
+    return true;
+  };
+
   return (
     <g style={{zIndex: 3}}>
       {/* Render edges first (so they appear behind nodes) */}
-      {nodes.map(node => {
+      {visibleNodes.map(node => {
         const nodePos = scalePosition(node.position);
 
         return node.neighbors.map(neighbor => {
           const neighborNode = nodes.find(n => n.id === neighbor.to);
           if (!neighborNode) return null;
 
+          // Check if this edge should be visible
+          if (!isEdgeVisible(node, neighborNode)) return null;
+
           const neighborPos = scalePosition(neighborNode.position);
+
+          const isPathToPath = node.kind === 'path' && neighborNode.kind === 'path';
+          const isRoomConnection = node.kind === 'room' || neighborNode.kind === 'room';
 
           return (
             <line
@@ -70,18 +112,17 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
               stroke={showDebugInfo ? '#ec4899' : '#4f46e5'}
               strokeWidth={showDebugInfo ? 3 : 2}
               opacity={showDebugInfo ? 0.8 : 0.6}
-              strokeDasharray={
-                node.kind === 'path' && neighborNode.kind === 'path'
-                  ? 'none'
-                  : '4,4'
-              }
+              strokeDasharray={isPathToPath ? 'none' : '4,4'}
+              style={{
+                transition: 'opacity 0.3s ease-in-out',
+              }}
             />
           );
         });
       })}
 
       {/* Render nodes */}
-      {nodes.map(node => {
+      {visibleNodes.map(node => {
         const nodePos = scalePosition(node.position);
         const isRoom = node.kind === 'room';
         const isSelected = selectedNodeId === node.id;
@@ -197,6 +238,9 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
               node.neighbors.map(neighbor => {
                 const neighborNode = nodes.find(n => n.id === neighbor.to);
                 if (!neighborNode) return null;
+
+                // Only show distance label if the edge is visible
+                if (!isEdgeVisible(node, neighborNode)) return null;
 
                 const neighborPos = scalePosition(neighborNode.position);
                 const midX = (nodePos.x + neighborPos.x) / 2;

@@ -1,3 +1,4 @@
+
 /**
  * Map view component.
  *
@@ -12,6 +13,8 @@ import {RoomTile} from './RoomTile';
 import {StartMarker} from './StartMarker';
 import {DestinationMarker} from './DestinationMarker';
 import {GraphOverlay, GraphNode} from './GraphOverlay';
+import {RouteOverlay} from './RouteOverlay';
+import {PathResult} from './pathfinding';
 import mapImage from '../../assets/map.png';
 
 // Building type
@@ -60,6 +63,12 @@ interface MapViewProps {
   destinationPoint?: NavigationPoint | null;
   graphNodes?: GraphNode[];
   showGraphDebug?: boolean;
+  showPathNodes?: boolean;
+  showPathEdges?: boolean;
+  showRoomConnections?: boolean;
+  showRoomNodes?: boolean;
+  currentRoute?: PathResult | null;
+  showRoute?: boolean;
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
@@ -68,22 +77,29 @@ interface MapViewProps {
 
 const WORLD_WIDTH = 2500;
 const WORLD_HEIGHT = 2500;
+const SCALE_FACTOR = 10; // Same as in GraphOverlay
 
 export const MapView: React.FC<MapViewProps> = ({
-  initialBuildings,
-  selectedRoomId,
-  selectedGraphNodeId,
-  focusBuildingId,
-  rooms = [],
-  startPoint,
-  destinationPoint,
-  graphNodes = [],
-  showGraphDebug = false,
-  onRoomSelect,
-  onGraphNodeSelect,
-  onStartPointClear,
-  onDestinationPointClear,
-}) => {
+                                                  initialBuildings,
+                                                  selectedRoomId,
+                                                  selectedGraphNodeId,
+                                                  focusBuildingId,
+                                                  rooms = [],
+                                                  startPoint,
+                                                  destinationPoint,
+                                                  graphNodes = [],
+                                                  showGraphDebug = false,
+                                                  showPathNodes = true,
+                                                  showPathEdges = true,
+                                                  showRoomConnections = true,
+                                                  showRoomNodes = true,
+                                                  currentRoute = null,
+                                                  showRoute = true,
+                                                  onRoomSelect,
+                                                  onGraphNodeSelect,
+                                                  onStartPointClear,
+                                                  onDestinationPointClear,
+                                                }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Handle room pointer down (for potential future dragging if needed)
@@ -101,6 +117,12 @@ export const MapView: React.FC<MapViewProps> = ({
   const handleRoomClick = (roomId: number) => {
     onRoomSelect?.(roomId);
   };
+
+  // Scale position function for route overlay
+  const scalePosition = (pos: { x: number; y: number }) => ({
+    x: pos.x * SCALE_FACTOR,
+    y: pos.y * SCALE_FACTOR,
+  });
 
   return (
     <div
@@ -157,6 +179,10 @@ export const MapView: React.FC<MapViewProps> = ({
               worldHeight={WORLD_HEIGHT}
               showDebugInfo={showGraphDebug}
               selectedNodeId={selectedGraphNodeId}
+              showPathNodes={showPathNodes}
+              showPathEdges={showPathEdges}
+              showRoomConnections={showRoomConnections}
+              showRoomNodes={showRoomNodes}
               onNodeClick={onGraphNodeSelect}
             />
 
@@ -232,6 +258,16 @@ export const MapView: React.FC<MapViewProps> = ({
               );
             })}
 
+            {/* Route overlay - shows the path following graph edges */}
+            {currentRoute && currentRoute.success && showRoute && (
+              <RouteOverlay
+                nodes={graphNodes}
+                routePath={currentRoute.path}
+                scalePosition={scalePosition}
+                totalDistance={currentRoute.totalDistance}
+              />
+            )}
+
             {/* Navigation markers */}
             {startPoint && (
               <StartMarker
@@ -252,27 +288,6 @@ export const MapView: React.FC<MapViewProps> = ({
                 onClick={onDestinationPointClear}
               />
             )}
-
-            {/* Simple path line between start and destination */}
-            {startPoint && destinationPoint && (
-              <line
-                x1={startPoint.x}
-                y1={startPoint.y}
-                x2={destinationPoint.x}
-                y2={destinationPoint.y}
-                stroke="#8b5cf6"
-                strokeWidth={3}
-                strokeDasharray="8,4"
-                opacity={0.7}
-              >
-                <animate
-                  attributeName="stroke-dashoffset"
-                  values="0;12"
-                  dur="1s"
-                  repeatCount="indefinite"
-                />
-              </line>
-            )}
           </svg>
         </TransformComponent>
       </TransformWrapper>
@@ -281,28 +296,36 @@ export const MapView: React.FC<MapViewProps> = ({
       <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg text-xs">
         <h4 className="font-semibold mb-2">Legend</h4>
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span>Path Node</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <span>Room Node</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-1 bg-indigo-600"></div>
-            <span>Path Edge</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-1 bg-indigo-600"
-              style={{
-                background:
-                  'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)',
-              }}
-            ></div>
-            <span>Room Connection</span>
-          </div>
+          {showPathNodes && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span>Path Node</span>
+            </div>
+          )}
+          {showRoomNodes && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span>Room Node</span>
+            </div>
+          )}
+          {showPathEdges && (
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-1 bg-indigo-600"></div>
+              <span>Path Edge</span>
+            </div>
+          )}
+          {showRoomConnections && (
+            <div className="flex items-center gap-2">
+              <div
+                className="w-6 h-1 bg-indigo-600"
+                style={{
+                  background:
+                    'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)',
+                }}
+              ></div>
+              <span>Room Connection</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-sky-500 border border-black rounded-sm"></div>
             <span>Building</span>
@@ -315,16 +338,12 @@ export const MapView: React.FC<MapViewProps> = ({
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
             <span>Destination</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-1 bg-purple-500"
-              style={{
-                background:
-                  'repeating-linear-gradient(90deg, #8b5cf6 0px, #8b5cf6 8px, transparent 8px, transparent 12px)',
-              }}
-            ></div>
-            <span>Route</span>
-          </div>
+          {showRoute && currentRoute && currentRoute.success && (
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-1 bg-yellow-500"></div>
+              <span>Route</span>
+            </div>
+          )}
         </div>
       </div>
 
