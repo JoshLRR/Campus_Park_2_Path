@@ -1,3 +1,4 @@
+
 /**
  * Destination marker component.
  *
@@ -22,12 +23,12 @@ interface DestinationMarkerProps {
 }
 
 export const DestinationMarker: React.FC<DestinationMarkerProps> = ({
-  x,
-  y,
-  label,
-  isAnimated = false,
-  onClick,
-}) => {
+                                                                      x,
+                                                                      y,
+                                                                      label,
+                                                                      isAnimated = false,
+                                                                      onClick,
+                                                                    }) => {
   return (
     <g onClick={onClick} style={{cursor: onClick ? 'pointer' : 'default'}}>
       {/* Animated ring effect */}
@@ -69,11 +70,8 @@ export const DestinationMarker: React.FC<DestinationMarkerProps> = ({
         }}
       />
 
-      {/* Flag icon */}
-      <polygon
-        points={`${x - 3},${y - 6} ${x + 6},${y - 3} ${x - 3},${y} ${x - 3},${y + 6}`}
-        fill="white"
-      />
+      {/* Inner dot - same as StartMarker */}
+      <circle cx={x} cy={y} r={4} fill="white" />
 
       {/* Label */}
       {label && (

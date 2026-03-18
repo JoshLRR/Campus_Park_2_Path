@@ -185,15 +185,6 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
                 transition: 'all 0.2s ease-in-out',
               }}
               onClick={e => handleNodeClick(node.id, e)}
-              onMouseOver={e => {
-                const target = e.target as SVGCircleElement;
-                target.style.transform = 'scale(1.2)';
-                target.style.transformOrigin = `${nodePos.x}px ${nodePos.y}px`;
-              }}
-              onMouseOut={e => {
-                const target = e.target as SVGCircleElement;
-                target.style.transform = 'scale(1)';
-              }}
             />
 
             {/* Node label */}
@@ -280,24 +271,6 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
                 }}
               >
                 {node.neighbors.length}
-              </text>
-            )}
-
-            {/* Selection indicator text */}
-            {isSelected && (
-              <text
-                x={nodePos.x}
-                y={nodePos.y + (showDebugInfo ? 35 : 25)}
-                textAnchor="middle"
-                fontSize={10}
-                fill={isRoom ? '#dc2626' : '#1d4ed8'}
-                fontWeight="bold"
-                style={{
-                  textShadow: '1px 1px 3px rgba(255,255,255,0.9)',
-                  pointerEvents: 'none',
-                }}
-              >
-                SELECTED
               </text>
             )}
           </g>

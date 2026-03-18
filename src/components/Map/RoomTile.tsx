@@ -1,3 +1,4 @@
+
 /**
  * Room tile component.
  *
@@ -39,20 +40,20 @@ export interface RoomTileProps {
 }
 
 export const RoomTile: React.FC<RoomTileProps> = ({
-  id: _id, // Mark as intentionally unused with underscore prefix
-  x,
-  y,
-  width,
-  height,
-  name,
-  isDragging,
-  isSelected = false,
-  isHighlighted = false,
-  building,
-  floor,
-  onPointerDown,
-  onClick,
-}) => {
+                                                    id: _id, // Mark as intentionally unused with underscore prefix
+                                                    x,
+                                                    y,
+                                                    width,
+                                                    height,
+                                                    name,
+                                                    isDragging,
+                                                    isSelected = false,
+                                                    isHighlighted = false,
+                                                    building,
+                                                    floor,
+                                                    onPointerDown,
+                                                    onClick,
+                                                  }) => {
   // Determine fill color based on state
   const getFillColor = () => {
     if (isSelected) return '#ef4444'; // red-500
@@ -75,8 +76,33 @@ export const RoomTile: React.FC<RoomTileProps> = ({
     }
   };
 
+  // Calculate center point for the selection ring
+  const centerX = x + width / 2;
+  const centerY = y + height / 2;
+
   return (
     <g data-room-id={_id}>
+      {/* Selection highlight ring - same as path node animation */}
+      {isSelected && (
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={Math.max(width, height) / 2 + 8}
+          fill="none"
+          stroke="#dc2626"
+          strokeWidth={4}
+          opacity={0.6}
+          strokeDasharray="6,4"
+        >
+          <animate
+            attributeName="stroke-dashoffset"
+            values="0;10"
+            dur="1s"
+            repeatCount="indefinite"
+          />
+        </circle>
+      )}
+
       {/* Room rectangle */}
       <rect
         x={x}
@@ -92,8 +118,8 @@ export const RoomTile: React.FC<RoomTileProps> = ({
         style={{
           cursor: isDragging ? 'grabbing' : 'grab',
           filter: isSelected
-            ? 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
-            : 'none',
+            ? 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6))'
+            : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
           transition: 'all 0.2s ease-in-out',
         }}
         onPointerDown={onPointerDown}
@@ -102,8 +128,8 @@ export const RoomTile: React.FC<RoomTileProps> = ({
 
       {/* Room name text */}
       <text
-        x={x + width / 2}
-        y={y + height / 2}
+        x={centerX}
+        y={centerY}
         textAnchor="middle"
         alignmentBaseline="middle"
         fill="white"
