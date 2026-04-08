@@ -1,8 +1,10 @@
 import {IPathOrchestrator} from './I_PathOrchestrator';
 import {appLogger} from '../../../logging/index';
-import type {Node} from '../../../types/Node';
+import type {Node, NodeId} from '../../../types/Node';
 import {PathRequest} from '../../../types/PathRequest';
 import {PathResult} from '../../../types/PathResponse';
+import {DijkstraAlgorithm} from './DijkstraAlgorithm';
+import type {PathAlgorithm} from './PathAlgorithm';
 
 /**
  * Coordinates the full routing workflow for a given `PathRequest`.
@@ -23,8 +25,7 @@ import {PathResult} from '../../../types/PathResponse';
  */
 export class PathOrchestrator implements IPathOrchestrator {
   /**
-   * @param graph - Read-only campus graph used for all path computations.
-   *                Injected at construction time; the orchestrator does not mutate it.
+   * @param graph
    */
   constructor(private readonly graph: Node[]) {}
 
@@ -45,9 +46,22 @@ export class PathOrchestrator implements IPathOrchestrator {
   async resolvePath(request: PathRequest): Promise<PathResult> {
     appLogger.debug('PathOrchestrator: resolving path', {request});
     try {
-      const result: PathResult = {status: 'not_found'};
+      // TODO: implement Context Decoration
 
-      // TODO: strategy selection, decoration, algorithm invocation
+      let startNodeId: NodeId;
+      if (request.origin.kind === 'node') {
+        startNodeId = request.origin.nodeId;
+      } else {
+        // TODO: implement coordinate-to-node resolution
+        throw new Error(
+          'PathOrchestrator: coordinate origin not yet supported',
+        );
+      }
+
+      const algorithm: PathAlgorithm = new DijkstraAlgorithm(this.graph);
+      const result = await algorithm.findPath(startNodeId, request.destination);
+
+      // TODO: implement Path Export
 
       if (result.status === 'not_found') {
         appLogger.warn('PathOrchestrator: no path found', {request});

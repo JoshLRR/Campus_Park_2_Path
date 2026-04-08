@@ -1,7 +1,8 @@
 import {PathAPI} from './PathAPI';
 import {PathOrchestrator} from '../application/PathOrchestrator';
 import type {GraphRepository} from '../../../repositories/GraphRepository';
-import {HardcodedGraphRepository} from '../../../repositories/HardcodedGraphRepository';
+import graphJson from '../../../repositories/graph.json';
+import {JsonGraphRepository} from '../../../repositories/JsonGraphRepository';
 
 /**
  * Factory function that constructs and wires the `PathAPI` with its dependencies.
@@ -16,7 +17,7 @@ import {HardcodedGraphRepository} from '../../../repositories/HardcodedGraphRepo
  * @returns A fully configured `PathAPI` ready to accept routing requests.
  */
 export function createPathAPI(
-  repo: GraphRepository = new HardcodedGraphRepository(),
+  repo: GraphRepository = new JsonGraphRepository(graphJson),
 ) {
   const orchestrator = new PathOrchestrator(repo.getGraph());
   return new PathAPI(orchestrator);

@@ -26,7 +26,6 @@ TODO: How to read each table and use it to write tests when that feature is adde
 	- " * " if there is a note about the test's implementation (there will be more information at the foot of the table)
 - "Value" is the input variable for the test
 - "File Name" for the path of the file it is testing
-- TODO : add more as we decide what this looks like
 
 ## Profiled Tests
 ### **(Example Component) Unit Tests**
