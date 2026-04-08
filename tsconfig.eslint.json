@@ -5,8 +5,11 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
-    "vitest.config.ts"
-  , "**/*.json"],
+    "vitest.config.ts",
+    "server",
+    "server/**/*.ts",
+    "**/*.json"
+  ],
   "exclude": [
     "node_modules",
     "dist",
