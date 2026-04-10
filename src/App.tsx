@@ -58,12 +58,14 @@ export default function App() {
         if (data.nodes && Array.isArray(data.nodes)) {
           setGraphNodes(data.nodes);
 
-          // Extract available floors from graph nodes
-          const floors = [
-            ...new Set(
-              data.nodes.map((node: GraphNode) => node.position.floorNum),
-            ),
-          ].sort((a, b) => a - b);
+          // Extract available floors from graph nodes with proper typing
+          const floorNumbers = data.nodes
+            .map((node: GraphNode) => node.position.floorNum)
+            .filter(
+              (floorNum): floorNum is number => typeof floorNum === 'number',
+            );
+
+          const floors = [...new Set(floorNumbers)].sort((a, b) => a - b);
           setAvailableFloors(floors);
 
           // Set current floor to the lowest available floor
@@ -75,8 +77,8 @@ export default function App() {
         console.error('Error loading graph data:', error);
       }
     };
-    // eslint-disable-next-line
-    loadGraphData();
+
+    void loadGraphData();
   }, []);
 
   // Create pathfinder instance

@@ -9,6 +9,14 @@ interface RouteOverlayProps {
   currentFloor: number;
 }
 
+interface RouteSegment {
+  start: {x: number; y: number};
+  end: {x: number; y: number};
+  index: number;
+  startNode: GraphNode;
+  endNode: GraphNode;
+}
+
 export const RouteOverlay: React.FC<RouteOverlayProps> = ({
   nodes,
   routePath,
@@ -21,7 +29,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
 
   // Filter route path to only include segments on current floor
-  const currentFloorSegments = [];
+  const currentFloorSegments: RouteSegment[] = [];
   for (let i = 0; i < routePath.length - 1; i++) {
     const currentNode = nodeMap.get(routePath[i]);
     const nextNode = nodeMap.get(routePath[i + 1]);
@@ -119,7 +127,10 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
   // Get nodes that are on current floor for waypoint display
   const currentFloorRouteNodes = routePath
     .map(nodeId => nodeMap.get(nodeId))
-    .filter(node => node && node.position.floorNum === currentFloor);
+    .filter(
+      (node): node is GraphNode =>
+        node !== undefined && node.position.floorNum === currentFloor,
+    );
 
   return (
     <g style={{zIndex: 15}}>
@@ -159,8 +170,6 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
 
       {/* Route waypoint indicators - only for nodes on current floor */}
       {currentFloorRouteNodes.map((node, index) => {
-        if (!node) return null;
-
         const pos = scalePosition(node.position);
         const originalIndex = routePath.indexOf(node.id);
         const isStart = originalIndex === 0;
@@ -316,18 +325,18 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight="bold"
-                  fill="#1f2937"
+                  fill="#f59e0b"
                   style={{
                     pointerEvents: 'none',
                   }}
                 >
-                  {totalDistance.toFixed(1)} units (total)
+                  Route: {totalDistance.toFixed(1)}
                 </text>
 
-                {/* Route segment count for current floor */}
+                {/* Floor indicator */}
                 <text
                   x={midX}
-                  y={midY - 10}
+                  y={midY - 8}
                   textAnchor="middle"
                   fontSize={9}
                   fill="#6b7280"
@@ -335,21 +344,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                     pointerEvents: 'none',
                   }}
                 >
-                  {currentFloorSegments.length} segments on Floor {currentFloor}
-                </text>
-
-                {/* Floor indicator */}
-                <text
-                  x={midX}
-                  y={midY}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fill="#f59e0b"
-                  style={{
-                    pointerEvents: 'none',
-                  }}
-                >
-                  Floor {currentFloor}
+                  Floor {currentFloor} segment
                 </text>
               </g>
             );
