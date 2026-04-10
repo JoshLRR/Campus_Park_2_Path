@@ -59,7 +59,7 @@ export default function App() {
           setGraphNodes(data.nodes);
 
           // Extract available floors from graph nodes with proper typing
-          const floorNumbers = data.nodes
+          const floorNumbers: number[] = data.nodes
             .map((node: GraphNode) => node.position.floorNum)
             .filter(
               (floorNum: number): floorNum is number =>
