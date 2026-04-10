@@ -62,10 +62,13 @@ export default function App() {
           const floorNumbers = data.nodes
             .map((node: GraphNode) => node.position.floorNum)
             .filter(
-              (floorNum): floorNum is number => typeof floorNum === 'number',
+              (floorNum: number): floorNum is number =>
+                typeof floorNum === 'number',
             );
 
-          const floors = [...new Set(floorNumbers)].sort((a, b) => a - b);
+          const floors: number[] = [...new Set(floorNumbers)].sort(
+            (a: number, b: number) => a - b,
+          );
           setAvailableFloors(floors);
 
           // Set current floor to the lowest available floor
