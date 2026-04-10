@@ -27,6 +27,10 @@ export default function App() {
     useState<NavigationPoint | null>(null);
   const [graphNodes, setGraphNodes] = useState<GraphNode[]>([]);
 
+  // Floor management
+  const [currentFloor, setCurrentFloor] = useState(1);
+  const [availableFloors, setAvailableFloors] = useState<number[]>([1]);
+
   // Debug mode toggle
   const [showGraphDebug, setShowGraphDebug] = useState(false);
 
@@ -53,6 +57,19 @@ export default function App() {
 
         if (data.nodes && Array.isArray(data.nodes)) {
           setGraphNodes(data.nodes);
+
+          // Extract available floors from graph nodes
+          const floors = [
+            ...new Set(
+              data.nodes.map((node: GraphNode) => node.position.floorNum),
+            ),
+          ].sort((a, b) => a - b);
+          setAvailableFloors(floors);
+
+          // Set current floor to the lowest available floor
+          if (floors.length > 0) {
+            setCurrentFloor(floors[0]);
+          }
         }
       } catch (error) {
         console.error('Error loading graph data:', error);
@@ -112,6 +129,28 @@ export default function App() {
     };
   };
 
+  // Handle floor change
+  const handleFloorChange = (floor: number) => {
+    setCurrentFloor(floor);
+
+    // Clear selection if selected room/node is not on the new floor
+    const selectedRoom = selectedRoomId
+      ? sampleRooms.find(r => r.id === selectedRoomId)
+      : null;
+    const selectedNode = selectedGraphNodeId
+      ? graphNodes.find(n => n.id === selectedGraphNodeId)
+      : null;
+
+    if (selectedRoom && selectedRoom.floor !== floor) {
+      setSelectedRoomId(null);
+      setFocusBuilding(null);
+    }
+
+    if (selectedNode && selectedNode.position.floorNum !== floor) {
+      setSelectedGraphNodeId(null);
+    }
+  };
+
   // Handle room selection from search or map
   const handleRoomSelect = (roomId: number) => {
     const room = sampleRooms.find(r => r.id === roomId);
@@ -120,14 +159,27 @@ export default function App() {
       setSelectedGraphNodeId(null); // Clear graph node selection
       setFocusBuilding(room.buildingId);
       setSearchTerm(''); // Clear search after selection
+
+      // Switch to the room's floor if different
+      if (room.floor !== currentFloor) {
+        setCurrentFloor(room.floor);
+      }
     }
   };
 
   // Handle graph node selection
   const handleGraphNodeSelect = (nodeId: number) => {
-    setSelectedGraphNodeId(nodeId);
-    setSelectedRoomId(null); // Clear room selection
-    setFocusBuilding(null); // Clear building focus
+    const node = graphNodes.find(n => n.id === nodeId);
+    if (node) {
+      setSelectedGraphNodeId(nodeId);
+      setSelectedRoomId(null); // Clear room selection
+      setFocusBuilding(null); // Clear building focus
+
+      // Switch to the node's floor if different
+      if (node.position.floorNum !== currentFloor) {
+        setCurrentFloor(node.position.floorNum);
+      }
+    }
   };
 
   // Handle setting start point from regular room
@@ -138,6 +190,7 @@ export default function App() {
       x: position.x,
       y: position.y,
       label: room.name,
+      floor: room.floor,
     });
     setSearchTerm('');
   };
@@ -150,6 +203,7 @@ export default function App() {
       x: node.position.x * SCALE_FACTOR,
       y: node.position.y * SCALE_FACTOR,
       label: node.roomNumber || `Node ${node.id}`,
+      floor: node.position.floorNum,
     });
   };
 
@@ -161,6 +215,7 @@ export default function App() {
       x: position.x,
       y: position.y,
       label: room.name,
+      floor: room.floor,
     });
     setSearchTerm('');
   };
@@ -173,6 +228,7 @@ export default function App() {
       x: node.position.x * SCALE_FACTOR,
       y: node.position.y * SCALE_FACTOR,
       label: node.roomNumber || `Node ${node.id}`,
+      floor: node.position.floorNum,
     });
   };
 
@@ -218,6 +274,23 @@ export default function App() {
     return 'w-full';
   };
 
+  // Get floor statistics
+  const getFloorStats = () => {
+    const currentFloorNodes = graphNodes.filter(
+      n => n.position.floorNum === currentFloor,
+    );
+    const currentFloorRooms = sampleRooms.filter(r => r.floor === currentFloor);
+
+    return {
+      nodes: currentFloorNodes.length,
+      pathNodes: currentFloorNodes.filter(n => n.kind === 'path').length,
+      roomNodes: currentFloorNodes.filter(n => n.kind === 'room').length,
+      rooms: currentFloorRooms.length,
+    };
+  };
+
+  const floorStats = getFloorStats();
+
   return (
     <div className="w-full h-screen flex relative">
       {/* Left Sidebar */}
@@ -237,6 +310,86 @@ export default function App() {
               ×
             </button>
           </div>
+
+          {/* Floor Information */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h3 className="text-lg font-semibold text-blue-800 mb-2">
+              Floor {currentFloor}
+            </h3>
+            <div className="text-sm space-y-1">
+              <p>
+                <strong>Graph nodes:</strong> {floorStats.nodes}
+              </p>
+              <p>
+                <strong>Path nodes:</strong> {floorStats.pathNodes}
+              </p>
+              <p>
+                <strong>Room nodes:</strong> {floorStats.roomNodes}
+              </p>
+              <p>
+                <strong>Rooms:</strong> {floorStats.rooms}
+              </p>
+            </div>
+
+            <div className="mt-3">
+              <p className="text-xs text-blue-600 mb-2">Available floors:</p>
+              <div className="flex flex-wrap gap-1">
+                {availableFloors.map(floor => (
+                  <button
+                    key={floor}
+                    onClick={() => handleFloorChange(floor)}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      floor === currentFloor
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
+                    }`}
+                  >
+                    {floor}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Cross-floor route warning */}
+          {currentRoute &&
+            currentRoute.success &&
+            (() => {
+              const routeFloors = [
+                ...new Set(
+                  currentRoute.path.map(nodeId => {
+                    const node = graphNodes.find(n => n.id === nodeId);
+                    return node ? node.position.floorNum : currentFloor;
+                  }),
+                ),
+              ].sort((a, b) => a - b);
+
+              return routeFloors.length > 1 ? (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <h3 className="text-lg font-semibold text-amber-800 mb-2">
+                    Multi-Floor Route
+                  </h3>
+                  <p className="text-sm text-amber-700 mb-2">
+                    This route spans multiple floors: {routeFloors.join(', ')}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {routeFloors.map(floor => (
+                      <button
+                        key={floor}
+                        onClick={() => handleFloorChange(floor)}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          floor === currentFloor
+                            ? 'bg-amber-600 text-white'
+                            : 'bg-amber-200 text-amber-800 hover:bg-amber-300'
+                        }`}
+                      >
+                        Floor {floor}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
 
           {/* Graph Visibility Controls */}
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
@@ -426,13 +579,16 @@ export default function App() {
               </button>
             </div>
             <p className="text-sm text-indigo-700">
-              {graphNodes.length} nodes loaded
+              {graphNodes.length} nodes total ({floorStats.nodes} on Floor{' '}
+              {currentFloor})
             </p>
             <p className="text-xs text-indigo-600 mt-1">
-              Path nodes: {graphNodes.filter(n => n.kind === 'path').length}
+              Path nodes: {graphNodes.filter(n => n.kind === 'path').length}{' '}
+              total ({floorStats.pathNodes} on Floor {currentFloor})
             </p>
             <p className="text-xs text-indigo-600">
-              Room nodes: {graphNodes.filter(n => n.kind === 'room').length}
+              Room nodes: {graphNodes.filter(n => n.kind === 'room').length}{' '}
+              total ({floorStats.roomNodes} on Floor {currentFloor})
             </p>
 
             {/* Debug Information */}
@@ -468,11 +624,8 @@ export default function App() {
                     }
                   </p>
                   <p>
-                    <strong>Path Features Used:</strong>{' '}
-                    {
-                      [...new Set(graphNodes.flatMap(n => n.features || []))]
-                        .length
-                    }
+                    <strong>Available Floors:</strong>{' '}
+                    {availableFloors.join(', ')}
                   </p>
                   <p>
                     <strong>Pathfinder Status:</strong>{' '}
@@ -496,6 +649,9 @@ export default function App() {
                       <strong>Position:</strong> (
                       {graphNodes[0].position.x.toFixed(1)},{' '}
                       {graphNodes[0].position.y.toFixed(1)})
+                    </p>
+                    <p>
+                      <strong>Floor:</strong> {graphNodes[0].position.floorNum}
                     </p>
                     <p>
                       <strong>Neighbors:</strong>{' '}
@@ -522,6 +678,12 @@ export default function App() {
                 <div className="mb-2 text-sm">
                   <span className="text-red-600 font-medium">Start:</span>{' '}
                   {startPoint.label}
+                  {startPoint.floor && (
+                    <span className="text-gray-500">
+                      {' '}
+                      (Floor {startPoint.floor})
+                    </span>
+                  )}
                   <button
                     onClick={clearStartPoint}
                     className="ml-2 text-red-500 hover:text-red-700"
@@ -536,6 +698,12 @@ export default function App() {
                     Destination:
                   </span>{' '}
                   {destinationPoint.label}
+                  {destinationPoint.floor && (
+                    <span className="text-gray-500">
+                      {' '}
+                      (Floor {destinationPoint.floor})
+                    </span>
+                  )}
                   <button
                     onClick={clearDestination}
                     className="ml-2 text-green-500 hover:text-green-700"
@@ -617,75 +785,82 @@ export default function App() {
 
           {/* Room Search Section */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Search Rooms</h3>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search rooms or buildings..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {searchTerm && (
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold">Room Search</h3>
+              {!isRightPanelOpen && (
                 <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setIsRightPanelOpen(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  title="Open room panel"
                 >
-                  ×
+                  Show Rooms
                 </button>
               )}
             </div>
+            <input
+              type="text"
+              placeholder="Search rooms or buildings..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
 
             {/* Search Results */}
-            {searchTerm && (
-              <div className="mt-3 max-h-60 overflow-y-auto border rounded-md bg-white shadow-sm">
-                <div className="p-2">
-                  <p className="text-sm text-gray-600 mb-2">
-                    {filteredRooms.length} room(s) found
-                  </p>
-                  {filteredRooms.map(room => (
-                    <div
-                      key={room.id}
-                      className="p-2 mb-1 border rounded bg-gray-50 hover:bg-blue-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div
-                          className="flex-1"
-                          onClick={() => handleRoomSelect(room.id)}
+            {searchTerm && filteredRooms.length > 0 && (
+              <div className="mt-3 max-h-40 overflow-y-auto">
+                <p className="text-sm text-gray-600 mb-2">
+                  {filteredRooms.length} results found
+                </p>
+                {filteredRooms.slice(0, 5).map(room => (
+                  <div
+                    key={room.id}
+                    className="mb-2 p-2 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-sm">{room.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {room.building} • Floor {room.floor}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 ml-2">
+                        <button
+                          onClick={() => handleSetStartPoint(room)}
+                          className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                          title="Set as start point"
                         >
-                          <p className="font-medium text-sm cursor-pointer">
-                            {room.name}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {room.building} • Floor {room.floor}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 ml-2">
-                          <button
-                            onClick={() => handleSetStartPoint(room)}
-                            className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                            title="Set as start point"
-                          >
-                            Start
-                          </button>
-                          <button
-                            onClick={() => handleSetDestination(room)}
-                            className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
-                            title="Set as destination"
-                          >
-                            Go
-                          </button>
-                        </div>
+                          Start
+                        </button>
+                        <button
+                          onClick={() => handleSetDestination(room)}
+                          className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
+                          title="Set as destination"
+                        >
+                          Dest
+                        </button>
+                        <button
+                          onClick={() => handleRoomSelect(room.id)}
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
+                          title="Select room"
+                        >
+                          Select
+                        </button>
                       </div>
                     </div>
-                  ))}
-                  {filteredRooms.length === 0 && (
-                    <p className="text-sm text-gray-500 italic p-2">
-                      No rooms found
-                    </p>
-                  )}
-                </div>
+                  </div>
+                ))}
+                {filteredRooms.length > 5 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Showing first 5 results. Continue typing to refine.
+                  </p>
+                )}
               </div>
+            )}
+
+            {searchTerm && filteredRooms.length === 0 && (
+              <p className="mt-2 text-sm text-gray-500">
+                No rooms found matching "{searchTerm}"
+              </p>
             )}
           </div>
 
@@ -723,73 +898,22 @@ export default function App() {
               </div>
             </div>
           )}
-
-          {/* Buildings List */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Buildings</h3>
-            <p className="text-xs text-gray-600 mb-3 italic">
-              All rooms are always visible. Click buildings to highlight their
-              rooms.
-            </p>
-            {initialBuildings.map(b => (
-              <div
-                key={b.id}
-                className={`p-3 mb-2 border rounded transition-colors cursor-pointer ${
-                  focusBuilding === b.id
-                    ? 'bg-blue-100 border-blue-300 shadow-md'
-                    : 'bg-white shadow-sm hover:bg-gray-50'
-                }`}
-                onClick={() =>
-                  setFocusBuilding(focusBuilding === b.id ? null : b.id)
-                }
-              >
-                <p className="font-semibold">{b.name}</p>
-                <p className="text-sm text-gray-600">
-                  Position: ({b.x}, {b.y}) | Size: ({b.width}×{b.height})
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Rooms: {sampleRooms.filter(r => r.buildingId === b.id).length}
-                </p>
-                {focusBuilding === b.id && (
-                  <div className="mt-2">
-                    <p className="text-xs text-blue-600 font-medium">
-                      🔍 Rooms are highlighted - Click to remove highlight
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Left Sidebar Toggle Button (when closed) */}
+      {/* Toggle button for closed sidebar */}
       {!isLeftSidebarOpen && (
         <button
           onClick={() => setIsLeftSidebarOpen(true)}
-          className="absolute top-4 left-4 z-20 bg-white border-2 border-gray-300 rounded-md p-2 shadow-lg hover:bg-gray-50 transition-colors"
-          title="Open navigation panel"
+          className="absolute top-4 left-4 z-10 bg-white p-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors"
+          title="Open sidebar"
         >
-          <svg
-            className="w-5 h-5 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
+          <span className="text-xl">☰</span>
         </button>
       )}
 
-      {/* Map Container */}
-      <div
-        className={`${getMapWidth()} h-full relative transition-all duration-300 ease-in-out`}
-      >
+      {/* Main Map View */}
+      <div className={getMapWidth()}>
         <MapView
           initialBuildings={initialBuildings}
           selectedRoomId={selectedRoomId}
@@ -806,158 +930,86 @@ export default function App() {
           showRoomNodes={showRoomNodes}
           currentRoute={currentRoute}
           showRoute={showRoute}
+          currentFloor={currentFloor}
+          availableFloors={availableFloors}
           onRoomSelect={handleRoomSelect}
           onGraphNodeSelect={handleGraphNodeSelect}
           onStartPointClear={clearStartPoint}
           onDestinationPointClear={clearDestination}
+          onFloorChange={handleFloorChange}
         />
-
-        {/* Right Panel Toggle Button */}
-        <button
-          onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
-          className="absolute top-4 right-4 z-10 bg-white border-2 border-gray-300 rounded-md p-2 shadow-lg hover:bg-gray-50 transition-colors"
-          title={isRightPanelOpen ? 'Close info panel' : 'Open info panel'}
-        >
-          <svg
-            className="w-5 h-5 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={
-                isRightPanelOpen
-                  ? 'M6 18L18 6M6 6l12 12'
-                  : 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-              }
-            />
-          </svg>
-        </button>
       </div>
 
-      {/* Right Info Panel */}
-      <div
-        className={`${isRightPanelOpen ? 'w-1/4' : 'w-0'} h-full bg-white border-l border-gray-200 overflow-hidden transition-all duration-300 ease-in-out`}
-      >
-        <div
-          className={`w-80 h-full p-6 overflow-auto ${isRightPanelOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Map Info</h2>
-            <button
-              onClick={() => setIsRightPanelOpen(false)}
-              className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-              title="Close info panel"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Map Statistics</h3>
-              <div className="text-sm space-y-1">
-                <p>Buildings: {initialBuildings.length}</p>
-                <p>Rooms: {sampleRooms.length}</p>
-                <p>Graph Nodes: {graphNodes.length}</p>
-                <p>
-                  Visible Path Nodes:{' '}
-                  {showPathNodes
-                    ? graphNodes.filter(n => n.kind === 'path').length
-                    : 0}
-                </p>
-                <p>
-                  Visible Room Nodes:{' '}
-                  {showRoomNodes
-                    ? graphNodes.filter(n => n.kind === 'room').length
-                    : 0}
-                </p>
-                <p>Pathfinder: {pathfinder ? 'Ready' : 'Loading...'}</p>
-              </div>
+      {/* Right Panel - Room List (Optional) */}
+      {isRightPanelOpen && (
+        <div className="w-1/4 h-full bg-gray-50 overflow-hidden transition-all duration-300 ease-in-out">
+          <div className="w-full h-full p-4 overflow-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                Rooms (Floor {currentFloor})
+              </h3>
+              <button
+                onClick={() => setIsRightPanelOpen(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                title="Close panel"
+              >
+                ×
+              </button>
             </div>
 
-            {currentRoute && currentRoute.success && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Route Details</h3>
-                <div className="text-sm space-y-1">
-                  <p>
-                    <strong>Status:</strong> Active route found
-                  </p>
-                  <p>
-                    <strong>Total Distance:</strong>{' '}
-                    {currentRoute.totalDistance.toFixed(2)} units
-                  </p>
-                  <p>
-                    <strong>Waypoints:</strong> {currentRoute.path.length}
-                  </p>
-                  <p>
-                    <strong>Route Visible:</strong> {showRoute ? 'Yes' : 'No'}
-                  </p>
-                </div>
-
-                {/* Route waypoint list */}
-                <div className="mt-3">
-                  <h4 className="font-semibold mb-2">Waypoints:</h4>
-                  <div className="max-h-32 overflow-y-auto text-xs space-y-1">
-                    {currentRoute.path.map((nodeId, index) => {
-                      const node = graphNodes.find(n => n.id === nodeId);
-                      return (
-                        <div key={nodeId} className="flex justify-between">
-                          <span>
-                            {index + 1}. {node?.roomNumber || `Node ${nodeId}`}
-                          </span>
-                          <span className="text-gray-500">{node?.kind}</span>
-                        </div>
-                      );
-                    })}
+            {/* Floor-specific room list */}
+            <div className="space-y-2">
+              {sampleRooms
+                .filter(room => room.floor === currentFloor)
+                .map(room => (
+                  <div
+                    key={room.id}
+                    className={`p-3 border rounded-md transition-colors cursor-pointer ${
+                      selectedRoomId === room.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleRoomSelect(room.id)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{room.name}</p>
+                        <p className="text-sm text-gray-500">{room.building}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleSetStartPoint(room);
+                          }}
+                          className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                        >
+                          Start
+                        </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleSetDestination(room);
+                          }}
+                          className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
+                        >
+                          Dest
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                ))}
 
-            {selectedGraphNode && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Node Details</h3>
-                <div className="text-sm space-y-1">
-                  <p>
-                    <strong>ID:</strong> {selectedGraphNode.id}
-                  </p>
-                  <p>
-                    <strong>Type:</strong> {selectedGraphNode.kind}
-                  </p>
-                  <p>
-                    <strong>Position:</strong> ({selectedGraphNode.position.x},{' '}
-                    {selectedGraphNode.position.y})
-                  </p>
-                  <p>
-                    <strong>Floor:</strong>{' '}
-                    {selectedGraphNode.position.floorNum}
-                  </p>
-                  <p>
-                    <strong>Connections:</strong>{' '}
-                    {selectedGraphNode.neighbors.length}
-                  </p>
-                  {selectedGraphNode.roomNumber && (
-                    <p>
-                      <strong>Room:</strong> {selectedGraphNode.roomNumber}
-                    </p>
-                  )}
-                  {selectedGraphNode.features &&
-                    selectedGraphNode.features.length > 0 && (
-                      <p>
-                        <strong>Features:</strong>{' '}
-                        {selectedGraphNode.features.join(', ')}
-                      </p>
-                    )}
-                </div>
-              </div>
-            )}
+              {sampleRooms.filter(room => room.floor === currentFloor)
+                .length === 0 && (
+                <p className="text-gray-500 text-center py-8">
+                  No rooms on Floor {currentFloor}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ interface RouteOverlayProps {
   routePath: number[];
   scalePosition: (pos: {x: number; y: number}) => {x: number; y: number};
   totalDistance?: number;
+  currentFloor: number;
 }
 
 export const RouteOverlay: React.FC<RouteOverlayProps> = ({
@@ -13,51 +14,100 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
   routePath,
   scalePosition,
   totalDistance = 0,
+  currentFloor,
 }) => {
   if (routePath.length < 2) return null;
 
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
 
-  // Create path segments following the actual graph edges
-  const pathSegments = [];
+  // Filter route path to only include segments on current floor
+  const currentFloorSegments = [];
   for (let i = 0; i < routePath.length - 1; i++) {
     const currentNode = nodeMap.get(routePath[i]);
     const nextNode = nodeMap.get(routePath[i + 1]);
 
     if (currentNode && nextNode) {
-      // Verify that there's actually an edge between these nodes
-      const edgeExists = currentNode.neighbors.some(
-        neighbor => neighbor.to === nextNode.id,
-      );
-
-      if (edgeExists) {
-        const startPos = scalePosition(currentNode.position);
-        const endPos = scalePosition(nextNode.position);
-
-        pathSegments.push({
-          start: startPos,
-          end: endPos,
-          index: i,
-          startNode: currentNode,
-          endNode: nextNode,
-        });
-      } else {
-        console.warn(
-          `No edge found between nodes ${currentNode.id} and ${nextNode.id}`,
+      // Only include segments where both nodes are on current floor
+      if (
+        currentNode.position.floorNum === currentFloor &&
+        nextNode.position.floorNum === currentFloor
+      ) {
+        // Verify that there's actually an edge between these nodes
+        const edgeExists = currentNode.neighbors.some(
+          neighbor => neighbor.to === nextNode.id,
         );
+
+        if (edgeExists) {
+          const startPos = scalePosition(currentNode.position);
+          const endPos = scalePosition(nextNode.position);
+
+          currentFloorSegments.push({
+            start: startPos,
+            end: endPos,
+            index: i,
+            startNode: currentNode,
+            endNode: nextNode,
+          });
+        } else {
+          console.warn(
+            `No edge found between nodes ${currentNode.id} and ${nextNode.id}`,
+          );
+        }
       }
     }
   }
 
-  if (pathSegments.length === 0) return null;
+  if (currentFloorSegments.length === 0) {
+    // Show message if route exists but not on current floor
+    const hasRouteOnOtherFloors = routePath.some(nodeId => {
+      const node = nodeMap.get(nodeId);
+      return node && node.position.floorNum !== currentFloor;
+    });
+
+    if (hasRouteOnOtherFloors) {
+      return (
+        <g style={{zIndex: 15}}>
+          <text
+            x={1250} // Center of map
+            y={200}
+            textAnchor="middle"
+            fontSize={14}
+            fontWeight="bold"
+            fill="#f59e0b"
+            style={{
+              textShadow: '2px 2px 4px rgba(255,255,255,0.9)',
+              pointerEvents: 'none',
+            }}
+          >
+            Route continues on other floors
+          </text>
+          <text
+            x={1250}
+            y={220}
+            textAnchor="middle"
+            fontSize={12}
+            fill="#6b7280"
+            style={{
+              textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
+              pointerEvents: 'none',
+            }}
+          >
+            Use floor selector to see full route
+          </text>
+        </g>
+      );
+    }
+
+    return null;
+  }
 
   // Create a single continuous path string for smooth animation
   const createPathString = () => {
-    if (pathSegments.length === 0) return '';
+    if (currentFloorSegments.length === 0) return '';
 
-    let pathString = `M ${pathSegments[0].start.x} ${pathSegments[0].start.y}`;
+    let pathString = `M ${currentFloorSegments[0].start.x} ${currentFloorSegments[0].start.y}`;
 
-    for (const segment of pathSegments) {
+    for (const segment of currentFloorSegments) {
       pathString += ` L ${segment.end.x} ${segment.end.y}`;
     }
 
@@ -65,6 +115,11 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
   };
 
   const pathString = createPathString();
+
+  // Get nodes that are on current floor for waypoint display
+  const currentFloorRouteNodes = routePath
+    .map(nodeId => nodeMap.get(nodeId))
+    .filter(node => node && node.position.floorNum === currentFloor);
 
   return (
     <g style={{zIndex: 15}}>
@@ -102,22 +157,22 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
         </path>
       </g>
 
-      {/* Route waypoint indicators */}
-      {routePath.map((nodeId, index) => {
-        const node = nodeMap.get(nodeId);
+      {/* Route waypoint indicators - only for nodes on current floor */}
+      {currentFloorRouteNodes.map((node, index) => {
         if (!node) return null;
 
         const pos = scalePosition(node.position);
-        const isStart = index === 0;
-        const isEnd = index === routePath.length - 1;
+        const originalIndex = routePath.indexOf(node.id);
+        const isStart = originalIndex === 0;
+        const isEnd = originalIndex === routePath.length - 1;
         const isKeyWaypoint =
-          isStart || isEnd || (index % 5 === 0 && index > 0); // Show every 5th waypoint
+          isStart || isEnd || (index % 3 === 0 && index > 0); // Show every 3rd waypoint on current floor
 
         // Only show start, end, and key waypoints to avoid clutter
         if (!isKeyWaypoint) return null;
 
         return (
-          <g key={`route-waypoint-${nodeId}`}>
+          <g key={`route-waypoint-${node.id}`}>
             {/* Waypoint circle with glow effect */}
             <circle
               cx={pos.x}
@@ -174,36 +229,66 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                 >
                   {node.roomNumber || `${node.kind} node`}
                 </text>
+
+                {/* Floor indicator */}
+                <text
+                  x={pos.x}
+                  y={pos.y + (isStart ? 35 : 35)}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fill="#6b7280"
+                  style={{
+                    textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  Floor {node.position.floorNum}
+                </text>
               </>
             )}
 
             {/* Step number for intermediate waypoints */}
             {!isStart && !isEnd && (
-              <text
-                x={pos.x}
-                y={pos.y + 3}
-                textAnchor="middle"
-                fontSize={10}
-                fontWeight="bold"
-                fill="#1f2937"
-                style={{
-                  pointerEvents: 'none',
-                }}
-              >
-                {index}
-              </text>
+              <>
+                <text
+                  x={pos.x}
+                  y={pos.y + 3}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fontWeight="bold"
+                  fill="#1f2937"
+                  style={{
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {originalIndex}
+                </text>
+                {/* Floor indicator for waypoints */}
+                <text
+                  x={pos.x}
+                  y={pos.y + 18}
+                  textAnchor="middle"
+                  fontSize={7}
+                  fill="#6b7280"
+                  style={{
+                    pointerEvents: 'none',
+                  }}
+                >
+                  F{node.position.floorNum}
+                </text>
+              </>
             )}
           </g>
         );
       })}
 
-      {/* Distance and route info indicator */}
-      {totalDistance > 0 && pathSegments.length > 0 && (
+      {/* Distance and route info indicator for current floor */}
+      {totalDistance > 0 && currentFloorSegments.length > 0 && (
         <g>
           {/* Find middle of route for info display */}
           {(() => {
-            const midIndex = Math.floor(pathSegments.length / 2);
-            const midSegment = pathSegments[midIndex];
+            const midIndex = Math.floor(currentFloorSegments.length / 2);
+            const midSegment = currentFloorSegments[midIndex];
             const midX = (midSegment.start.x + midSegment.end.x) / 2;
             const midY = (midSegment.start.y + midSegment.end.y) / 2;
 
@@ -211,10 +296,10 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
               <g>
                 {/* Background for route info */}
                 <rect
-                  x={midX - 45}
-                  y={midY - 30}
-                  width={90}
-                  height={25}
+                  x={midX - 55}
+                  y={midY - 35}
+                  width={110}
+                  height={35}
                   fill="rgba(255, 255, 255, 0.95)"
                   stroke="#f59e0b"
                   strokeWidth={2}
@@ -227,7 +312,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                 {/* Distance text */}
                 <text
                   x={midX}
-                  y={midY - 15}
+                  y={midY - 20}
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight="bold"
@@ -236,13 +321,13 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                     pointerEvents: 'none',
                   }}
                 >
-                  {totalDistance.toFixed(1)} units
+                  {totalDistance.toFixed(1)} units (total)
                 </text>
 
-                {/* Route segment count */}
+                {/* Route segment count for current floor */}
                 <text
                   x={midX}
-                  y={midY - 5}
+                  y={midY - 10}
                   textAnchor="middle"
                   fontSize={9}
                   fill="#6b7280"
@@ -250,7 +335,21 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
                     pointerEvents: 'none',
                   }}
                 >
-                  {pathSegments.length} segments
+                  {currentFloorSegments.length} segments on Floor {currentFloor}
+                </text>
+
+                {/* Floor indicator */}
+                <text
+                  x={midX}
+                  y={midY}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fill="#f59e0b"
+                  style={{
+                    pointerEvents: 'none',
+                  }}
+                >
+                  Floor {currentFloor}
                 </text>
               </g>
             );

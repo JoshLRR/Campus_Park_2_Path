@@ -23,6 +23,7 @@ export interface Building {
   width: number;
   height: number;
   name: string;
+  floors?: number[]; // Available floors in this building
 }
 
 export type Point = {x: number; y: number};
@@ -49,6 +50,7 @@ export interface NavigationPoint {
   x: number;
   y: number;
   label: string;
+  floor?: number; // Add floor information to navigation points
 }
 
 // Props - Accept buildings and rooms with external IDs but use indices internally
@@ -68,10 +70,13 @@ interface MapViewProps {
   showRoomNodes?: boolean;
   currentRoute?: PathResult | null;
   showRoute?: boolean;
+  currentFloor: number; // Current floor being displayed
+  availableFloors: number[]; // All available floors
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
   onDestinationPointClear?: () => void;
+  onFloorChange?: (floor: number) => void;
 }
 
 const WORLD_WIDTH = 2500;
@@ -94,12 +99,38 @@ export const MapView: React.FC<MapViewProps> = ({
   showRoomNodes = true,
   currentRoute = null,
   showRoute = true,
+  currentFloor,
+  availableFloors,
   onRoomSelect,
   onGraphNodeSelect,
   onStartPointClear,
   onDestinationPointClear,
+  onFloorChange,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Filter items based on current floor
+  const filterByFloor = <T extends {floor?: number}>(items: T[]): T[] => {
+    return items.filter(item => item.floor === currentFloor);
+  };
+
+  // Filter graph nodes by current floor
+  const currentFloorGraphNodes = graphNodes.filter(
+    node => node.position.floorNum === currentFloor,
+  );
+
+  // Filter rooms by current floor
+  const currentFloorRooms = filterByFloor(rooms);
+
+  // Filter buildings that have rooms/content on current floor
+  const buildingsWithCurrentFloorContent = initialBuildings.filter(building => {
+    const hasRoomsOnFloor = currentFloorRooms.some(
+      room => room.buildingId === building.id,
+    );
+    const hasFloorsProperty =
+      building.floors && building.floors.includes(currentFloor);
+    return hasRoomsOnFloor || hasFloorsProperty || currentFloor === 1; // Always show on floor 1 by default
+  });
 
   // Handle room pointer down (for potential future dragging if needed)
   // Will probably be deleted later
@@ -122,6 +153,12 @@ export const MapView: React.FC<MapViewProps> = ({
     x: pos.x * SCALE_FACTOR,
     y: pos.y * SCALE_FACTOR,
   });
+
+  // Check if navigation points are on current floor
+  const isStartPointOnCurrentFloor =
+    !startPoint?.floor || startPoint.floor === currentFloor;
+  const isDestinationPointOnCurrentFloor =
+    !destinationPoint?.floor || destinationPoint.floor === currentFloor;
 
   return (
     <div
@@ -147,7 +184,7 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Background map image as HTML img element */}
           <img
             src={mapImage}
-            alt="Campus Map"
+            alt={`Campus Map - Floor ${currentFloor}`}
             style={{
               position: 'absolute',
               top: -30,
@@ -171,9 +208,9 @@ export const MapView: React.FC<MapViewProps> = ({
               zIndex: 2, // Above the background image
             }}
           >
-            {/* Graph overlay with nodes and edges */}
+            {/* Graph overlay with nodes and edges - filtered by floor */}
             <GraphOverlay
-              nodes={graphNodes}
+              nodes={currentFloorGraphNodes}
               worldWidth={WORLD_WIDTH}
               worldHeight={WORLD_HEIGHT}
               showDebugInfo={showGraphDebug}
@@ -183,12 +220,13 @@ export const MapView: React.FC<MapViewProps> = ({
               showRoomConnections={showRoomConnections}
               showRoomNodes={showRoomNodes}
               onNodeClick={onGraphNodeSelect}
+              currentFloor={currentFloor}
             />
 
-            {/* Buildings - Static, no movement */}
-            {initialBuildings.map((building, index) => {
+            {/* Buildings - Only show those with content on current floor */}
+            {buildingsWithCurrentFloorContent.map((building, index) => {
               const isFocused = focusBuildingId === building.id;
-              const buildingRooms = rooms.filter(
+              const buildingRooms = currentFloorRooms.filter(
                 room => room.buildingId === building.id,
               );
 
@@ -210,6 +248,16 @@ export const MapView: React.FC<MapViewProps> = ({
                     }}
                   >
                     {building.name}
+                    {building.floors && building.floors.length > 1 && (
+                      <tspan
+                        x={building.x + building.width / 2}
+                        dy="12"
+                        fontSize={10}
+                        fill="#6b7280"
+                      >
+                        Floors: {building.floors.join(', ')}
+                      </tspan>
+                    )}
                   </text>
 
                   {/* Building rectangle - No movement, only color changes */}
@@ -234,7 +282,7 @@ export const MapView: React.FC<MapViewProps> = ({
                     }}
                   />
 
-                  {/* All rooms within building - Always visible */}
+                  {/* All rooms within building on current floor */}
                   {buildingRooms.map((room, roomIndex) => (
                     <RoomTile
                       key={roomIndex}
@@ -257,18 +305,19 @@ export const MapView: React.FC<MapViewProps> = ({
               );
             })}
 
-            {/* Route overlay - shows the path following graph edges */}
+            {/* Route overlay - shows the path following graph edges - filtered by floor */}
             {currentRoute && currentRoute.success && showRoute && (
               <RouteOverlay
-                nodes={graphNodes}
+                nodes={currentFloorGraphNodes}
                 routePath={currentRoute.path}
                 scalePosition={scalePosition}
                 totalDistance={currentRoute.totalDistance}
+                currentFloor={currentFloor}
               />
             )}
 
-            {/* Navigation markers */}
-            {startPoint && (
+            {/* Navigation markers - only show if on current floor */}
+            {startPoint && isStartPointOnCurrentFloor && (
               <StartMarker
                 x={startPoint.x}
                 y={startPoint.y}
@@ -278,7 +327,7 @@ export const MapView: React.FC<MapViewProps> = ({
               />
             )}
 
-            {destinationPoint && (
+            {destinationPoint && isDestinationPointOnCurrentFloor && (
               <DestinationMarker
                 x={destinationPoint.x}
                 y={destinationPoint.y}
@@ -291,9 +340,68 @@ export const MapView: React.FC<MapViewProps> = ({
         </TransformComponent>
       </TransformWrapper>
 
-      {/* Legend */}
+      {/* Floor indicator for off-floor navigation points */}
+      {startPoint && !isStartPointOnCurrentFloor && (
+        <div className="absolute bottom-24 right-4 bg-red-50 border border-red-200 p-2 rounded-lg shadow-lg text-xs">
+          <p className="text-red-700">
+            <strong>Start point</strong> is on Floor {startPoint.floor}
+          </p>
+          <button
+            onClick={() =>
+              startPoint.floor && onFloorChange?.(startPoint.floor)
+            }
+            className="text-red-600 hover:text-red-800 underline"
+          >
+            Go to Floor {startPoint.floor}
+          </button>
+        </div>
+      )}
+
+      {destinationPoint && !isDestinationPointOnCurrentFloor && (
+        <div className="absolute bottom-40 right-4 bg-green-50 border border-green-200 p-2 rounded-lg shadow-lg text-xs">
+          <p className="text-green-700">
+            <strong>Destination</strong> is on Floor {destinationPoint.floor}
+          </p>
+          <button
+            onClick={() =>
+              destinationPoint.floor && onFloorChange?.(destinationPoint.floor)
+            }
+            className="text-green-600 hover:text-green-800 underline"
+          >
+            Go to Floor {destinationPoint.floor}
+          </button>
+        </div>
+      )}
+
+      {/* Floor Selector - Moved to Bottom Right */}
+      <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg">
+        <h4 className="font-semibold mb-2 text-sm">Floor</h4>
+        <div className="flex flex-wrap gap-1">
+          {availableFloors.map(floor => (
+            <button
+              key={floor}
+              onClick={() => onFloorChange?.(floor)}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                floor === currentFloor
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title={`Switch to Floor ${floor}`}
+            >
+              {floor}
+            </button>
+          ))}
+        </div>
+        <div className="text-xs text-gray-500 mt-1">
+          Current: Floor {currentFloor}
+        </div>
+      </div>
+
+      {/* Legend - Removed floor info */}
       <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg text-xs">
-        <h4 className="font-semibold mb-2">Legend</h4>
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="font-semibold">Legend</h4>
+        </div>
         <div className="space-y-1">
           {showPathNodes && (
             <div className="flex items-center gap-2">
@@ -346,13 +454,14 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
-      {/* Instructions */}
+      {/* Instructions - Updated */}
       <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs max-w-48">
         <p>
           <strong>Controls:</strong>
         </p>
         <p>• Mouse wheel: Zoom</p>
         <p>• Drag: Pan around map</p>
+        <p>• Click floor buttons: Change floor</p>
         <p>• Click buildings: Highlight rooms</p>
         <p>• Click rooms: Select</p>
         <p>• Click graph nodes: Select node</p>

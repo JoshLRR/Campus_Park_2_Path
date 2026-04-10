@@ -26,6 +26,7 @@ interface GraphOverlayProps {
   showPathEdges?: boolean;
   showRoomConnections?: boolean;
   showRoomNodes?: boolean;
+  currentFloor: number;
   onNodeClick?: (nodeId: number) => void;
 }
 
@@ -42,6 +43,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
   showPathEdges = true,
   showRoomConnections = true,
   showRoomNodes = true,
+  currentFloor,
   onNodeClick,
 }) => {
   // Convert graph coordinates to map coordinates
@@ -56,9 +58,13 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
     onNodeClick?.(nodeId);
   };
 
-  // Filter nodes based on visibility settings
+  // Filter nodes based on visibility settings and current floor
   const getVisibleNodes = () => {
     return nodes.filter(node => {
+      // First filter by floor
+      if (node.position.floorNum !== currentFloor) return false;
+
+      // Then filter by visibility settings
       if (node.kind === 'path' && !showPathNodes) return false;
       if (node.kind === 'room' && !showRoomNodes) return false;
       return true;
@@ -67,9 +73,20 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
 
   const visibleNodes = getVisibleNodes();
 
+  // Get all original nodes for neighbor lookup (including other floors for cross-floor edges)
+  const allNodes = nodes;
+
   // Check if an edge should be visible based on its endpoints and connection type
   const isEdgeVisible = (sourceNode: GraphNode, targetNode: GraphNode) => {
-    // If either node is not visible, don't show the edge
+    // Only show edges where both nodes are on the current floor
+    if (
+      sourceNode.position.floorNum !== currentFloor ||
+      targetNode.position.floorNum !== currentFloor
+    ) {
+      return false;
+    }
+
+    // If either node is not visible due to settings, don't show the edge
     if (
       !visibleNodes.includes(sourceNode) ||
       !visibleNodes.includes(targetNode)
@@ -88,6 +105,17 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
     return true;
   };
 
+  // Check if a node has cross-floor connections
+  const hasCrossFloorConnection = (node: GraphNode) => {
+    return node.neighbors.some(neighbor => {
+      const neighborNode = allNodes.find(n => n.id === neighbor.to);
+      return (
+        neighborNode &&
+        neighborNode.position.floorNum !== node.position.floorNum
+      );
+    });
+  };
+
   return (
     <g style={{zIndex: 3}}>
       {/* Define gradients for glow effects */}
@@ -97,6 +125,11 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
           <stop offset="70%" stopColor="#dc2626" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
         </radialGradient>
+        <radialGradient id="crossFloorGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+          <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
       {/* Render edges first (so they appear behind nodes) */}
@@ -104,7 +137,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
         const nodePos = scalePosition(node.position);
 
         return node.neighbors.map(neighbor => {
-          const neighborNode = nodes.find(n => n.id === neighbor.to);
+          const neighborNode = allNodes.find(n => n.id === neighbor.to);
           if (!neighborNode) return null;
 
           // Check if this edge should be visible
@@ -142,6 +175,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
         const nodePos = scalePosition(node.position);
         const isRoom = node.kind === 'room';
         const isSelected = selectedNodeId === node.id;
+        const hasCrossFloor = hasCrossFloorConnection(node);
 
         return (
           <g key={`node-${node.id}`}>
@@ -214,28 +248,56 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
               </>
             )}
 
+            {/* Cross-floor connection indicator */}
+            {hasCrossFloor && !isSelected && (
+              <circle
+                cx={nodePos.x}
+                cy={nodePos.y}
+                r={12}
+                fill="url(#crossFloorGlow)"
+                opacity={0.6}
+              >
+                <animate
+                  attributeName="r"
+                  values="12;16;12"
+                  dur="3s"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="opacity"
+                  values="0.6;0.3;0.6"
+                  dur="3s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            )}
+
             {/* Node circle */}
             <circle
               cx={nodePos.x}
               cy={nodePos.y}
               r={isRoom ? (showDebugInfo ? 10 : 8) : showDebugInfo ? 8 : 6}
               fill={
-                isRoom
-                  ? showDebugInfo
-                    ? '#dc2626'
-                    : '#ef4444'
-                  : showDebugInfo
-                    ? '#1d4ed8'
-                    : '#3b82f6'
+                hasCrossFloor && !isSelected
+                  ? '#f59e0b' // amber for cross-floor connections
+                  : isRoom
+                    ? showDebugInfo
+                      ? '#dc2626'
+                      : '#ef4444'
+                    : showDebugInfo
+                      ? '#1d4ed8'
+                      : '#3b82f6'
               }
               stroke={
                 isSelected
                   ? isRoom
                     ? '#dc2626'
                     : '#1d4ed8'
-                  : isRoom
-                    ? '#dc2626'
-                    : '#1d4ed8'
+                  : hasCrossFloor
+                    ? '#f59e0b'
+                    : isRoom
+                      ? '#dc2626'
+                      : '#1d4ed8'
               }
               strokeWidth={isSelected ? 3 : showDebugInfo ? 3 : 2}
               opacity={isSelected ? 1.0 : showDebugInfo ? 1.0 : 0.8}
@@ -271,27 +333,60 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
               {isRoom && node.roomNumber ? node.roomNumber : `N${node.id}`}
             </text>
 
-            {/* Debug: Show node ID and coordinates */}
-            {showDebugInfo && (
+            {/* Floor indicator for cross-floor connections */}
+            {hasCrossFloor && (
               <text
-                x={nodePos.x}
-                y={nodePos.y + 20}
-                textAnchor="middle"
+                x={nodePos.x + 12}
+                y={nodePos.y - 8}
+                textAnchor="start"
                 fontSize={8}
-                fill="#666666"
+                fontWeight="bold"
+                fill="#f59e0b"
                 style={{
                   textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
                   pointerEvents: 'none',
                 }}
               >
-                ({node.position.x.toFixed(1)}, {node.position.y.toFixed(1)})
+                ↕
               </text>
+            )}
+
+            {/* Debug: Show node ID, coordinates and floor */}
+            {showDebugInfo && (
+              <>
+                <text
+                  x={nodePos.x}
+                  y={nodePos.y + 20}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fill="#666666"
+                  style={{
+                    textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  ({node.position.x.toFixed(1)}, {node.position.y.toFixed(1)})
+                </text>
+                <text
+                  x={nodePos.x}
+                  y={nodePos.y + 30}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fill="#666666"
+                  style={{
+                    textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  Floor {node.position.floorNum}
+                </text>
+              </>
             )}
 
             {/* Distance labels on edges - only show in debug mode or for selected nodes */}
             {(showDebugInfo || isSelected) &&
               node.neighbors.map(neighbor => {
-                const neighborNode = nodes.find(n => n.id === neighbor.to);
+                const neighborNode = allNodes.find(n => n.id === neighbor.to);
                 if (!neighborNode) return null;
 
                 // Only show distance label if the edge is visible
@@ -307,9 +402,9 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
                     x={midX}
                     y={midY}
                     textAnchor="middle"
-                    fontSize={showDebugInfo ? 9 : 8}
-                    fill={showDebugInfo ? '#000000' : '#6b7280'}
-                    fontWeight={showDebugInfo ? 'bold' : 'normal'}
+                    fontSize={8}
+                    fill="#059669"
+                    fontWeight="bold"
                     style={{
                       textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
                       pointerEvents: 'none',
@@ -319,24 +414,6 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
                   </text>
                 );
               })}
-
-            {/* Debug: Show neighbor count */}
-            {showDebugInfo && (
-              <text
-                x={nodePos.x + 15}
-                y={nodePos.y}
-                textAnchor="middle"
-                fontSize={8}
-                fill="#059669"
-                fontWeight="bold"
-                style={{
-                  textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
-                  pointerEvents: 'none',
-                }}
-              >
-                {node.neighbors.length}
-              </text>
-            )}
           </g>
         );
       })}
