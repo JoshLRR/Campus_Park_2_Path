@@ -91,30 +91,50 @@ export default function App() {
 
   // Calculate route when start and destination points change
   useEffect(() => {
-    if (startPoint && destinationPoint && pathfinder) {
-      const SCALE_INVERSE = 0.1; // Inverse of SCALE_FACTOR from GraphOverlay
+    const calculateRoute = async () => {
+      if (startPoint && destinationPoint && pathfinder) {
+        const SCALE_INVERSE = 0.1; // Inverse of SCALE_FACTOR from GraphOverlay
 
-      // Find closest nodes to start and destination points
-      const startNodeId = pathfinder.findClosestNode(
-        startPoint.x,
-        startPoint.y,
-        SCALE_INVERSE,
-      );
-      const endNodeId = pathfinder.findClosestNode(
-        destinationPoint.x,
-        destinationPoint.y,
-        SCALE_INVERSE,
-      );
+        try {
+          // Find closest nodes to start and destination points
+          const startNodeId = pathfinder.findClosestNode(
+            startPoint.x,
+            startPoint.y,
+            SCALE_INVERSE,
+          );
+          const endNodeId = pathfinder.findClosestNode(
+            destinationPoint.x,
+            destinationPoint.y,
+            SCALE_INVERSE,
+          );
 
-      if (startNodeId !== null && endNodeId !== null) {
-        const route = pathfinder.findPath(startNodeId, endNodeId);
-        setCurrentRoute(route);
+          if (startNodeId !== null && endNodeId !== null) {
+            // Updated to use async/await with the API-based pathfinding
+            const route = await pathfinder.findPath(startNodeId, endNodeId);
+            setCurrentRoute(route);
+          } else {
+            setCurrentRoute({
+              path: [],
+              totalDistance: 0,
+              success: false,
+              message: 'Could not find nodes near start or destination points',
+            });
+          }
+        } catch (error) {
+          console.error('Route calculation failed:', error);
+          setCurrentRoute({
+            path: [],
+            totalDistance: 0,
+            success: false,
+            message: 'Route calculation failed. Please try again.',
+          });
+        }
       } else {
         setCurrentRoute(null);
       }
-    } else {
-      setCurrentRoute(null);
-    }
+    };
+
+    void calculateRoute();
   }, [startPoint, destinationPoint, pathfinder]);
 
   // Filter rooms based on search term
