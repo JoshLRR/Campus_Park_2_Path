@@ -5,6 +5,7 @@ import {
   PathResponseDTO,
   PositionDTO,
 } from '../../logic/PathingComponent/api/PathAPI.dto';
+import {createPathAPI} from '../../logic/PathingComponent/api/CreatePathingAPI';
 
 export interface PathResult {
   path: number[];
@@ -13,20 +14,17 @@ export interface PathResult {
   message?: string;
 }
 
+const api = createPathAPI();
+
 export class Pathfinder {
   private nodes: Map<number, GraphNode>;
-  private apiBaseUrl: string;
 
-  constructor(
-    graphNodes: GraphNode[],
-    apiBaseUrl: string = 'http://localhost:3001/api',
-  ) {
+  constructor(graphNodes: GraphNode[]) {
     this.nodes = new Map(graphNodes.map(node => [node.id, node]));
-    this.apiBaseUrl = apiBaseUrl;
   }
 
   /**
-   * Find the shortest path between two nodes using the backend PathAPI
+   * Find the shortest path between two nodes using the local PathAPI
    */
   async findPath(startNodeId: number, endNodeId: number): Promise<PathResult> {
     if (!this.nodes.has(startNodeId) || !this.nodes.has(endNodeId)) {
@@ -42,51 +40,23 @@ export class Pathfinder {
       return {path: [startNodeId], totalDistance: 0, success: true};
     }
 
-    try {
-      // Prepare the API request
-      const request: PathRequestDTO = {
-        origin: {
-          mode: 'node',
-          value: startNodeId.toString(),
-        },
-        destination: {
-          mode: 'node',
-          value: endNodeId.toString(),
-        },
-      };
+    const request: PathRequestDTO = {
+      origin: {
+        mode: 'node',
+        value: startNodeId.toString(),
+      },
+      destination: {
+        mode: 'node',
+        value: endNodeId.toString(),
+      },
+    };
 
-      // Make the API call
-      const response = await fetch(`${this.apiBaseUrl}/path`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `API request failed: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const result: PathResponseDTO = await response.json();
-
-      // Transform the API response to our expected format
-      return this.transformApiResponse(result);
-    } catch (error) {
-      console.error('Pathfinding API error:', error);
-      return {
-        path: [],
-        totalDistance: 0,
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown API error',
-      };
-    }
+    const result = await api.path(request);
+    return this.transformApiResponse(result);
   }
 
   /**
-   * Find a path from coordinates to a node using the backend PathAPI
+   * Find a path from coordinates to a node using the local PathAPI
    */
   async findPathFromCoordinates(
     x: number,
@@ -104,54 +74,29 @@ export class Pathfinder {
       };
     }
 
-    try {
-      // Convert map coordinates to graph coordinates
-      const position: PositionDTO = {
-        x: x * scaleInverse,
-        y: y * scaleInverse,
-        floorNum: floor,
-      };
+    const position: PositionDTO = {
+      x: x * scaleInverse,
+      y: y * scaleInverse,
+      floorNum: floor,
+    };
 
-      const request: PathRequestDTO = {
-        origin: {
-          mode: 'coordinate',
-          value: position,
-        },
-        destination: {
-          mode: 'node',
-          value: endNodeId.toString(),
-        },
-      };
+    const request: PathRequestDTO = {
+      origin: {
+        mode: 'coordinate',
+        value: position,
+      },
+      destination: {
+        mode: 'node',
+        value: endNodeId.toString(),
+      },
+    };
 
-      const response = await fetch(`${this.apiBaseUrl}/path`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `API request failed: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const result: PathResponseDTO = await response.json();
-      return this.transformApiResponse(result);
-    } catch (error) {
-      console.error('Pathfinding API error:', error);
-      return {
-        path: [],
-        totalDistance: 0,
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown API error',
-      };
-    }
+    const result = await api.path(request);
+    return this.transformApiResponse(result);
   }
 
   /**
-   * Find a path to a POI type using the backend PathAPI
+   * Find a path to a POI type using the local PathAPI
    */
   async findPathToPOI(
     startNodeId: number,
@@ -171,48 +116,24 @@ export class Pathfinder {
       };
     }
 
-    try {
-      const request: PathRequestDTO = {
-        origin: {
-          mode: 'node',
-          value: startNodeId.toString(),
-        },
-        destination: {
-          mode: 'poiType',
-          value: poiType,
-        },
-        preferences,
-      };
+    const request: PathRequestDTO = {
+      origin: {
+        mode: 'node',
+        value: startNodeId.toString(),
+      },
+      destination: {
+        mode: 'poiType',
+        value: poiType,
+      },
+      preferences,
+    };
 
-      const response = await fetch(`${this.apiBaseUrl}/path`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `API request failed: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const result: PathResponseDTO = await response.json();
-      return this.transformApiResponse(result);
-    } catch (error) {
-      console.error('Pathfinding API error:', error);
-      return {
-        path: [],
-        totalDistance: 0,
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown API error',
-      };
-    }
+    const result = await api.path(request);
+    return this.transformApiResponse(result);
   }
 
   /**
-   * Transform the PathResponseDTO from the API into our PathResult format
+   * Transform the PathResponseDTO into our PathResult format
    */
   private transformApiResponse(response: PathResponseDTO): PathResult {
     switch (response.status) {
@@ -261,13 +182,13 @@ export class Pathfinder {
           path: [],
           totalDistance: 0,
           success: false,
-          message: 'Unknown API response status',
+          message: 'Unknown response status',
         };
     }
   }
 
   /**
-   * Find the closest node to a given position (kept local for UI responsiveness)
+   * Find the closest node to a given position
    */
   findClosestNode(
     x: number,
@@ -278,7 +199,6 @@ export class Pathfinder {
     let minDistance = Infinity;
 
     for (const [nodeId, node] of this.nodes) {
-      // Convert map coordinates back to graph coordinates
       const nodeX = node.position.x;
       const nodeY = node.position.y;
 
@@ -294,19 +214,5 @@ export class Pathfinder {
     }
 
     return closestNodeId;
-  }
-
-  /**
-   * Get the current API base URL
-   */
-  getApiBaseUrl(): string {
-    return this.apiBaseUrl;
-  }
-
-  /**
-   * Update the API base URL
-   */
-  setApiBaseUrl(url: string): void {
-    this.apiBaseUrl = url;
   }
 }
