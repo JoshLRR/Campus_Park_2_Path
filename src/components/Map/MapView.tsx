@@ -1,20 +1,16 @@
 /**
  * Map view component.
- *
- * This file defines the MapView UI component responsible for rendering
- * the primary visual representation of the campus map. It serves as the
- * central interaction surface for spatial navigation.
  */
 
-import React, {useRef} from 'react';
-import {TransformWrapper, TransformComponent} from 'react-zoom-pan-pinch';
-import {RoomTile} from './RoomTile';
-import {StartMarker} from './StartMarker';
-import {DestinationMarker} from './DestinationMarker';
-import {GraphOverlay, GraphNode} from './GraphOverlay';
-import {RouteOverlay} from './RouteOverlay';
-import {PathResult} from './pathfinding';
-import mapImage from '../../assets/map-line-only.png';
+import React, { useRef, useState, useCallback } from 'react';
+import TileSystem from './TileSystem';
+import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
+import { RoomTile } from './RoomTile';
+import { StartMarker } from './StartMarker';
+import { DestinationMarker } from './DestinationMarker';
+import { GraphOverlay, GraphNode } from './GraphOverlay';
+import { RouteOverlay } from './RouteOverlay';
+import { PathResult } from './pathfinding';
 
 // Building type
 export interface Building {
@@ -23,10 +19,10 @@ export interface Building {
   width: number;
   height: number;
   name: string;
-  floors?: number[]; // Available floors in this building
+  floors?: number[];
 }
 
-export type Point = {x: number; y: number};
+export type Point = { x: number; y: number };
 
 export interface PolygonBuilding extends Building {
   points: Point[];
@@ -50,16 +46,15 @@ export interface NavigationPoint {
   x: number;
   y: number;
   label: string;
-  floor?: number; // Add floor information to navigation points
+  floor?: number;
 }
 
-// Props - Accept buildings and rooms with external IDs but use indices internally
 interface MapViewProps {
-  initialBuildings: (Building & {id: number})[];
+  initialBuildings: (Building & { id: number })[];
   selectedRoomId?: number | null;
   selectedGraphNodeId?: number | null;
   focusBuildingId?: number | null;
-  rooms?: (Room & {id: number})[];
+  rooms?: (Room & { id: number })[];
   startPoint?: NavigationPoint | null;
   destinationPoint?: NavigationPoint | null;
   graphNodes?: GraphNode[];
@@ -70,8 +65,8 @@ interface MapViewProps {
   showRoomNodes?: boolean;
   currentRoute?: PathResult | null;
   showRoute?: boolean;
-  currentFloor: number; // Current floor being displayed
-  availableFloors: number[]; // All available floors
+  currentFloor: number;
+  availableFloors: number[];
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
@@ -81,36 +76,95 @@ interface MapViewProps {
 
 const WORLD_WIDTH = 2500;
 const WORLD_HEIGHT = 2500;
-const SCALE_FACTOR = 10; // Same as in GraphOverlay
+const SCALE_FACTOR = 10;
 
 export const MapView: React.FC<MapViewProps> = ({
-  initialBuildings,
-  selectedRoomId,
-  selectedGraphNodeId,
-  focusBuildingId,
-  rooms = [],
-  startPoint,
-  destinationPoint,
-  graphNodes = [],
-  showGraphDebug = false,
-  showPathNodes = true,
-  showPathEdges = true,
-  showRoomConnections = true,
-  showRoomNodes = true,
-  currentRoute = null,
-  showRoute = true,
-  currentFloor,
-  availableFloors,
-  onRoomSelect,
-  onGraphNodeSelect,
-  onStartPointClear,
-  onDestinationPointClear,
-  onFloorChange,
-}) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+                                                  initialBuildings,
+                                                  selectedRoomId,
+                                                  selectedGraphNodeId,
+                                                  focusBuildingId,
+                                                  rooms = [],
+                                                  startPoint,
+                                                  destinationPoint,
+                                                  graphNodes = [],
+                                                  showGraphDebug = false,
+                                                  showPathNodes = true,
+                                                  showPathEdges = true,
+                                                  showRoomConnections = true,
+                                                  showRoomNodes = true,
+                                                  currentRoute = null,
+                                                  showRoute = true,
+                                                  currentFloor,
+                                                  availableFloors,
+                                                  onRoomSelect,
+                                                  onGraphNodeSelect,
+                                                  onStartPointClear,
+                                                  onDestinationPointClear,
+                                                  onFloorChange,
+                                                }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const transformRef = useRef<ReactZoomPanPinchRef>(null);
+
+  // Viewport tracking for tile culling
+  const [viewport, setViewport] = useState({
+    x: 0,
+    y: 0,
+    width: WORLD_WIDTH,
+    height: WORLD_HEIGHT,
+    scale: 1,
+  });
+
+  // Update viewport for tile culling optimization
+  const handleTransform = useCallback((ref: ReactZoomPanPinchRef, event: any) => {
+    const { state } = ref;
+    const container = containerRef.current;
+
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+
+      setViewport({
+        x: -state.positionX / state.scale,
+        y: -state.positionY / state.scale,
+        width: containerRect.width,
+        height: containerRect.height,
+        scale: state.scale,
+      });
+    }
+  }, []);
+
+  // Initialize viewport on mount
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      setViewport(prev => ({
+        ...prev,
+        width: containerRect.width,
+        height: containerRect.height,
+      }));
+    }
+  }, []);
+
+  // Handle window resize to update viewport dimensions
+  React.useEffect(() => {
+    const handleResize = () => {
+      const container = containerRef.current;
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+        setViewport(prev => ({
+          ...prev,
+          width: containerRect.width,
+          height: containerRect.height,
+        }));
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Filter items based on current floor
-  const filterByFloor = <T extends {floor?: number}>(items: T[]): T[] => {
+  const filterByFloor = <T extends { floor?: number }>(items: T[]): T[] => {
     return items.filter(item => item.floor === currentFloor);
   };
 
@@ -129,18 +183,16 @@ export const MapView: React.FC<MapViewProps> = ({
     );
     const hasFloorsProperty =
       building.floors && building.floors.includes(currentFloor);
-    return hasRoomsOnFloor || hasFloorsProperty || currentFloor === 1; // Always show on floor 1 by default
+    return hasRoomsOnFloor || hasFloorsProperty || currentFloor === 1;
   });
 
-  // Handle room pointer down (for potential future dragging if needed)
-  // Will probably be deleted later
+  // Handle room pointer down
   const handleRoomPointerDown = (
-    e: React.PointerEvent<SVGRectElement>, //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    e: React.PointerEvent<SVGRectElement>,
     id: number,
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    // Currently no dragging functionality - just prevent event bubbling
   };
 
   // Handle room click
@@ -149,7 +201,7 @@ export const MapView: React.FC<MapViewProps> = ({
   };
 
   // Scale position function for route overlay
-  const scalePosition = (pos: {x: number; y: number}) => ({
+  const scalePosition = (pos: { x: number; y: number }) => ({
     x: pos.x * SCALE_FACTOR,
     y: pos.y * SCALE_FACTOR,
   });
@@ -163,40 +215,43 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-white relative overflow-hidden"
+      className="w-full h-full bg-gray-200 relative overflow-hidden"
     >
       <TransformWrapper
-        wheel={{step: 0.08}}
-        doubleClick={{disabled: true}}
-        pinch={{step: 5}}
+        ref={transformRef}
+        wheel={{ step: 0.08 }}
+        doubleClick={{ disabled: true }}
+        pinch={{ step: 5 }}
         minScale={0.4}
         maxScale={4}
         limitToBounds={false}
+        onTransformed={handleTransform}
       >
         <TransformComponent
-          wrapperStyle={{width: '100%', height: '100%'}}
+          wrapperStyle={{ width: '100%', height: '100%' }}
           contentStyle={{
             width: WORLD_WIDTH,
             height: WORLD_HEIGHT,
             position: 'relative',
           }}
         >
-          {/* Background map image as HTML img element */}
-          <img
-            src={mapImage}
-            alt={`Campus Map - Floor ${currentFloor}`}
+          {/* Optimized Tile System with Viewport Culling */}
+          <div
             style={{
               position: 'absolute',
-              top: -30,
-              left: 100,
+              top: 0,
+              left: 0,
               width: WORLD_WIDTH,
               height: WORLD_HEIGHT,
-              objectFit: 'cover',
-              opacity: 0.7,
-              pointerEvents: 'none', // Allow clicks to pass through to SVG elements
-              zIndex: 1,
+              zIndex: 0,
             }}
-          />
+          >
+            <TileSystem
+              tileSize={8192}
+              className="tile-background"
+              viewport={viewport}
+            />
+          </div>
 
           <svg
             width={WORLD_WIDTH}
@@ -205,7 +260,7 @@ export const MapView: React.FC<MapViewProps> = ({
               position: 'absolute',
               top: 0,
               left: 0,
-              zIndex: 2, // Above the background image
+              zIndex: 2,
             }}
           >
             {/* Graph overlay with nodes and edges - filtered by floor */}
@@ -223,7 +278,7 @@ export const MapView: React.FC<MapViewProps> = ({
               currentFloor={currentFloor}
             />
 
-            {/* Buildings - Only show those with content on current floor */}
+            {/* Buildings */}
             {buildingsWithCurrentFloorContent.map((building, index) => {
               const isFocused = focusBuildingId === building.id;
               const buildingRooms = currentFloorRooms.filter(
@@ -232,7 +287,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
               return (
                 <g key={index}>
-                  {/* Building name - Positioned above the rectangle */}
+                  {/* Building name */}
                   <text
                     x={building.x + building.width / 2}
                     y={building.y - 10}
@@ -260,18 +315,18 @@ export const MapView: React.FC<MapViewProps> = ({
                     )}
                   </text>
 
-                  {/* Building rectangle - No movement, only color changes */}
+                  {/* Building rectangle */}
                   <rect
                     x={building.x}
                     y={building.y}
                     width={building.width}
                     height={building.height}
-                    fill={isFocused ? '#3b82f6' : '#0ea5e9'} // blue-500 : sky-500
-                    stroke={isFocused ? '#2563eb' : '#000000'} // blue-600 : black
+                    fill={isFocused ? '#3b82f6' : '#0ea5e9'}
+                    stroke={isFocused ? '#2563eb' : '#000000'}
                     strokeWidth={isFocused ? 3 : 2}
                     rx={6}
                     ry={6}
-                    opacity={0.8} // Slightly transparent to show background
+                    opacity={0.8}
                     style={{
                       cursor: 'pointer',
                       filter: isFocused
@@ -282,7 +337,7 @@ export const MapView: React.FC<MapViewProps> = ({
                     }}
                   />
 
-                  {/* All rooms within building on current floor */}
+                  {/* Rooms within building */}
                   {buildingRooms.map((room, roomIndex) => (
                     <RoomTile
                       key={roomIndex}
@@ -294,7 +349,7 @@ export const MapView: React.FC<MapViewProps> = ({
                       name={room.name}
                       building={room.building}
                       floor={room.floor}
-                      isDragging={false} // No dragging functionality
+                      isDragging={false}
                       isSelected={selectedRoomId === room.id}
                       isHighlighted={focusBuildingId === room.buildingId}
                       onPointerDown={e => handleRoomPointerDown(e, room.id)}
@@ -305,7 +360,7 @@ export const MapView: React.FC<MapViewProps> = ({
               );
             })}
 
-            {/* Route overlay - shows the path following graph edges - filtered by floor */}
+            {/* Route overlay */}
             {currentRoute && currentRoute.success && showRoute && (
               <RouteOverlay
                 nodes={currentFloorGraphNodes}
@@ -316,7 +371,7 @@ export const MapView: React.FC<MapViewProps> = ({
               />
             )}
 
-            {/* Navigation markers - only show if on current floor */}
+            {/* Navigation markers */}
             {startPoint && isStartPointOnCurrentFloor && (
               <StartMarker
                 x={startPoint.x}
@@ -340,7 +395,7 @@ export const MapView: React.FC<MapViewProps> = ({
         </TransformComponent>
       </TransformWrapper>
 
-      {/* Floor indicator for off-floor navigation points */}
+      {/* Floor indicators for off-floor navigation points */}
       {startPoint && !isStartPointOnCurrentFloor && (
         <div className="absolute bottom-24 right-4 bg-red-50 border border-red-200 p-2 rounded-lg shadow-lg text-xs">
           <p className="text-red-700">
@@ -373,7 +428,7 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       )}
 
-      {/* Floor Selector - Moved to Bottom Right */}
+      {/* Floor Selector */}
       <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg">
         <h4 className="font-semibold mb-2 text-sm">Floor</h4>
         <div className="flex flex-wrap gap-1">
@@ -397,7 +452,7 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
-      {/* Legend - Removed floor info */}
+      {/* Legend */}
       <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg text-xs">
         <div className="flex justify-between items-center mb-2">
           <h4 className="font-semibold">Legend</h4>
@@ -454,7 +509,7 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
-      {/* Instructions - Updated */}
+      {/* Instructions */}
       <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs max-w-48">
         <p>
           <strong>Controls:</strong>
