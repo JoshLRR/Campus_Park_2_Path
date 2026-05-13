@@ -74,8 +74,8 @@ interface MapViewProps {
   onFloorChange?: (floor: number) => void;
 }
 
-const WORLD_WIDTH = 2500;
-const WORLD_HEIGHT = 2500;
+const WORLD_WIDTH = 20000;
+const WORLD_HEIGHT = 20000;
 const SCALE_FACTOR = 10;
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -244,6 +244,7 @@ export const MapView: React.FC<MapViewProps> = ({
               width: WORLD_WIDTH,
               height: WORLD_HEIGHT,
               zIndex: 0,
+              pointerEvents: 'none',
             }}
           >
             <TileSystem
@@ -260,7 +261,7 @@ export const MapView: React.FC<MapViewProps> = ({
               position: 'absolute',
               top: 0,
               left: 0,
-              zIndex: 2,
+              zIndex: 10,
             }}
           >
             {/* Graph overlay with nodes and edges - filtered by floor */}
