@@ -5,6 +5,7 @@ import {PathRequest} from '../../../types/PathRequest';
 import {PathResult} from '../../../types/PathResponse';
 import {DijkstraAlgorithm} from './DijkstraAlgorithm';
 import type {PathAlgorithm} from './PathAlgorithm';
+import {GraphContextBuilder} from './context/GraphContextBuilder';
 
 /**
  * Coordinates the full routing workflow for a given `PathRequest`.
@@ -24,6 +25,8 @@ import type {PathAlgorithm} from './PathAlgorithm';
  * @see IPathOrchestrator
  */
 export class PathOrchestrator implements IPathOrchestrator {
+  private readonly contextBuilder = new GraphContextBuilder();
+
   /**
    * @param graph
    */
@@ -46,7 +49,7 @@ export class PathOrchestrator implements IPathOrchestrator {
   async resolvePath(request: PathRequest): Promise<PathResult> {
     appLogger.debug('PathOrchestrator: resolving path', {request});
     try {
-      // TODO: implement Context Decoration
+      const contextualGraph = this.contextBuilder.build(this.graph, request);
 
       let startNodeId: NodeId;
       if (request.origin.kind === 'node') {
@@ -58,7 +61,7 @@ export class PathOrchestrator implements IPathOrchestrator {
         );
       }
 
-      const algorithm: PathAlgorithm = new DijkstraAlgorithm(this.graph);
+      const algorithm: PathAlgorithm = new DijkstraAlgorithm(contextualGraph);
       const result = await algorithm.findPath(startNodeId, request.destination);
 
       // TODO: implement Path Export
