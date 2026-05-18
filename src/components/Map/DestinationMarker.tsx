@@ -1,27 +1,19 @@
 /**
- * Start marker component.
+ * Destination marker component.
  *
- * This file defines the StartMarker UI component responsible for
- * visually indicating the starting point of a navigation route
+ * This file defines the DestinationMarker UI component responsible for
+ * visually indicating the destination point of a navigation route
  * on the campus map.
  *
- * The StartMarker is expected to:
- * - Represent the user's selected origin or current location
- * - Remain visually distinct from destinations and path overlays
- * - Update position when the start location changes
- *
- * @remarks
- * This component is intentionally minimal and presentational.
- * It should not perform location resolution or routing logic.
- *
- * Any logic related to determining the start point (e.g. nearest
- * entrance, parking location, or user-selected origin) should
- * be handled upstream and passed in as data.
+ * The DestinationMarker is expected to:
+ * - Represent the user's selected destination or target location
+ * - Remain visually distinct from start points and path overlays
+ * - Update position when the destination changes
  */
 
 import React from 'react';
 
-interface StartMarkerProps {
+interface DestinationMarkerProps {
   x: number;
   y: number;
   label?: string;
@@ -29,7 +21,7 @@ interface StartMarkerProps {
   onClick?: () => void;
 }
 
-export const StartMarker: React.FC<StartMarkerProps> = ({
+export const DestinationMarker: React.FC<DestinationMarkerProps> = ({
   x,
   y,
   label,
@@ -45,7 +37,7 @@ export const StartMarker: React.FC<StartMarkerProps> = ({
           cy={y}
           r={12}
           fill="none"
-          stroke="rgba(239, 68, 68, 0.4)"
+          stroke="rgba(34, 197, 94, 0.4)"
           strokeWidth={4}
         >
           <animate
@@ -68,7 +60,7 @@ export const StartMarker: React.FC<StartMarkerProps> = ({
         cx={x}
         cy={y}
         r={12}
-        fill="#ef4444"
+        fill="#22c55e"
         stroke="white"
         strokeWidth={3}
         style={{
@@ -77,7 +69,7 @@ export const StartMarker: React.FC<StartMarkerProps> = ({
         }}
       />
 
-      {/* Inner dot */}
+      {/* Inner dot - same as StartMarker */}
       <circle cx={x} cy={y} r={4} fill="white" />
 
       {/* Label */}
@@ -89,7 +81,7 @@ export const StartMarker: React.FC<StartMarkerProps> = ({
             y={y - 10}
             width={label.length * 8 + 8}
             height={20}
-            fill="rgba(239, 68, 68, 0.9)"
+            fill="rgba(34, 197, 94, 0.9)"
             stroke="white"
             strokeWidth={1}
             rx={4}
@@ -109,7 +101,7 @@ export const StartMarker: React.FC<StartMarkerProps> = ({
       )}
 
       {/* Tooltip */}
-      <title>Start Point{label ? `: ${label}` : ''}</title>
+      <title>Destination{label ? `: ${label}` : ''}</title>
     </g>
   );
 };
