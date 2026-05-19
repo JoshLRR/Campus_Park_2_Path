@@ -15,6 +15,19 @@ const initialBuildings: (Building & {id: number})[] = [];
 // Sample room data with positions within buildings
 const sampleRooms: (Room & {id: number})[] = [];
 
+const WORLD_WIDTH = 20000;
+const WORLD_HEIGHT = 20000;
+
+// Calibration values from graph.json
+const CALIBRATION_PIXELS_PER_UNIT = 6.9198;
+const CALIBRATION_UNITS_PER_PIXEL = 1 / CALIBRATION_PIXELS_PER_UNIT; // = 0.1445
+const MIN_NODE_X = 713.29;
+const MIN_NODE_Y = 2049.97;
+const MIN_SCALED_X = MIN_NODE_X * CALIBRATION_PIXELS_PER_UNIT;
+const MIN_SCALED_Y = MIN_NODE_Y * CALIBRATION_PIXELS_PER_UNIT;
+const NODE_OFFSET_X = -MIN_SCALED_X;
+const NODE_OFFSET_Y = -MIN_SCALED_Y;
+
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
@@ -92,11 +105,9 @@ export default function App() {
   // Calculate route when start and destination points change
   useEffect(() => {
     if (startPoint && destinationPoint && pathfinder) {
-      const SCALE_INVERSE = 0.1; // Inverse of SCALE_FACTOR from GraphOverlay
-
       // Find closest nodes to start and destination points
-      const startNodeId = pathfinder.findClosestNode(startPoint.x, startPoint.y, SCALE_INVERSE);
-      const endNodeId = pathfinder.findClosestNode(destinationPoint.x, destinationPoint.y, SCALE_INVERSE);
+      const startNodeId = pathfinder.findClosestNode(startPoint.x, startPoint.y, CALIBRATION_UNITS_PER_PIXEL);
+      const endNodeId = pathfinder.findClosestNode(destinationPoint.x, destinationPoint.y, CALIBRATION_UNITS_PER_PIXEL);
 
       if (startNodeId !== null && endNodeId !== null) {
         const route = pathfinder.findPath(startNodeId, endNodeId);
@@ -180,14 +191,13 @@ export default function App() {
   };
 
   // Handle setting start point from regular room
-  const handleSetStartPoint = (room: Room & {id: number}) => {
-    const position = getRoomPosition(room);
+  const handleSetStartPoint = (node: GraphNode) => {
     setStartPoint({
-      roomId: room.id,
-      x: position.x,
-      y: position.y,
-      label: room.name,
-      floor: room.floor,
+      roomId: node.id,
+      x: node.position.x * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_X,
+      y: node.position.y * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_Y,
+      label: node.roomNumber || `Room ${node.id}`,
+      floor: node.position.floorNum,
     });
     setSearchTerm('');
   };
@@ -219,11 +229,10 @@ export default function App() {
 
   // Handle setting destination point from graph node
   const handleSetDestinationFromNode = (node: GraphNode) => {
-    const SCALE_FACTOR = 10; // Same as in GraphOverlay
     setDestinationPoint({
       roomId: node.id,
-      x: node.position.x * SCALE_FACTOR,
-      y: node.position.y * SCALE_FACTOR,
+      x: node.position.x * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_X,
+      y: node.position.y * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_Y,
       label: node.roomNumber || `Node ${node.id}`,
       floor: node.position.floorNum,
     });
@@ -934,6 +943,12 @@ export default function App() {
           onStartPointClear={clearStartPoint}
           onDestinationPointClear={clearDestination}
           onFloorChange={handleFloorChange}
+          initialPositionX={0}
+          initialPositionY={0}
+          initialZoom={100}
+          nodeToPixelScale={CALIBRATION_PIXELS_PER_UNIT}
+          nodeOffsetX={NODE_OFFSET_X}
+          nodeOffsetY={NODE_OFFSET_Y}
         />
       </div>
 

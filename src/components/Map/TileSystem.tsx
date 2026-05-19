@@ -265,7 +265,7 @@ const TileSystem: React.FC<TileSystemProps> = ({
         );
       })}
 
-      {/* Optional: Tile grid info for debugging */}
+      {/* Optional: Tile grid info for debugging */} {/*
       {process.env.NODE_ENV === 'development' && (
         <div
           style={{
@@ -286,8 +286,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
           <div>Visible: {visibleTiles.length}</div>
           <div>Grid: {gridInfo.gridWidth}×{gridInfo.gridHeight}</div>
           <div>Tile size: {scaledTileSize}px</div>
-        </div>
-      )}
+        </div> */}
+      )
     </div>
   );
 };
