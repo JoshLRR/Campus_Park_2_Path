@@ -75,26 +75,10 @@ interface MapViewProps {
   initialPositionX?: number;
   initialPositionY?: number;
   initialZoom?: number;
-  nodeOffsetX?: number;
-  nodeOffsetY?: number;
-  nodeToPixelScale?: number;
-  scaleFactor?: number;
 }
 
 const WORLD_WIDTH = 20000;
 const WORLD_HEIGHT = 20000;
-
-const CALIBRATION_PIXELS_PER_UNIT = 6.9198;
-const MIN_NODE_X = 713.29; // minimum x coordinate in graph
-const MIN_NODE_Y = 2049.97; // minimum y coordinate in graph
-
-// Calculate minimum scaled position
-const MIN_SCALED_X = MIN_NODE_X * CALIBRATION_PIXELS_PER_UNIT; // = 4,942.52
-const MIN_SCALED_Y = MIN_NODE_Y * CALIBRATION_PIXELS_PER_UNIT; // = 14,204.35
-
-// Offsets to align with tile map origin (0, 0)
-const NODE_OFFSET_X = -MIN_NODE_X // = -4,942.52
-const NODE_OFFSET_Y = -MIN_NODE_Y // = -14,204.35
 
 export const MapView: React.FC<MapViewProps> = ({
                                                   initialBuildings,
@@ -122,9 +106,6 @@ export const MapView: React.FC<MapViewProps> = ({
                                                   initialPositionX = -WORLD_WIDTH / 4,
                                                   initialPositionY = -WORLD_HEIGHT / 4,
                                                   initialZoom = 1,
-                                                  nodeOffsetX = NODE_OFFSET_X,
-                                                  nodeOffsetY = NODE_OFFSET_Y,
-                                                  nodeToPixelScale = CALIBRATION_PIXELS_PER_UNIT,
                                                 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
@@ -226,8 +207,8 @@ export const MapView: React.FC<MapViewProps> = ({
 
   // Scale position function for route overlay
   const scalePosition = (pos: { x: number; y: number }) => ({
-    x: pos.x * nodeToPixelScale + nodeOffsetX,
-    y: pos.y * nodeToPixelScale + nodeOffsetY,
+    x: pos.x,
+    y: pos.y,
   });
 
   // Check if navigation points are on current floor
@@ -305,9 +286,6 @@ export const MapView: React.FC<MapViewProps> = ({
               showRoomNodes={showRoomNodes}
               onNodeClick={onGraphNodeSelect}
               currentFloor={currentFloor}
-              scaleFactor={nodeToPixelScale}
-              offsetX={nodeOffsetX}
-              offsetY={nodeOffsetY}
             />
 
             {/* Buildings */}

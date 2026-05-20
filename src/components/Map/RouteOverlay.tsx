@@ -46,8 +46,9 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
         );
 
         if (edgeExists) {
-          const startPos = scalePosition(currentNode.position);
-          const endPos = scalePosition(nextNode.position);
+          // Use positions directly without scaling
+          const startPos = {x: currentNode.position.x, y: currentNode.position.y};
+          const endPos = {x: nextNode.position.x, y: nextNode.position.y};
 
           currentFloorSegments.push({
             start: startPos,
@@ -170,14 +171,14 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
 
       {/* Route waypoint indicators - only for nodes on current floor */}
       {currentFloorRouteNodes.map((node, index) => {
-        const pos = scalePosition(node.position);
+        // Use position directly
+        const pos = {x: node.position.x, y: node.position.y};
         const originalIndex = routePath.indexOf(node.id);
         const isStart = originalIndex === 0;
         const isEnd = originalIndex === routePath.length - 1;
         const isKeyWaypoint =
-          isStart || isEnd || (index % 3 === 0 && index > 0); // Show every 3rd waypoint on current floor
+          isStart || isEnd || (index % 3 === 0 && index > 0);
 
-        // Only show start, end, and key waypoints to avoid clutter
         if (!isKeyWaypoint) return null;
 
         return (

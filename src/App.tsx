@@ -19,14 +19,6 @@ const WORLD_WIDTH = 20000;
 const WORLD_HEIGHT = 20000;
 
 // Calibration values from graph.json
-const CALIBRATION_PIXELS_PER_UNIT = 6.9198;
-const CALIBRATION_UNITS_PER_PIXEL = 1 / CALIBRATION_PIXELS_PER_UNIT; // = 0.1445
-const MIN_NODE_X = 713.29;
-const MIN_NODE_Y = 2049.97;
-const MIN_SCALED_X = MIN_NODE_X * CALIBRATION_PIXELS_PER_UNIT;
-const MIN_SCALED_Y = MIN_NODE_Y * CALIBRATION_PIXELS_PER_UNIT;
-const NODE_OFFSET_X = -MIN_SCALED_X;
-const NODE_OFFSET_Y = -MIN_SCALED_Y;
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -194,8 +186,8 @@ export default function App() {
   const handleSetStartPoint = (node: GraphNode) => {
     setStartPoint({
       roomId: node.id,
-      x: node.position.x * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_X,
-      y: node.position.y * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_Y,
+      x: node.position.x,
+      y: node.position.y,
       label: node.roomNumber || `Room ${node.id}`,
       floor: node.position.floorNum,
     });
@@ -204,11 +196,10 @@ export default function App() {
 
   // Handle setting start point from graph node
   const handleSetStartPointFromNode = (node: GraphNode) => {
-    const SCALE_FACTOR = 10; // Same as in GraphOverlay
     setStartPoint({
       roomId: node.id,
-      x: node.position.x * SCALE_FACTOR,
-      y: node.position.y * SCALE_FACTOR,
+      x: node.position.x,
+      y: node.position.y,
       label: node.roomNumber || `Node ${node.id}`,
       floor: node.position.floorNum,
     });
@@ -231,8 +222,8 @@ export default function App() {
   const handleSetDestinationFromNode = (node: GraphNode) => {
     setDestinationPoint({
       roomId: node.id,
-      x: node.position.x * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_X,
-      y: node.position.y * CALIBRATION_PIXELS_PER_UNIT + NODE_OFFSET_Y,
+      x: node.position.x,
+      y: node.position.y,
       label: node.roomNumber || `Node ${node.id}`,
       floor: node.position.floorNum,
     });
@@ -946,9 +937,6 @@ export default function App() {
           initialPositionX={0}
           initialPositionY={0}
           initialZoom={100}
-          nodeToPixelScale={CALIBRATION_PIXELS_PER_UNIT}
-          nodeOffsetX={NODE_OFFSET_X}
-          nodeOffsetY={NODE_OFFSET_Y}
         />
       </div>
 

@@ -18,14 +18,12 @@ interface TileSystemProps {
   tileSize?: number;
   className?: string;
   viewport?: ViewportInfo;
-  scale?: number;
 }
 
 const TileSystem: React.FC<TileSystemProps> = ({
                                                  tileSize = 256,
                                                  className = '',
                                                  viewport,
-                                                 scale = 1
                                                }) => {
   // Automatically import all tile images using Vite's glob import
   const tiles = useMemo<TileData[]>(() => {
@@ -72,7 +70,7 @@ const TileSystem: React.FC<TileSystemProps> = ({
   const loadingTiles = useRef<Set<string>>(new Set());
 
   // Apply scale to the effective tile size
-  const scaledTileSize = tileSize * scale;
+  const scaledTileSize = tileSize;
 
   // Memoize grid calculations
   const gridInfo = useMemo(() => {

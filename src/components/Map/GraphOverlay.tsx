@@ -28,9 +28,6 @@ interface GraphOverlayProps {
   showRoomNodes?: boolean;
   currentFloor: number;
   onNodeClick?: (nodeId: number) => void;
-  scaleFactor?: number;
-  offsetX?: number;
-  offsetY?: number;
 }
 
 // Simple scale factor to convert graph coordinates to map coordinates
@@ -48,14 +45,11 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
   showRoomNodes = true,
   currentFloor,
   onNodeClick,
-  scaleFactor = CALIBRATION_PIXELS_PER_UNIT,
-  offsetX = 0,
-  offsetY = 0,
 }) => {
   // Convert graph coordinates to map coordinates
   const scalePosition = (pos: {x: number; y: number}) => ({
-    x: pos.x * scaleFactor + offsetX,
-    y: pos.y * scaleFactor + offsetY,
+    x: pos.x,
+    y: pos.y
   });
 
   const handleNodeClick = (nodeId: number, e: React.MouseEvent) => {
