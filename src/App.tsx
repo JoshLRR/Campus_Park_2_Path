@@ -9,6 +9,8 @@ import {GraphNode} from './components/Map/GraphOverlay';
 import {Pathfinder, PathResult} from './components/Map/pathfinding';
 import {GraphDisplayControls} from './components/Map/GraphDisplayControls';
 import {FloorInfoPanel} from './components/Map/FloorInfoPanel';
+import {CrossFloorRouteWarning} from './components/Map/CrossFloorRouteWarning';
+import {RouteStatusPanel} from './components/Directions/RouteStatusPanel';
 import './index.css';
 import './App.css';
 
@@ -347,44 +349,12 @@ export default function App() {
           />
 
           {/* Cross-floor route warning */}
-          {currentRoute &&
-            currentRoute.success &&
-            (() => {
-              const routeFloors = [
-                ...new Set(
-                  currentRoute.path.map(nodeId => {
-                    const node = graphNodes.find(n => n.id === nodeId);
-                    return node ? node.position.floorNum : currentFloor;
-                  }),
-                ),
-              ].sort((a, b) => a - b);
-
-              return routeFloors.length > 1 ? (
-                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
-                  <h3 className="text-lg font-semibold text-amber-800 mb-2">
-                    Multi-Floor Route
-                  </h3>
-                  <p className="text-sm text-amber-700 mb-2">
-                    This route spans multiple floors: {routeFloors.join(', ')}
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {routeFloors.map(floor => (
-                      <button
-                        key={floor}
-                        onClick={() => handleFloorChange(floor)}
-                        className={`px-2 py-1 text-xs rounded transition-colors ${
-                          floor === currentFloor
-                            ? 'bg-amber-600 text-white'
-                            : 'bg-amber-200 text-amber-800 hover:bg-amber-300'
-                        }`}
-                      >
-                        Floor {floor}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null;
-            })()}
+          <CrossFloorRouteWarning
+            currentRoute={currentRoute}
+            graphNodes={graphNodes}
+            currentFloor={currentFloor}
+            onFloorChange={handleFloorChange}
+          />
 
           {/* Graph Visibility Controls */}
           <GraphDisplayControls
@@ -400,68 +370,15 @@ export default function App() {
             setShowRoute={setShowRoute}
           />
 
-          {/* Route Information */}
-          {currentRoute && currentRoute.success && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-              <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                Current Route
-              </h3>
-              <div className="text-sm space-y-1">
-                <p>
-                  <strong>Status:</strong> Route found!
-                </p>
-                <p>
-                  <strong>Distance:</strong>{' '}
-                  {currentRoute.totalDistance.toFixed(1)} units
-                </p>
-                <p>
-                  <strong>Waypoints:</strong> {currentRoute.path.length}
-                </p>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={clearRoute}
-                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                >
-                  Clear Route
-                </button>
-                <button
-                  onClick={() => setShowRoute(!showRoute)}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    showRoute
-                      ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                      : 'bg-gray-400 text-white hover:bg-gray-500'
-                  }`}
-                >
-                  {showRoute ? 'Hide Route' : 'Show Route'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Route Error Display */}
-          {currentRoute &&
-            !currentRoute.success &&
-            startPoint &&
-            destinationPoint && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-                <h3 className="text-lg font-semibold text-red-800 mb-2">
-                  Route Error
-                </h3>
-                <p className="text-sm text-red-600">
-                  No route could be found between the selected start and
-                  destination points.
-                </p>
-                <div className="mt-3">
-                  <button
-                    onClick={clearRoute}
-                    className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                  >
-                    Clear Points
-                  </button>
-                </div>
-              </div>
-            )}
+          {/* Route Status Panel */}
+          <RouteStatusPanel
+            currentRoute={currentRoute}
+            startPoint={startPoint}
+            destinationPoint={destinationPoint}
+            showRoute={showRoute}
+            setShowRoute={setShowRoute}
+            clearRoute={clearRoute}
+          />
 
           {/* Graph Info with Debug Toggle */}
           <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-md">
