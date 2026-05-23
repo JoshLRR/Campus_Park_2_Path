@@ -2,25 +2,25 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-import { describe, expect, it } from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 import {
   generateSeedSql,
   ReferenceData,
   runGenerateSeedSqlCli,
 } from '../scripts/generateSeedSql';
-import { GraphJson, GraphNode } from '../scripts/validateGraph';
+import {GraphJson, GraphNode} from '../scripts/validateGraph';
 
 function makeNode(
   id: number,
   kind: string = 'path',
-  options: Partial<GraphNode> = {}
+  options: Partial<GraphNode> = {},
 ): GraphNode {
   return {
     id,
     kind,
-    position: { x: id, y: id + 1, floorNum: 0 },
-    imagePosition: { x: id * 100, y: id * 100 + 1 },
+    position: {x: id, y: id + 1, floorNum: 0},
+    imagePosition: {x: id * 100, y: id * 100 + 1},
     neighbors: [],
     features: [],
     ...options,
@@ -32,16 +32,16 @@ function makeValidGraph(): GraphJson {
     graphId: 'test-graph',
     nodes: [
       makeNode(1, 'path', {
-        position: { x: 11.25, y: 22.5, floorNum: 0 },
-        imagePosition: { x: 999, y: 999 },
-        neighbors: [{ to: 2, distance: 10.5 }],
+        position: {x: 11.25, y: 22.5, floorNum: 0},
+        imagePosition: {x: 999, y: 999},
+        neighbors: [{to: 2, distance: 10.5}],
       }),
       makeNode(2, 'room', {
         roomNumber: 'T101',
         features: [8],
-        position: { x: 33.75, y: 44.25, floorNum: 0 },
-        imagePosition: { x: 888, y: 888 },
-        neighbors: [{ to: 1, distance: 10.5 }],
+        position: {x: 33.75, y: 44.25, floorNum: 0},
+        imagePosition: {x: 888, y: 888},
+        neighbors: [{to: 1, distance: 10.5}],
       }),
     ],
   };
@@ -76,18 +76,20 @@ describe('generateSeedSql', () => {
   });
 
   it('uses reference data for building and room feature names', () => {
-  const sql = generateSeedSql(makeValidGraph(), makeReferenceData());
+    const sql = generateSeedSql(makeValidGraph(), makeReferenceData());
 
-  expect(sql).toContain("('T', 'T Building')");
-  expect(sql).toContain("(8, 'classroom', 'Classroom or instructional space')");
-  expect(sql).not.toContain('graph_feature_8');
-});
+    expect(sql).toContain("('T', 'T Building')");
+    expect(sql).toContain(
+      "(8, 'classroom', 'Classroom or instructional space')",
+    );
+    expect(sql).not.toContain('graph_feature_8');
+  });
 
   it('preserves graph node ids from graph.json', () => {
     const sql = generateSeedSql(makeValidGraph());
 
     expect(sql).toContain(
-      'INSERT INTO graph_nodes (graph_node_id, x, y, building_id, floor, is_active) VALUES'
+      'INSERT INTO graph_nodes (graph_node_id, x, y, building_id, floor, is_active) VALUES',
     );
     expect(sql).toContain('(1, 11.25, 22.5');
     expect(sql).toContain('(2, 33.75, 44.25');
@@ -102,12 +104,12 @@ describe('generateSeedSql', () => {
         makeNode(50, 'room', {
           roomNumber: 'T121',
           features: [8],
-          neighbors: [{ to: 1, distance: 5 }],
+          neighbors: [{to: 1, distance: 5}],
         }),
         makeNode(51, 'room', {
           roomNumber: 'T121',
           features: [8],
-          neighbors: [{ to: 1, distance: 7 }],
+          neighbors: [{to: 1, distance: 7}],
         }),
       ],
     };
@@ -128,34 +130,42 @@ describe('generateSeedSql', () => {
         makeNode(2, 'room', {
           roomNumber: 'T101',
           features: [8],
-          neighbors: [{ to: 1, distance: 5 }],
+          neighbors: [{to: 1, distance: 5}],
         }),
         makeNode(3, 'room', {
           roomNumber: 'T101',
           features: [8],
-          neighbors: [{ to: 1, distance: 7 }],
+          neighbors: [{to: 1, distance: 7}],
         }),
       ],
     };
 
     const sql = generateSeedSql(graph, makeReferenceData());
 
-    expect(sql).toContain('INSERT INTO room_features (feature_id, name, description) VALUES');
-    expect(sql).toContain("(8, 'classroom', 'Classroom or instructional space')");
-    expect(sql).toContain('INSERT INTO room_feature_map (room_id, feature_id) VALUES');
+    expect(sql).toContain(
+      'INSERT INTO room_features (feature_id, name, description) VALUES',
+    );
+    expect(sql).toContain(
+      "(8, 'classroom', 'Classroom or instructional space')",
+    );
+    expect(sql).toContain(
+      'INSERT INTO room_feature_map (room_id, feature_id) VALUES',
+    );
   });
 
   it('creates directed edges from neighbor entries', () => {
     const sql = generateSeedSql(makeValidGraph());
 
-    expect(sql).toContain('INSERT INTO edges (from_node_id, to_node_id, distance, is_active) VALUES');
+    expect(sql).toContain(
+      'INSERT INTO edges (from_node_id, to_node_id, distance, is_active) VALUES',
+    );
     expect(sql).toContain('(1, 2, 10.5, 1)');
     expect(sql).toContain('(2, 1, 10.5, 1)');
   });
 
   it('throws when a neighbor points to a missing node', () => {
     const graph: GraphJson = {
-      nodes: [makeNode(1, 'path', { neighbors: [{ to: 999, distance: 5 }] })],
+      nodes: [makeNode(1, 'path', {neighbors: [{to: 999, distance: 5}]})],
     };
 
     expect(() => generateSeedSql(graph)).toThrow('points to missing node');
@@ -176,7 +186,7 @@ describe('generateSeedSql', () => {
           }),
         ],
       }),
-      'utf8'
+      'utf8',
     );
 
     const exitCode = runGenerateSeedSqlCli([graphPath, outputPath]);
@@ -192,14 +202,18 @@ describe('generateSeedSql', () => {
     const referenceDataPath = path.join(tempDir, 'referenceData.json');
 
     fs.writeFileSync(graphPath, JSON.stringify(makeValidGraph()), 'utf8');
-    fs.writeFileSync(referenceDataPath, JSON.stringify(makeReferenceData()), 'utf8');
+    fs.writeFileSync(
+      referenceDataPath,
+      JSON.stringify(makeReferenceData()),
+      'utf8',
+    );
 
     const exitCode = runGenerateSeedSqlCli([
-  graphPath,
-  outputPath,
-  '--reference-data',
-  referenceDataPath,
-]);
+      graphPath,
+      outputPath,
+      '--reference-data',
+      referenceDataPath,
+    ]);
 
     expect(exitCode).toBe(0);
     expect(fs.existsSync(outputPath)).toBe(true);
@@ -207,6 +221,8 @@ describe('generateSeedSql', () => {
     const sql = fs.readFileSync(outputPath, 'utf8');
     expect(sql).toContain('INSERT INTO graph_nodes');
     expect(sql).toContain('INSERT INTO edges');
-    expect(sql).toContain("(8, 'classroom', 'Classroom or instructional space')");
+    expect(sql).toContain(
+      "(8, 'classroom', 'Classroom or instructional space')",
+    );
   });
 });

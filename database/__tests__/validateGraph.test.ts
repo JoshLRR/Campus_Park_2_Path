@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-import { describe, expect, it } from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 import {
   buildValidationReport,
@@ -15,13 +15,13 @@ import {
 function makeNode(
   id: number,
   kind: string = 'path',
-  options: Partial<GraphNode> = {}
+  options: Partial<GraphNode> = {},
 ): GraphNode {
   return {
     id,
     kind,
-    position: { x: id, y: id + 1, floorNum: 0 },
-    imagePosition: { x: id * 10, y: id * 10 + 1 },
+    position: {x: id, y: id + 1, floorNum: 0},
+    imagePosition: {x: id * 10, y: id * 10 + 1},
     neighbors: [],
     features: [],
     ...options,
@@ -33,11 +33,11 @@ function makeValidGraph(): GraphJson {
     graphId: 'test-graph',
     savedAt: '2026-05-12T00:00:00.000Z',
     nodes: [
-      makeNode(1, 'path', { neighbors: [{ to: 2, distance: 10.5 }] }),
+      makeNode(1, 'path', {neighbors: [{to: 2, distance: 10.5}]}),
       makeNode(2, 'room', {
         roomNumber: 'T101',
         features: [8],
-        neighbors: [{ to: 1, distance: 10.5 }],
+        neighbors: [{to: 1, distance: 10.5}],
       }),
     ],
   };
@@ -60,12 +60,12 @@ describe('validateGraph', () => {
         makeNode(50, 'room', {
           roomNumber: 'T121',
           features: [8],
-          neighbors: [{ to: 1, distance: 5 }],
+          neighbors: [{to: 1, distance: 5}],
         }),
         makeNode(51, 'room', {
           roomNumber: 'T121',
           features: [8],
-          neighbors: [{ to: 1, distance: 7 }],
+          neighbors: [{to: 1, distance: 7}],
         }),
       ],
     };
@@ -74,9 +74,11 @@ describe('validateGraph', () => {
 
     expect(result.isValid).toBe(true);
     expect(result.errors).toEqual([]);
-    expect(result.warnings.some((warning) => warning.includes('Duplicate roomNumber "T121" is valid'))).toBe(
-      true
-    );
+    expect(
+      result.warnings.some(warning =>
+        warning.includes('Duplicate roomNumber "T121" is valid'),
+      ),
+    ).toBe(true);
   });
 
   it('fails duplicate room numbers when feature sets do not match', () => {
@@ -86,12 +88,12 @@ describe('validateGraph', () => {
         makeNode(36, 'room', {
           roomNumber: 'T102',
           features: [13],
-          neighbors: [{ to: 1, distance: 5 }],
+          neighbors: [{to: 1, distance: 5}],
         }),
         makeNode(41, 'room', {
           roomNumber: 'T102',
           features: [3],
-          neighbors: [{ to: 1, distance: 7 }],
+          neighbors: [{to: 1, distance: 7}],
         }),
       ],
     };
@@ -100,9 +102,11 @@ describe('validateGraph', () => {
 
     expect(result.isValid).toBe(false);
     expect(
-      result.errors.some((error) =>
-        error.includes('Duplicate roomNumber "T102" has mismatched feature sets')
-      )
+      result.errors.some(error =>
+        error.includes(
+          'Duplicate roomNumber "T102" has mismatched feature sets',
+        ),
+      ),
     ).toBe(true);
   });
 
@@ -113,7 +117,7 @@ describe('validateGraph', () => {
         makeNode(44, 'room', {
           roomNumber: '',
           features: [3],
-          neighbors: [{ to: 1, distance: 5 }],
+          neighbors: [{to: 1, distance: 5}],
         }),
       ],
     };
@@ -121,25 +125,29 @@ describe('validateGraph', () => {
     const result = validateGraph(graph);
 
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((error) => error.includes('Unlabeled room nodes found'))).toBe(true);
-    expect(result.errors.some((error) => error.includes('44'))).toBe(true);
+    expect(
+      result.errors.some(error => error.includes('Unlabeled room nodes found')),
+    ).toBe(true);
+    expect(result.errors.some(error => error.includes('44'))).toBe(true);
   });
 
   it('fails missing neighbor node references', () => {
     const graph: GraphJson = {
-      nodes: [makeNode(1, 'path', { neighbors: [{ to: 999, distance: 5 }] })],
+      nodes: [makeNode(1, 'path', {neighbors: [{to: 999, distance: 5}]})],
     };
 
     const result = validateGraph(graph);
 
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('Node 1 has neighbor 999, but node 999 does not exist');
+    expect(result.errors).toContain(
+      'Node 1 has neighbor 999, but node 999 does not exist',
+    );
   });
 
   it('fails zero or negative distances', () => {
     const graph: GraphJson = {
       nodes: [
-        makeNode(1, 'path', { neighbors: [{ to: 2, distance: 0 }] }),
+        makeNode(1, 'path', {neighbors: [{to: 2, distance: 0}]}),
         makeNode(2),
       ],
     };
@@ -205,12 +213,14 @@ describe('validateGraph', () => {
         tempDir,
         'database',
         'reports',
-        'graph_validation_report.txt'
+        'graph_validation_report.txt',
       );
 
       expect(exitCode).toBe(0);
       expect(fs.existsSync(defaultReportPath)).toBe(true);
-      expect(fs.readFileSync(defaultReportPath, 'utf8')).toContain('RESULT: PASS');
+      expect(fs.readFileSync(defaultReportPath, 'utf8')).toContain(
+        'RESULT: PASS',
+      );
     } finally {
       process.chdir(originalCwd);
     }
@@ -231,7 +241,7 @@ describe('validateGraph', () => {
           }),
         ],
       }),
-      'utf8'
+      'utf8',
     );
 
     try {
@@ -243,7 +253,7 @@ describe('validateGraph', () => {
         tempDir,
         'database',
         'reports',
-        'graph_validation_report.txt'
+        'graph_validation_report.txt',
       );
 
       expect(exitCode).toBe(1);
@@ -273,7 +283,7 @@ describe('validateGraph', () => {
         tempDir,
         'database',
         'reports',
-        'graph_validation_report.txt'
+        'graph_validation_report.txt',
       );
 
       expect(exitCode).toBe(0);

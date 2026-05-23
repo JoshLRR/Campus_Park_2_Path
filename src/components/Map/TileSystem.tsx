@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 
 interface TileData {
   row: number;
@@ -22,18 +22,21 @@ interface TileSystemProps {
 }
 
 const TileSystem: React.FC<TileSystemProps> = ({
-                                                 tileSize = 256,
-                                                 className = '',
-                                                 viewport,
-                                                 scale = 1
-                                               }) => {
+  tileSize = 256,
+  className = '',
+  viewport,
+  scale = 1,
+}) => {
   // Automatically import all tile images using Vite's glob import
   const tiles = useMemo<TileData[]>(() => {
     // Use Vite's import.meta.glob to dynamically import all tile images
-    const tileModules = import.meta.glob('../../assets/tile_*.{png,jpg,jpeg,webp}', {
-      eager: true,
-      as: 'url'
-    });
+    const tileModules = import.meta.glob(
+      '../../assets/tile_*.{png,jpg,jpeg,webp}',
+      {
+        eager: true,
+        as: 'url',
+      },
+    );
 
     const tileList: TileData[] = [];
 
@@ -51,10 +54,12 @@ const TileSystem: React.FC<TileSystemProps> = ({
         tileList.push({
           row,
           col,
-          src: url as string
+          src: url as string,
         });
       } else {
-        console.warn(`Tile filename doesn't match expected pattern: ${filename}`);
+        console.warn(
+          `Tile filename doesn't match expected pattern: ${filename}`,
+        );
       }
     }
 
@@ -107,24 +112,31 @@ const TileSystem: React.FC<TileSystemProps> = ({
 
     const startCol = Math.max(
       gridInfo.minCol,
-      Math.floor((viewLeft - buffer * scaledTileSize) / scaledTileSize) + gridInfo.minCol
+      Math.floor((viewLeft - buffer * scaledTileSize) / scaledTileSize) +
+        gridInfo.minCol,
     );
     const endCol = Math.min(
       gridInfo.maxCol,
-      Math.ceil((viewRight + buffer * scaledTileSize) / scaledTileSize) + gridInfo.minCol
+      Math.ceil((viewRight + buffer * scaledTileSize) / scaledTileSize) +
+        gridInfo.minCol,
     );
     const startRow = Math.max(
       gridInfo.minRow,
-      Math.floor((viewTop - buffer * scaledTileSize) / scaledTileSize) + gridInfo.minRow
+      Math.floor((viewTop - buffer * scaledTileSize) / scaledTileSize) +
+        gridInfo.minRow,
     );
     const endRow = Math.min(
       gridInfo.maxRow,
-      Math.ceil((viewBottom + buffer * scaledTileSize) / scaledTileSize) + gridInfo.minRow
+      Math.ceil((viewBottom + buffer * scaledTileSize) / scaledTileSize) +
+        gridInfo.minRow,
     );
 
-    const visible = tiles.filter(tile =>
-      tile.col >= startCol && tile.col <= endCol &&
-      tile.row >= startRow && tile.row <= endRow
+    const visible = tiles.filter(
+      tile =>
+        tile.col >= startCol &&
+        tile.col <= endCol &&
+        tile.row >= startRow &&
+        tile.row <= endRow,
     );
 
     return visible;
@@ -148,10 +160,14 @@ const TileSystem: React.FC<TileSystemProps> = ({
     const centerY = viewport.y + viewport.height / (2 * viewport.scale);
 
     const sortedTiles = [...visibleTiles].sort((a, b) => {
-      const aX = (a.col - (gridInfo?.minCol || 0)) * scaledTileSize + scaledTileSize / 2;
-      const aY = (a.row - (gridInfo?.minRow || 0)) * scaledTileSize + scaledTileSize / 2;
-      const bX = (b.col - (gridInfo?.minCol || 0)) * scaledTileSize + scaledTileSize / 2;
-      const bY = (b.row - (gridInfo?.minRow || 0)) * scaledTileSize + scaledTileSize / 2;
+      const aX =
+        (a.col - (gridInfo?.minCol || 0)) * scaledTileSize + scaledTileSize / 2;
+      const aY =
+        (a.row - (gridInfo?.minRow || 0)) * scaledTileSize + scaledTileSize / 2;
+      const bX =
+        (b.col - (gridInfo?.minCol || 0)) * scaledTileSize + scaledTileSize / 2;
+      const bY =
+        (b.row - (gridInfo?.minRow || 0)) * scaledTileSize + scaledTileSize / 2;
 
       const aDist = Math.sqrt((aX - centerX) ** 2 + (aY - centerY) ** 2);
       const bDist = Math.sqrt((bX - centerX) ** 2 + (bY - centerY) ** 2);
@@ -165,10 +181,11 @@ const TileSystem: React.FC<TileSystemProps> = ({
     sortedTiles.forEach(tile => {
       const tileKey = `tile_r${tile.row}_c${tile.col}`;
 
-      if (!loadedTiles.has(tileKey) &&
+      if (
+        !loadedTiles.has(tileKey) &&
         !loadingTiles.current.has(tileKey) &&
-        currentLoads < maxConcurrentLoads) {
-
+        currentLoads < maxConcurrentLoads
+      ) {
         loadingTiles.current.add(tileKey);
         currentLoads++;
 
@@ -178,23 +195,36 @@ const TileSystem: React.FC<TileSystemProps> = ({
         img.src = tile.src;
       }
     });
-  }, [visibleTiles, loadedTiles, handleTileLoad, handleTileError, gridInfo, scaledTileSize, viewport]);
+  }, [
+    visibleTiles,
+    loadedTiles,
+    handleTileLoad,
+    handleTileError,
+    gridInfo,
+    scaledTileSize,
+    viewport,
+  ]);
 
   if (!gridInfo || tiles.length === 0) {
     return (
-      <div className="tile-system-empty" style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#666',
-        fontSize: '14px'
-      }}>
-        {tiles.length === 0 ? 'No tiles found in assets folder' : 'Loading tiles...'}
+      <div
+        className="tile-system-empty"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '14px',
+        }}
+      >
+        {tiles.length === 0
+          ? 'No tiles found in assets folder'
+          : 'Loading tiles...'}
       </div>
     );
   }
@@ -210,7 +240,7 @@ const TileSystem: React.FC<TileSystemProps> = ({
         height: gridInfo.gridHeight * scaledTileSize,
       }}
     >
-      {visibleTiles.map(({ row, col, src }) => {
+      {visibleTiles.map(({row, col, src}) => {
         const tileKey = `tile_r${row}_c${col}`;
         const isLoaded = loadedTiles.has(tileKey);
         const isLoading = loadingTiles.current.has(tileKey);
@@ -284,7 +314,9 @@ const TileSystem: React.FC<TileSystemProps> = ({
         >
           <div>Total tiles: {tiles.length}</div>
           <div>Visible: {visibleTiles.length}</div>
-          <div>Grid: {gridInfo.gridWidth}×{gridInfo.gridHeight}</div>
+          <div>
+            Grid: {gridInfo.gridWidth}×{gridInfo.gridHeight}
+          </div>
           <div>Tile size: {scaledTileSize}px</div>
         </div>
       )}

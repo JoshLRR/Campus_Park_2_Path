@@ -45,7 +45,7 @@ const DEFAULT_REPORT_PATH = 'database/reports/graph_validation_report.txt';
 
 function featureSignature(node: GraphNode): string {
   return [...(node.features ?? [])]
-    .map((feature) => Number(feature))
+    .map(feature => Number(feature))
     .sort((a, b) => a - b)
     .join(',');
 }
@@ -76,7 +76,9 @@ export function validateGraph(graph: GraphJson): ValidationResult {
 
   for (const node of nodes) {
     if (!Number.isInteger(node.id)) {
-      errors.push(`Node is missing a valid integer id: ${JSON.stringify(node)}`);
+      errors.push(
+        `Node is missing a valid integer id: ${JSON.stringify(node)}`,
+      );
       continue;
     }
 
@@ -91,24 +93,24 @@ export function validateGraph(graph: GraphJson): ValidationResult {
     errors.push(
       `Duplicate graph node ids found: ${[...new Set(duplicateIds)]
         .sort((a, b) => a - b)
-        .join(', ')}`
+        .join(', ')}`,
     );
   }
 
   const nodeIds = seenIds;
-  const roomNodes = nodes.filter((node) => node.kind === 'room');
-  const pathNodes = nodes.filter((node) => node.kind === 'path');
+  const roomNodes = nodes.filter(node => node.kind === 'room');
+  const pathNodes = nodes.filter(node => node.kind === 'path');
 
   const unlabeledRoomNodeIds = roomNodes
-    .filter((node) => roomCode(node).length === 0)
-    .map((node) => node.id)
+    .filter(node => roomCode(node).length === 0)
+    .map(node => node.id)
     .sort((a, b) => a - b);
 
   if (unlabeledRoomNodeIds.length > 0) {
     errors.push(
       `Unlabeled room nodes found. These need roomNumber fixed or the nodes removed: ${unlabeledRoomNodeIds.join(
-        ', '
-      )}`
+        ', ',
+      )}`,
     );
   }
 
@@ -126,8 +128,8 @@ export function validateGraph(graph: GraphJson): ValidationResult {
     roomsByCode.set(code, current);
   }
 
-  for (const [code, duplicateRoomNodes] of [...roomsByCode.entries()].sort(([a], [b]) =>
-    a.localeCompare(b)
+  for (const [code, duplicateRoomNodes] of [...roomsByCode.entries()].sort(
+    ([a], [b]) => a.localeCompare(b),
   )) {
     if (duplicateRoomNodes.length <= 1) {
       continue;
@@ -137,14 +139,16 @@ export function validateGraph(graph: GraphJson): ValidationResult {
     const details = duplicateRoomNodes
       .slice()
       .sort((a, b) => a.id - b.id)
-      .map((node) => `node ${node.id} features ${featureDisplay(node)}`)
+      .map(node => `node ${node.id} features ${featureDisplay(node)}`)
       .join(', ');
 
     if (signatures.size > 1) {
-      errors.push(`Duplicate roomNumber "${code}" has mismatched feature sets: ${details}`);
+      errors.push(
+        `Duplicate roomNumber "${code}" has mismatched feature sets: ${details}`,
+      );
     } else {
       warnings.push(
-        `Duplicate roomNumber "${code}" is valid as multiple room nodes for one room: ${details}`
+        `Duplicate roomNumber "${code}" is valid as multiple room nodes for one room: ${details}`,
       );
     }
   }
@@ -159,34 +163,44 @@ export function validateGraph(graph: GraphJson): ValidationResult {
 
     for (const neighbor of neighbors) {
       if (!Number.isInteger(neighbor.to)) {
-        errors.push(`Node ${node.id} has a neighbor without a valid 'to': ${JSON.stringify(neighbor)}`);
+        errors.push(
+          `Node ${node.id} has a neighbor without a valid 'to': ${JSON.stringify(neighbor)}`,
+        );
         continue;
       }
 
       if (!nodeIds.has(neighbor.to)) {
-        errors.push(`Node ${node.id} has neighbor ${neighbor.to}, but node ${neighbor.to} does not exist`);
+        errors.push(
+          `Node ${node.id} has neighbor ${neighbor.to}, but node ${neighbor.to} does not exist`,
+        );
       }
 
       const distance = Number(neighbor.distance);
 
       if (!Number.isFinite(distance)) {
-        errors.push(`Node ${node.id} -> ${neighbor.to} is missing a valid distance`);
+        errors.push(
+          `Node ${node.id} -> ${neighbor.to} is missing a valid distance`,
+        );
         continue;
       }
 
       if (distance <= 0) {
-        errors.push(`Node ${node.id} -> ${neighbor.to} has non-positive distance ${distance}`);
+        errors.push(
+          `Node ${node.id} -> ${neighbor.to} has non-positive distance ${distance}`,
+        );
       }
     }
   }
 
   const unknownKindIds = nodes
-    .filter((node) => node.kind !== 'room' && node.kind !== 'path')
-    .map((node) => node.id)
+    .filter(node => node.kind !== 'room' && node.kind !== 'path')
+    .map(node => node.id)
     .sort((a, b) => a - b);
 
   if (unknownKindIds.length > 0) {
-    warnings.push(`Nodes with unknown kind found: ${unknownKindIds.join(', ')}`);
+    warnings.push(
+      `Nodes with unknown kind found: ${unknownKindIds.join(', ')}`,
+    );
   }
 
   warnings.push(`Found ${nodes.length} total nodes`);
@@ -201,7 +215,10 @@ export function validateGraph(graph: GraphJson): ValidationResult {
   };
 }
 
-export function buildValidationReport(graphPath: string, result: ValidationResult): string {
+export function buildValidationReport(
+  graphPath: string,
+  result: ValidationResult,
+): string {
   const lines: string[] = [`Validation report for ${graphPath}`, ''];
 
   if (result.errors.length > 0) {
@@ -229,9 +246,13 @@ export function readGraphJson(graphPath: string): GraphJson {
   return JSON.parse(fs.readFileSync(graphPath, 'utf8')) as GraphJson;
 }
 
-function parseArgs(argv: string[]): { graphPath?: string; reportPath: string; noReport: boolean } {
+function parseArgs(argv: string[]): {
+  graphPath?: string;
+  reportPath: string;
+  noReport: boolean;
+} {
   const args = [...argv];
-  const parsed: { graphPath?: string; reportPath: string; noReport: boolean } = {
+  const parsed: {graphPath?: string; reportPath: string; noReport: boolean} = {
     reportPath: DEFAULT_REPORT_PATH,
     noReport: false,
   };
@@ -254,11 +275,11 @@ function parseArgs(argv: string[]): { graphPath?: string; reportPath: string; no
 }
 
 export function runValidateGraphCli(argv = process.argv.slice(2)): number {
-  const { graphPath, reportPath, noReport } = parseArgs(argv);
+  const {graphPath, reportPath, noReport} = parseArgs(argv);
 
   if (!graphPath) {
     console.error(
-      'Usage: tsx database/scripts/validateGraph.ts <graph.json> [--report <report.txt>] [--no-report]'
+      'Usage: tsx database/scripts/validateGraph.ts <graph.json> [--report <report.txt>] [--no-report]',
     );
     return 1;
   }
@@ -268,7 +289,7 @@ export function runValidateGraphCli(argv = process.argv.slice(2)): number {
   const report = buildValidationReport(graphPath, result);
 
   if (!noReport) {
-    fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+    fs.mkdirSync(path.dirname(reportPath), {recursive: true});
     fs.writeFileSync(reportPath, `${report}\n`, 'utf8');
     console.log(`Wrote validation report to ${reportPath}`);
   }
