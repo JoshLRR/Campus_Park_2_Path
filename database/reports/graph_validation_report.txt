@@ -1,0 +1,16 @@
+Validation report for database/seeds/graph.json
+
+ERRORS
+- Unlabeled room nodes found. These need roomNumber fixed or the nodes removed: 44, 45, 56
+- Duplicate roomNumber "T102" has mismatched feature sets: node 36 features [13], node 41 features [3]
+
+WARNINGS / INFO
+- Duplicate roomNumber "T119" is valid as multiple room nodes for one room: node 47 features [8], node 49 features [8]
+- Duplicate roomNumber "T121" is valid as multiple room nodes for one room: node 50 features [8], node 51 features [8]
+- Duplicate roomNumber "T122" is valid as multiple room nodes for one room: node 55 features [8], node 57 features [8]
+- Found 54 total nodes
+- Found 33 path nodes
+- Found 21 room nodes
+- Found 14 unique labeled rooms
+
+RESULT: FAIL

@@ -1,17 +1,30 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "es2022"],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "jsx": "react-jsx",
     "rootDir": ".",
     "outDir": "build",
     "module": "Node16",
-    "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "moduleResolution": "node16",
-    "jsx": "react-jsx",
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "src/**/*.ts", "src/**/*.tsx", "src/**/*.json", "server", "server/**/*.ts"],
-  "exclude": ["src/__tests__/**", "**/*.test.ts", "**/*.test.tsx"]
+  "include": [
+    "src",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.json",
+    "server",
+    "server/**/*.ts",
+    "database",
+    "database/**/*.ts",
+    "database/**/*.json"
+  ],
+  "exclude": [
+  "build",
+  "node_modules",
+  "src/__tests__/**"
+]
 }
