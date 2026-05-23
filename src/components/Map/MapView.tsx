@@ -11,6 +11,7 @@ import { DestinationMarker } from './DestinationMarker';
 import { GraphOverlay, GraphNode } from './GraphOverlay';
 import { RouteOverlay } from './RouteOverlay';
 import { PathResult } from './pathfinding';
+import { MAP_CONSTANTS, graphToMapCoords } from "./MapConstants";
 
 // Building type
 export interface Building {
@@ -74,9 +75,9 @@ interface MapViewProps {
   onFloorChange?: (floor: number) => void;
 }
 
-const WORLD_WIDTH = 20000;
-const WORLD_HEIGHT = 20000;
-const SCALE_FACTOR = 10;
+const WORLD_WIDTH = MAP_CONSTANTS.WORLD_WIDTH;
+const WORLD_HEIGHT = MAP_CONSTANTS.WORLD_HEIGHT;
+const SCALE_FACTOR = MAP_CONSTANTS.SCALE_FACTOR;
 
 export const MapView: React.FC<MapViewProps> = ({
                                                   initialBuildings,
@@ -104,6 +105,7 @@ export const MapView: React.FC<MapViewProps> = ({
                                                 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
+  const scalePosition = graphToMapCoords;
 
   // Viewport tracking for tile culling
   const [viewport, setViewport] = useState({
@@ -199,12 +201,6 @@ export const MapView: React.FC<MapViewProps> = ({
   const handleRoomClick = (roomId: number) => {
     onRoomSelect?.(roomId);
   };
-
-  // Scale position function for route overlay
-  const scalePosition = (pos: { x: number; y: number }) => ({
-    x: pos.x * SCALE_FACTOR,
-    y: pos.y * SCALE_FACTOR,
-  });
 
   // Check if navigation points are on current floor
   const isStartPointOnCurrentFloor =
@@ -364,7 +360,7 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Route overlay */}
             {currentRoute && currentRoute.success && showRoute && (
               <RouteOverlay
-                nodes={currentFloorGraphNodes}
+                nodes={graphNodes}
                 routePath={currentRoute.path}
                 scalePosition={scalePosition}
                 totalDistance={currentRoute.totalDistance}

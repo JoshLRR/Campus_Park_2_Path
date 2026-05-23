@@ -7,6 +7,7 @@ import {
 } from './components/Map/MapView';
 import {GraphNode} from './components/Map/GraphOverlay';
 import {Pathfinder, PathResult} from './components/Map/pathfinding';
+import { MAP_CONSTANTS, graphToMapCoords } from './components/Map/MapConstants';
 import './index.css';
 import './App.css';
 
@@ -93,26 +94,46 @@ export default function App() {
   useEffect(() => {
     const calculateRoute = async () => {
       if (startPoint && destinationPoint && pathfinder) {
-        const SCALE_INVERSE = 0.1; // Inverse of SCALE_FACTOR from GraphOverlay
-
         try {
+          console.log('[App] Starting route calculation');
+          console.log('[App] Start point:', startPoint);
+          console.log('[App] Destination point:', destinationPoint);
+
           // Find closest nodes to start and destination points
           const startNodeId = pathfinder.findClosestNode(
             startPoint.x,
             startPoint.y,
-            SCALE_INVERSE,
+            startPoint.floor,
           );
+
           const endNodeId = pathfinder.findClosestNode(
             destinationPoint.x,
             destinationPoint.y,
-            SCALE_INVERSE,
+            destinationPoint.floor,
           );
 
+          console.log('[App] Closest start node:', startNodeId);
+          console.log('[App] Closest end node:', endNodeId);
+
+          // Check if both points map to the same node
           if (startNodeId !== null && endNodeId !== null) {
-            // Updated to use async/await with the API-based pathfinding
+            if (startNodeId === endNodeId) {
+              console.warn('[App] Start and end points map to the same node!');
+              setCurrentRoute({
+                path: [],
+                totalDistance: 0,
+                success: false,
+                message: 'Start and destination are too close or map to the same node. Please select points that are further apart.',
+              });
+              return;
+            }
+
+            console.log('[App] Finding path between nodes', startNodeId, 'and', endNodeId);
             const route = await pathfinder.findPath(startNodeId, endNodeId);
+            console.log('[App] Route result:', route);
             setCurrentRoute(route);
           } else {
+            console.error('[App] Could not find nodes near points');
             setCurrentRoute({
               path: [],
               totalDistance: 0,
@@ -121,7 +142,7 @@ export default function App() {
             });
           }
         } catch (error) {
-          console.error('Route calculation failed:', error);
+          console.error('[App] Route calculation failed:', error);
           setCurrentRoute({
             path: [],
             totalDistance: 0,
@@ -130,6 +151,11 @@ export default function App() {
           });
         }
       } else {
+        console.log('[App] Route calculation skipped - missing data:', {
+          hasStartPoint: !!startPoint,
+          hasDestinationPoint: !!destinationPoint,
+          hasPathfinder: !!pathfinder,
+        });
         setCurrentRoute(null);
       }
     };
@@ -222,11 +248,12 @@ export default function App() {
 
   // Handle setting start point from graph node
   const handleSetStartPointFromNode = (node: GraphNode) => {
-    const SCALE_FACTOR = 10; // Same as in GraphOverlay
+    const mapCoords = graphToMapCoords(node.position);
+
     setStartPoint({
       roomId: node.id,
-      x: node.position.x * SCALE_FACTOR,
-      y: node.position.y * SCALE_FACTOR,
+      x: mapCoords.x,
+      y: mapCoords.y,
       label: node.roomNumber || `Node ${node.id}`,
       floor: node.position.floorNum,
     });
@@ -245,13 +272,14 @@ export default function App() {
     setSearchTerm('');
   };
 
-  // Handle setting destination point from graph node
+// Handle setting destination point from graph node
   const handleSetDestinationFromNode = (node: GraphNode) => {
-    const SCALE_FACTOR = 10; // Same as in GraphOverlay
+    const mapCoords = graphToMapCoords(node.position);
+
     setDestinationPoint({
       roomId: node.id,
-      x: node.position.x * SCALE_FACTOR,
-      y: node.position.y * SCALE_FACTOR,
+      x: mapCoords.x,
+      y: mapCoords.y,
       label: node.roomNumber || `Node ${node.id}`,
       floor: node.position.floorNum,
     });
