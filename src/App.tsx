@@ -16,6 +16,7 @@ import {GraphNetworkPanel} from './components/Map/GraphNetworkPanel';
 import {SelectedGraphNodePanel} from './components/Map/SelectedGraphNodePanel';
 import {SelectedRoomPanel} from './components/Map/SelectedRoomPanel';
 import {RoomSearchPanel} from './components/Search/RoomSearchPanel';
+import {RightRoomPanel} from './components/Map/RightRoomPanel';
 import './index.css';
 import './App.css';
 
@@ -475,75 +476,16 @@ export default function App() {
       </div>
 
       {/* Right Panel - Room List (Optional) */}
-      {isRightPanelOpen && (
-        <div className="w-1/4 h-full bg-gray-50 overflow-hidden transition-all duration-300 ease-in-out">
-          <div className="w-full h-full p-4 overflow-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                Rooms (Floor {currentFloor})
-              </h3>
-              <button
-                onClick={() => setIsRightPanelOpen(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-                title="Close panel"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Floor-specific room list */}
-            <div className="space-y-2">
-              {sampleRooms
-                .filter(room => room.floor === currentFloor)
-                .map(room => (
-                  <div
-                    key={room.id}
-                    className={`p-3 border rounded-md transition-colors cursor-pointer ${
-                      selectedRoomId === room.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
-                    }`}
-                    onClick={() => handleRoomSelect(room.id)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{room.name}</p>
-                        <p className="text-sm text-gray-500">{room.building}</p>
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleSetStartPoint(room);
-                          }}
-                          className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                        >
-                          Start
-                        </button>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleSetDestination(room);
-                          }}
-                          className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
-                        >
-                          Dest
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              {sampleRooms.filter(room => room.floor === currentFloor)
-                .length === 0 && (
-                <p className="text-gray-500 text-center py-8">
-                  No rooms on Floor {currentFloor}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <RightRoomPanel
+        isRightPanelOpen={isRightPanelOpen}
+        setIsRightPanelOpen={setIsRightPanelOpen}
+        currentFloor={currentFloor}
+        sampleRooms={sampleRooms}
+        selectedRoomId={selectedRoomId}
+        onRoomSelect={handleRoomSelect}
+        onSetStartPoint={handleSetStartPoint}
+        onSetDestination={handleSetDestination}
+      />
     </div>
   );
 }
