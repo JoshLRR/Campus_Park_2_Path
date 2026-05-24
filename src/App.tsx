@@ -13,6 +13,7 @@ import {CrossFloorRouteWarning} from './components/Map/CrossFloorRouteWarning';
 import {RouteStatusPanel} from './components/Directions/RouteStatusPanel';
 import {NavigationStatusPanel} from './components/Directions/NavigationStatusPanel';
 import {GraphNetworkPanel} from './components/Map/GraphNetworkPanel';
+import {SelectedGraphNodePanel} from './components/Map/SelectedGraphNodePanel';
 import './index.css';
 import './App.css';
 
@@ -403,59 +404,12 @@ export default function App() {
           />
 
           {/* Selected Graph Node Info */}
-          {selectedGraphNode && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold text-red-800">
-                  Selected Graph Node
-                </h3>
-                <button
-                  onClick={clearSelection}
-                  className="text-red-600 hover:text-red-800 font-bold"
-                >
-                  ×
-                </button>
-              </div>
-              <p className="font-medium">
-                {selectedGraphNode.roomNumber || `Node ${selectedGraphNode.id}`}
-              </p>
-              <p className="text-sm text-gray-600">
-                Type: {selectedGraphNode.kind} • ID: {selectedGraphNode.id}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Position: ({selectedGraphNode.position.x.toFixed(1)},{' '}
-                {selectedGraphNode.position.y.toFixed(1)})
-              </p>
-              <p className="text-xs text-gray-500">
-                Floor: {selectedGraphNode.position.floorNum}
-              </p>
-              <p className="text-xs text-gray-500">
-                Connections: {selectedGraphNode.neighbors.length}
-              </p>
-              {selectedGraphNode.features &&
-                selectedGraphNode.features.length > 0 && (
-                  <p className="text-xs text-gray-500">
-                    Features: {selectedGraphNode.features.join(', ')}
-                  </p>
-                )}
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => handleSetStartPointFromNode(selectedGraphNode)}
-                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                >
-                  Set as Start
-                </button>
-                <button
-                  onClick={() =>
-                    handleSetDestinationFromNode(selectedGraphNode)
-                  }
-                  className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
-                >
-                  Set as Destination
-                </button>
-              </div>
-            </div>
-          )}
+          <SelectedGraphNodePanel
+            selectedGraphNode={selectedGraphNode}
+            clearSelection={clearSelection}
+            onSetStartPoint={handleSetStartPointFromNode}
+            onSetDestination={handleSetDestinationFromNode}
+          />
 
           {/* Room Search Section */}
           <div className="mb-6">
