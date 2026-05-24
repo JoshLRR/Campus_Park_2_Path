@@ -14,6 +14,7 @@ import {RouteStatusPanel} from './components/Directions/RouteStatusPanel';
 import {NavigationStatusPanel} from './components/Directions/NavigationStatusPanel';
 import {GraphNetworkPanel} from './components/Map/GraphNetworkPanel';
 import {SelectedGraphNodePanel} from './components/Map/SelectedGraphNodePanel';
+import {SelectedRoomPanel} from './components/Map/SelectedRoomPanel';
 import './index.css';
 import './App.css';
 
@@ -493,39 +494,12 @@ export default function App() {
           </div>
 
           {/* Selected Room Info */}
-          {selectedRoom && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold text-blue-800">
-                  Selected Room
-                </h3>
-                <button
-                  onClick={clearSelection}
-                  className="text-blue-600 hover:text-blue-800 font-bold"
-                >
-                  ×
-                </button>
-              </div>
-              <p className="font-medium">{selectedRoom.name}</p>
-              <p className="text-sm text-gray-600">
-                {selectedRoom.building} • Floor {selectedRoom.floor}
-              </p>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => handleSetStartPoint(selectedRoom)}
-                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                >
-                  Set as Start
-                </button>
-                <button
-                  onClick={() => handleSetDestination(selectedRoom)}
-                  className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
-                >
-                  Set as Destination
-                </button>
-              </div>
-            </div>
-          )}
+          <SelectedRoomPanel
+            selectedRoom={selectedRoom}
+            clearSelection={clearSelection}
+            onSetStartPoint={handleSetStartPoint}
+            onSetDestination={handleSetDestination}
+          />
         </div>
       </div>
 
