@@ -34,6 +34,7 @@ export const RoomFeatures = {
   Emergency_Phone: 30,
   EV_Charging_Station: 31,
   Other: 32,
+  Microwaves: 33,
 } as const;
 
 export type RoomFeatures = (typeof RoomFeatures)[keyof typeof RoomFeatures];
