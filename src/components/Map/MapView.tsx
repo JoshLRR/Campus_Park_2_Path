@@ -77,7 +77,6 @@ interface MapViewProps {
 
 const WORLD_WIDTH = MAP_CONSTANTS.WORLD_WIDTH;
 const WORLD_HEIGHT = MAP_CONSTANTS.WORLD_HEIGHT;
-const SCALE_FACTOR = MAP_CONSTANTS.SCALE_FACTOR;
 
 export const MapView: React.FC<MapViewProps> = ({
                                                   initialBuildings,

@@ -5,11 +5,13 @@ import {
   NavigationPoint,
   Building,
 } from './components/Map/MapView';
+import {MobileMapView} from './components/Map/MobileMapView';
 import {GraphNode} from './components/Map/GraphOverlay';
 import {Pathfinder, PathResult} from './components/Map/pathfinding';
 import { MAP_CONSTANTS, graphToMapCoords } from './components/Map/MapConstants';
 import './index.css';
 import './App.css';
+import {useDeviceType} from "./components/hooks/useDeviceType";
 
 const initialBuildings: (Building & {id: number})[] = [];
 
@@ -17,6 +19,8 @@ const initialBuildings: (Building & {id: number})[] = [];
 const sampleRooms: (Room & {id: number})[] = [];
 
 export default function App() {
+  const deviceType = useDeviceType();
+  const isMobileOrTablet = deviceType === 'mobile' || deviceType === 'tablet';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(
@@ -343,6 +347,43 @@ export default function App() {
   };
 
   const floorStats = getFloorStats();
+
+  if (isMobileOrTablet) {
+    return (
+      <div className="w-full h-screen">
+        <MobileMapView
+          initialBuildings={initialBuildings}
+          selectedRoomId={selectedRoomId}
+          selectedGraphNodeId={selectedGraphNodeId}
+          focusBuildingId={focusBuilding}
+          rooms={sampleRooms}
+          startPoint={startPoint}
+          destinationPoint={destinationPoint}
+          graphNodes={graphNodes}
+          showGraphDebug={showGraphDebug}
+          showPathNodes={showPathNodes}
+          showPathEdges={showPathEdges}
+          showRoomConnections={showRoomConnections}
+          showRoomNodes={showRoomNodes}
+          currentRoute={currentRoute}
+          showRoute={showRoute}
+          currentFloor={currentFloor}
+          availableFloors={availableFloors}
+          onRoomSelect={handleRoomSelect}
+          onGraphNodeSelect={handleGraphNodeSelect}
+          onStartPointClear={clearStartPoint}
+          onDestinationPointClear={clearDestination}
+          onFloorChange={handleFloorChange}
+          onClearRoute={clearRoute}
+          onShowPathNodesChange={setShowPathNodes}
+          onShowPathEdgesChange={setShowPathEdges}
+          onShowRoomConnectionsChange={setShowRoomConnections}
+          onShowRoomNodesChange={setShowRoomNodes}
+          onShowRouteChange={setShowRoute}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen flex relative">
