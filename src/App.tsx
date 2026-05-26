@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
   MapView,
   Room,
@@ -13,6 +13,7 @@ import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
+import {useRouteCalculation} from './hooks/useRouteCalculation';
 import './index.css';
 import './App.css';
 
@@ -58,53 +59,13 @@ export default function App() {
     return graphNodes.length > 0 ? new Pathfinder(graphNodes) : null;
   }, [graphNodes]);
 
-  // Calculate route when start and destination points change
-  useEffect(() => {
-    const calculateRoute = async () => {
-      if (startPoint && destinationPoint && pathfinder) {
-        const SCALE_INVERSE = 0.1; // Inverse of SCALE_FACTOR from GraphOverlay
-
-        try {
-          // Find closest nodes to start and destination points
-          const startNodeId = pathfinder.findClosestNode(
-            startPoint.x,
-            startPoint.y,
-            SCALE_INVERSE,
-          );
-          const endNodeId = pathfinder.findClosestNode(
-            destinationPoint.x,
-            destinationPoint.y,
-            SCALE_INVERSE,
-          );
-
-          if (startNodeId !== null && endNodeId !== null) {
-            // Updated to use async/await with the API-based pathfinding
-            const route = await pathfinder.findPath(startNodeId, endNodeId);
-            setCurrentRoute(route);
-          } else {
-            setCurrentRoute({
-              path: [],
-              totalDistance: 0,
-              success: false,
-              message: 'Could not find nodes near start or destination points',
-            });
-          }
-        } catch (error) {
-          console.error('Route calculation failed:', error);
-          setCurrentRoute({
-            path: [],
-            totalDistance: 0,
-            success: false,
-            message: 'Route calculation failed. Please try again.',
-          });
-        }
-      } else {
-        setCurrentRoute(null);
-      }
-    };
-
-    void calculateRoute();
-  }, [startPoint, destinationPoint, pathfinder]);
+  // Calculate route whenever start/destination points or pathfinder changes
+  useRouteCalculation({
+    startPoint,
+    destinationPoint,
+    pathfinder,
+    setCurrentRoute,
+  });
 
   // Filter rooms based on search term
   const filteredRooms = sampleRooms.filter(
