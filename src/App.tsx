@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {MapView, NavigationPoint} from './components/Map/MapView';
 import {PathResult} from './components/Map/pathfinding';
 import {RightRoomPanel} from './components/Map/RightRoomPanel';
@@ -6,6 +6,7 @@ import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
 import {filterRooms} from './logic/filterRooms';
+import {getSelectedGraphNode, getSelectedRoom} from './logic/getSelectedItems';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
@@ -103,15 +104,12 @@ export default function App() {
     setCurrentRoute,
   });
 
-  // Get selected room details
-  const selectedRoom = selectedRoomId
-    ? sampleRooms.find(r => r.id === selectedRoomId)
-    : null;
+  const selectedRoom = getSelectedRoom(sampleRooms, selectedRoomId);
 
-  // Get selected graph node details
-  const selectedGraphNode = selectedGraphNodeId
-    ? graphNodes.find(n => n.id === selectedGraphNodeId)
-    : null;
+  const selectedGraphNode = getSelectedGraphNode(
+    graphNodes,
+    selectedGraphNodeId,
+  );
 
   const floorStats = getFloorStats(graphNodes, sampleRooms, currentFloor);
 
