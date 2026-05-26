@@ -11,6 +11,7 @@ import {RightRoomPanel} from './components/Map/RightRoomPanel';
 import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
+import {filterRooms} from './logic/filterRooms';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
@@ -67,11 +68,7 @@ export default function App() {
   });
 
   // Filter rooms based on search term
-  const filteredRooms = sampleRooms.filter(
-    room =>
-      room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      room.building.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredRooms = filterRooms(sampleRooms, searchTerm);
 
   // Helper function to get room position on map
   const getRoomPosition = (room: Room & {id: number}) => {
