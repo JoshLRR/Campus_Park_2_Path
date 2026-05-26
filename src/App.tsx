@@ -12,6 +12,7 @@ import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
+import {useGraphData} from './hooks/useGraphData';
 import './index.css';
 import './App.css';
 
@@ -30,11 +31,10 @@ export default function App() {
   const [startPoint, setStartPoint] = useState<NavigationPoint | null>(null);
   const [destinationPoint, setDestinationPoint] =
     useState<NavigationPoint | null>(null);
-  const [graphNodes, setGraphNodes] = useState<GraphNode[]>([]);
+  const {graphNodes, availableFloors} = useGraphData();
 
   // Floor management
   const [currentFloor, setCurrentFloor] = useState(1);
-  const [availableFloors, setAvailableFloors] = useState<number[]>([1]);
 
   // Debug mode toggle
   const [showGraphDebug, setShowGraphDebug] = useState(false);
@@ -52,42 +52,6 @@ export default function App() {
 
   // Route state
   const [currentRoute, setCurrentRoute] = useState<PathResult | null>(null);
-
-  // Load graph data from graph.json
-  useEffect(() => {
-    const loadGraphData = async () => {
-      try {
-        const response = await fetch('/graph.json');
-        const data = await response.json();
-
-        if (data.nodes && Array.isArray(data.nodes)) {
-          setGraphNodes(data.nodes);
-
-          // Extract available floors from graph nodes with proper typing
-          const floorNumbers: number[] = data.nodes
-            .map((node: GraphNode) => node.position.floorNum)
-            .filter(
-              (floorNum: number): floorNum is number =>
-                typeof floorNum === 'number',
-            );
-
-          const floors: number[] = [...new Set(floorNumbers)].sort(
-            (a: number, b: number) => a - b,
-          );
-          setAvailableFloors(floors);
-
-          // Set current floor to the lowest available floor
-          if (floors.length > 0) {
-            setCurrentFloor(floors[0]);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading graph data:', error);
-      }
-    };
-
-    void loadGraphData();
-  }, []);
 
   // Create pathfinder instance
   const pathfinder = useMemo(() => {
