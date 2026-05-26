@@ -7,16 +7,8 @@ import {
 } from './components/Map/MapView';
 import {GraphNode} from './components/Map/GraphOverlay';
 import {Pathfinder, PathResult} from './components/Map/pathfinding';
-import {GraphDisplayControls} from './components/Map/GraphDisplayControls';
-import {FloorInfoPanel} from './components/Map/FloorInfoPanel';
-import {CrossFloorRouteWarning} from './components/Map/CrossFloorRouteWarning';
-import {RouteStatusPanel} from './components/Directions/RouteStatusPanel';
-import {NavigationStatusPanel} from './components/Directions/NavigationStatusPanel';
-import {GraphNetworkPanel} from './components/Map/GraphNetworkPanel';
-import {SelectedGraphNodePanel} from './components/Map/SelectedGraphNodePanel';
-import {SelectedRoomPanel} from './components/Map/SelectedRoomPanel';
-import {RoomSearchPanel} from './components/Search/RoomSearchPanel';
 import {RightRoomPanel} from './components/Map/RightRoomPanel';
+import {AppSidebar} from './components/AppSidebar';
 import './index.css';
 import './App.css';
 
@@ -329,112 +321,47 @@ export default function App() {
   return (
     <div className="w-full h-screen flex relative">
       {/* Left Sidebar */}
-      <div
-        className={`${isLeftSidebarOpen ? 'w-1/4' : 'w-0'} h-full bg-gray-100 overflow-hidden transition-all duration-300 ease-in-out`}
-      >
-        <div
-          className={`w-80 h-full p-6 overflow-auto ${isLeftSidebarOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Campus Navigator</h2>
-            <button
-              onClick={() => setIsLeftSidebarOpen(false)}
-              className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-              title="Close sidebar"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* Floor Information */}
-          <FloorInfoPanel
-            currentFloor={currentFloor}
-            floorStats={floorStats}
-            availableFloors={availableFloors}
-            onFloorChange={handleFloorChange}
-          />
-
-          {/* Cross-floor route warning */}
-          <CrossFloorRouteWarning
-            currentRoute={currentRoute}
-            graphNodes={graphNodes}
-            currentFloor={currentFloor}
-            onFloorChange={handleFloorChange}
-          />
-
-          {/* Graph Visibility Controls */}
-          <GraphDisplayControls
-            showPathNodes={showPathNodes}
-            setShowPathNodes={setShowPathNodes}
-            showRoomNodes={showRoomNodes}
-            setShowRoomNodes={setShowRoomNodes}
-            showPathEdges={showPathEdges}
-            setShowPathEdges={setShowPathEdges}
-            showRoomConnections={showRoomConnections}
-            setShowRoomConnections={setShowRoomConnections}
-            showRoute={showRoute}
-            setShowRoute={setShowRoute}
-          />
-
-          {/* Route Status Panel */}
-          <RouteStatusPanel
-            currentRoute={currentRoute}
-            startPoint={startPoint}
-            destinationPoint={destinationPoint}
-            showRoute={showRoute}
-            setShowRoute={setShowRoute}
-            clearRoute={clearRoute}
-          />
-
-          {/* Graph Network Panel */}
-          <GraphNetworkPanel
-            graphNodes={graphNodes}
-            floorStats={floorStats}
-            currentFloor={currentFloor}
-            availableFloors={availableFloors}
-            pathfinder={pathfinder}
-            showGraphDebug={showGraphDebug}
-            setShowGraphDebug={setShowGraphDebug}
-          />
-
-          {/* Navigation Status */}
-          <NavigationStatusPanel
-            startPoint={startPoint}
-            destinationPoint={destinationPoint}
-            currentRoute={currentRoute}
-            clearStartPoint={clearStartPoint}
-            clearDestination={clearDestination}
-          />
-
-          {/* Selected Graph Node Info */}
-          <SelectedGraphNodePanel
-            selectedGraphNode={selectedGraphNode}
-            clearSelection={clearSelection}
-            onSetStartPoint={handleSetStartPointFromNode}
-            onSetDestination={handleSetDestinationFromNode}
-          />
-
-          {/* Room Search */}
-          <RoomSearchPanel
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filteredRooms={filteredRooms}
-            isRightPanelOpen={isRightPanelOpen}
-            setIsRightPanelOpen={setIsRightPanelOpen}
-            onSetStartPoint={handleSetStartPoint}
-            onSetDestination={handleSetDestination}
-            onRoomSelect={handleRoomSelect}
-          />
-
-          {/* Selected Room Info */}
-          <SelectedRoomPanel
-            selectedRoom={selectedRoom}
-            clearSelection={clearSelection}
-            onSetStartPoint={handleSetStartPoint}
-            onSetDestination={handleSetDestination}
-          />
-        </div>
-      </div>
+      <AppSidebar
+        isLeftSidebarOpen={isLeftSidebarOpen}
+        setIsLeftSidebarOpen={setIsLeftSidebarOpen}
+        currentFloor={currentFloor}
+        floorStats={floorStats}
+        availableFloors={availableFloors}
+        handleFloorChange={handleFloorChange}
+        currentRoute={currentRoute}
+        graphNodes={graphNodes}
+        showPathNodes={showPathNodes}
+        setShowPathNodes={setShowPathNodes}
+        showRoomNodes={showRoomNodes}
+        setShowRoomNodes={setShowRoomNodes}
+        showPathEdges={showPathEdges}
+        setShowPathEdges={setShowPathEdges}
+        showRoomConnections={showRoomConnections}
+        setShowRoomConnections={setShowRoomConnections}
+        showRoute={showRoute}
+        setShowRoute={setShowRoute}
+        startPoint={startPoint}
+        destinationPoint={destinationPoint}
+        clearRoute={clearRoute}
+        pathfinder={pathfinder}
+        showGraphDebug={showGraphDebug}
+        setShowGraphDebug={setShowGraphDebug}
+        clearStartPoint={clearStartPoint}
+        clearDestination={clearDestination}
+        selectedGraphNode={selectedGraphNode}
+        clearSelection={clearSelection}
+        handleSetStartPointFromNode={handleSetStartPointFromNode}
+        handleSetDestinationFromNode={handleSetDestinationFromNode}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filteredRooms={filteredRooms}
+        isRightPanelOpen={isRightPanelOpen}
+        setIsRightPanelOpen={setIsRightPanelOpen}
+        handleSetStartPoint={handleSetStartPoint}
+        handleSetDestination={handleSetDestination}
+        handleRoomSelect={handleRoomSelect}
+        selectedRoom={selectedRoom}
+      />
 
       {/* Toggle button for closed sidebar */}
       {!isLeftSidebarOpen && (
