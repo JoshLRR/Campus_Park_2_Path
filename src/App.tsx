@@ -9,6 +9,8 @@ import {GraphNode} from './components/Map/GraphOverlay';
 import {Pathfinder, PathResult} from './components/Map/pathfinding';
 import {RightRoomPanel} from './components/Map/RightRoomPanel';
 import {AppSidebar} from './components/AppSidebar';
+import {getMapWidth} from './logic/getMapWidth';
+import {getFloorStats} from './logic/getFloorStats';
 import './index.css';
 import './App.css';
 
@@ -294,29 +296,7 @@ export default function App() {
     ? graphNodes.find(n => n.id === selectedGraphNodeId)
     : null;
 
-  // Calculate map width based on sidebar states
-  const getMapWidth = () => {
-    if (isLeftSidebarOpen && isRightPanelOpen) return 'w-1/2';
-    if (isLeftSidebarOpen || isRightPanelOpen) return 'w-3/4';
-    return 'w-full';
-  };
-
-  // Get floor statistics
-  const getFloorStats = () => {
-    const currentFloorNodes = graphNodes.filter(
-      n => n.position.floorNum === currentFloor,
-    );
-    const currentFloorRooms = sampleRooms.filter(r => r.floor === currentFloor);
-
-    return {
-      nodes: currentFloorNodes.length,
-      pathNodes: currentFloorNodes.filter(n => n.kind === 'path').length,
-      roomNodes: currentFloorNodes.filter(n => n.kind === 'room').length,
-      rooms: currentFloorRooms.length,
-    };
-  };
-
-  const floorStats = getFloorStats();
+  const floorStats = getFloorStats(graphNodes, sampleRooms, currentFloor);
 
   return (
     <div className="w-full h-screen flex relative">
@@ -375,7 +355,7 @@ export default function App() {
       )}
 
       {/* Main Map View */}
-      <div className={getMapWidth()}>
+      <div className={getMapWidth(isLeftSidebarOpen, isRightPanelOpen)}>
         <MapView
           initialBuildings={initialBuildings}
           selectedRoomId={selectedRoomId}
