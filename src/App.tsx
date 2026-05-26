@@ -11,6 +11,7 @@ import {RightRoomPanel} from './components/Map/RightRoomPanel';
 import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
+import {SidebarToggleButton} from './components/SidebarToggleButton';
 import './index.css';
 import './App.css';
 
@@ -344,15 +345,10 @@ export default function App() {
       />
 
       {/* Toggle button for closed sidebar */}
-      {!isLeftSidebarOpen && (
-        <button
-          onClick={() => setIsLeftSidebarOpen(true)}
-          className="absolute top-4 left-4 z-10 bg-white p-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors"
-          title="Open sidebar"
-        >
-          <span className="text-xl">☰</span>
-        </button>
-      )}
+      <SidebarToggleButton
+        isLeftSidebarOpen={isLeftSidebarOpen}
+        setIsLeftSidebarOpen={setIsLeftSidebarOpen}
+      />
 
       {/* Main Map View */}
       <div className={getMapWidth(isLeftSidebarOpen, isRightPanelOpen)}>
