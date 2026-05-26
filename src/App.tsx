@@ -12,6 +12,7 @@ import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
 import {filterRooms} from './logic/filterRooms';
+import {getRoomPosition} from './logic/getRoomPosition';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
@@ -70,16 +71,6 @@ export default function App() {
   // Filter rooms based on search term
   const filteredRooms = filterRooms(sampleRooms, searchTerm);
 
-  // Helper function to get room position on map
-  const getRoomPosition = (room: Room & {id: number}) => {
-    const building = initialBuildings.find(b => b.id === room.buildingId);
-    if (!building) return {x: 0, y: 0};
-    return {
-      x: building.x + room.x + (room.width || 30) / 2,
-      y: building.y + room.y + (room.height || 20) / 2,
-    };
-  };
-
   // Handle floor change
   const handleFloorChange = (floor: number) => {
     setCurrentFloor(floor);
@@ -135,7 +126,7 @@ export default function App() {
 
   // Handle setting start point from regular room
   const handleSetStartPoint = (room: Room & {id: number}) => {
-    const position = getRoomPosition(room);
+    const position = getRoomPosition(room, initialBuildings);
     setStartPoint({
       roomId: room.id,
       x: position.x,
@@ -160,7 +151,7 @@ export default function App() {
 
   // Handle setting destination point from regular room
   const handleSetDestination = (room: Room & {id: number}) => {
-    const position = getRoomPosition(room);
+    const position = getRoomPosition(room, initialBuildings);
     setDestinationPoint({
       roomId: room.id,
       x: position.x,
