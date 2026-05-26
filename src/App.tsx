@@ -12,7 +12,10 @@ import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
 import {filterRooms} from './logic/filterRooms';
-import {getRoomPosition} from './logic/getRoomPosition';
+import {
+  createNavigationPointFromGraphNode,
+  createNavigationPointFromRoom,
+} from './logic/createNavigationPoint';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
@@ -126,52 +129,22 @@ export default function App() {
 
   // Handle setting start point from regular room
   const handleSetStartPoint = (room: Room & {id: number}) => {
-    const position = getRoomPosition(room, initialBuildings);
-    setStartPoint({
-      roomId: room.id,
-      x: position.x,
-      y: position.y,
-      label: room.name,
-      floor: room.floor,
-    });
-    setSearchTerm('');
+    setStartPoint(createNavigationPointFromRoom(room, initialBuildings));
   };
 
   // Handle setting start point from graph node
   const handleSetStartPointFromNode = (node: GraphNode) => {
-    const SCALE_FACTOR = 10; // Same as in GraphOverlay
-    setStartPoint({
-      roomId: node.id,
-      x: node.position.x * SCALE_FACTOR,
-      y: node.position.y * SCALE_FACTOR,
-      label: node.roomNumber || `Node ${node.id}`,
-      floor: node.position.floorNum,
-    });
+    setStartPoint(createNavigationPointFromGraphNode(node));
   };
 
   // Handle setting destination point from regular room
   const handleSetDestination = (room: Room & {id: number}) => {
-    const position = getRoomPosition(room, initialBuildings);
-    setDestinationPoint({
-      roomId: room.id,
-      x: position.x,
-      y: position.y,
-      label: room.name,
-      floor: room.floor,
-    });
-    setSearchTerm('');
+    setDestinationPoint(createNavigationPointFromRoom(room, initialBuildings));
   };
 
   // Handle setting destination point from graph node
   const handleSetDestinationFromNode = (node: GraphNode) => {
-    const SCALE_FACTOR = 10; // Same as in GraphOverlay
-    setDestinationPoint({
-      roomId: node.id,
-      x: node.position.x * SCALE_FACTOR,
-      y: node.position.y * SCALE_FACTOR,
-      label: node.roomNumber || `Node ${node.id}`,
-      floor: node.position.floorNum,
-    });
+    setDestinationPoint(createNavigationPointFromGraphNode(node));
   };
 
   // Handle clearing selection
