@@ -1,10 +1,5 @@
 import React, {useState} from 'react';
-import {
-  MapView,
-  Room,
-  NavigationPoint,
-  Building,
-} from './components/Map/MapView';
+import {MapView, Room, NavigationPoint} from './components/Map/MapView';
 import {GraphNode} from './components/Map/GraphOverlay';
 import {PathResult} from './components/Map/pathfinding';
 import {RightRoomPanel} from './components/Map/RightRoomPanel';
@@ -20,13 +15,9 @@ import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
 import {usePathfinder} from './hooks/usePathfinder';
+import {initialBuildings, sampleRooms} from './data/mockCampusData';
 import './index.css';
 import './App.css';
-
-const initialBuildings: (Building & {id: number})[] = [];
-
-// Sample room data with positions within buildings
-const sampleRooms: (Room & {id: number})[] = [];
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
