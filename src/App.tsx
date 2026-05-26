@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState} from 'react';
 import {
   MapView,
   Room,
@@ -6,7 +6,7 @@ import {
   Building,
 } from './components/Map/MapView';
 import {GraphNode} from './components/Map/GraphOverlay';
-import {Pathfinder, PathResult} from './components/Map/pathfinding';
+import {PathResult} from './components/Map/pathfinding';
 import {RightRoomPanel} from './components/Map/RightRoomPanel';
 import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
@@ -14,6 +14,7 @@ import {getFloorStats} from './logic/getFloorStats';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
+import {usePathfinder} from './hooks/usePathfinder';
 import './index.css';
 import './App.css';
 
@@ -55,9 +56,7 @@ export default function App() {
   const [currentRoute, setCurrentRoute] = useState<PathResult | null>(null);
 
   // Create pathfinder instance
-  const pathfinder = useMemo(() => {
-    return graphNodes.length > 0 ? new Pathfinder(graphNodes) : null;
-  }, [graphNodes]);
+  const pathfinder = usePathfinder(graphNodes);
 
   // Calculate route whenever start/destination points or pathfinder changes
   useRouteCalculation({
