@@ -386,6 +386,14 @@ export default function App() {
           onShowRoomConnectionsChange={setShowRoomConnections}
           onShowRoomNodesChange={setShowRoomNodes}
           onShowRouteChange={setShowRoute}
+          onSetStartFromSelected={() => {
+            const node = graphNodes.find(n => n.id === selectedGraphNodeId);
+            if (node) handleSetStartPointFromNode(node);
+          }}
+          onSetEndFromSelected={() => {
+            const node = graphNodes.find(n => n.id === selectedGraphNodeId);
+            if (node) handleSetDestinationFromNode(node);
+          }}
         />
       </div>
     );
