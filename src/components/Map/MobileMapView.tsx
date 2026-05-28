@@ -19,11 +19,7 @@ import {GraphOverlay, GraphNode} from './GraphOverlay';
 import {RouteOverlay} from './RouteOverlay';
 import {PathResult} from './pathfinding';
 import {MAP_CONSTANTS, graphToMapCoords} from './MapConstants';
-import {
-  Building,
-  Room,
-  NavigationPoint,
-} from './MapView';
+import {Building, Room, NavigationPoint} from './MapView';
 
 const WORLD_WIDTH = MAP_CONSTANTS.WORLD_WIDTH;
 const WORLD_HEIGHT = MAP_CONSTANTS.WORLD_HEIGHT;
@@ -62,35 +58,35 @@ interface MobileMapViewProps {
 }
 
 export const MobileMapView: React.FC<MobileMapViewProps> = ({
-  initialBuildings,
-  selectedRoomId,
-  selectedGraphNodeId,
-  focusBuildingId,
-  rooms = [],
-  startPoint,
-  destinationPoint,
-  graphNodes = [],
-  showGraphDebug = false,
-  showPathNodes = true,
-  showPathEdges = true,
-  showRoomConnections = true,
-  showRoomNodes = true,
-  currentRoute = null,
-  showRoute = true,
-  currentFloor,
-  availableFloors,
-  onRoomSelect,
-  onGraphNodeSelect,
-  onStartPointClear,
-  onDestinationPointClear,
-  onFloorChange,
-  onClearRoute,
-  onShowPathNodesChange,
-  onShowPathEdgesChange,
-  onShowRoomConnectionsChange,
-  onShowRoomNodesChange,
-  onShowRouteChange,
-}) => {
+                                                              initialBuildings,
+                                                              selectedRoomId,
+                                                              selectedGraphNodeId,
+                                                              focusBuildingId,
+                                                              rooms = [],
+                                                              startPoint,
+                                                              destinationPoint,
+                                                              graphNodes = [],
+                                                              showGraphDebug = false,
+                                                              showPathNodes = true,
+                                                              showPathEdges = true,
+                                                              showRoomConnections = true,
+                                                              showRoomNodes = true,
+                                                              currentRoute = null,
+                                                              showRoute = true,
+                                                              currentFloor,
+                                                              availableFloors,
+                                                              onRoomSelect,
+                                                              onGraphNodeSelect,
+                                                              onStartPointClear,
+                                                              onDestinationPointClear,
+                                                              onFloorChange,
+                                                              onClearRoute,
+                                                              onShowPathNodesChange,
+                                                              onShowPathEdgesChange,
+                                                              onShowRoomConnectionsChange,
+                                                              onShowRoomNodesChange,
+                                                              onShowRouteChange,
+                                                            }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const scalePosition = graphToMapCoords;
@@ -196,6 +192,7 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
             position: 'relative',
           }}
         >
+          {/* Tile layer */}
           <div
             style={{
               position: 'absolute',
@@ -214,6 +211,7 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
             />
           </div>
 
+          {/* SVG layer */}
           <svg
             width={WORLD_WIDTH}
             height={WORLD_HEIGHT}
@@ -324,7 +322,6 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
 
       {/* Top bar: floor selector + route status */}
       <div className="absolute top-3 left-3 right-3 flex items-center gap-2 z-20 pointer-events-none">
-        {/* Floor pills */}
         <div className="flex gap-1 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 shadow pointer-events-auto">
           {availableFloors.map(floor => (
             <button
@@ -341,7 +338,6 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
           ))}
         </div>
 
-        {/* Route status badge */}
         {currentRoute && currentRoute.success && (
           <div className="ml-auto bg-yellow-400/95 backdrop-blur-sm text-yellow-900 rounded-full px-3 py-1 text-xs font-semibold shadow pointer-events-auto">
             📍 {currentRoute.totalDistance.toFixed(1)} units
@@ -354,7 +350,7 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
         )}
       </div>
 
-      {/* Off-floor navigation warnings */}
+      {/* Off-floor warnings */}
       {startPoint && !isStartPointOnCurrentFloor && (
         <div className="absolute top-14 left-3 right-3 bg-red-50 border border-red-200 p-2 rounded-lg shadow text-xs z-20">
           <span className="text-red-700 font-medium">Start</span>
@@ -367,7 +363,6 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
           </button>
         </div>
       )}
-
       {destinationPoint && !isDestinationPointOnCurrentFloor && (
         <div className="absolute top-14 left-3 right-3 bg-green-50 border border-green-200 p-2 rounded-lg shadow text-xs z-20">
           <span className="text-green-700 font-medium">Destination</span>
@@ -383,9 +378,8 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
         </div>
       )}
 
-      {/* Bottom drawer toggle handle */}
+      {/* Bottom drawer */}
       <div className="absolute bottom-0 left-0 right-0 z-20">
-        {/* Handle bar */}
         <button
           onClick={() => setIsDrawerOpen(prev => !prev)}
           className="w-full flex flex-col items-center pt-2 pb-1 bg-white rounded-t-2xl shadow-lg"
@@ -396,43 +390,48 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
           </span>
         </button>
 
-        {/* Drawer content */}
         {isDrawerOpen && (
           <div className="bg-white shadow-lg max-h-72 overflow-y-auto">
-            {/* Tab bar */}
             <div className="flex border-b border-gray-200">
               {(['navigation', 'floors', 'display'] as DrawerTab[]).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2 text-sm font-medium capitalize transition-colors ${
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
                     activeTab === tab
                       ? 'border-b-2 border-blue-500 text-blue-600'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  {tab === 'navigation' ? '🧭 Nav' : tab === 'floors' ? '🏢 Floors' : '🎨 Display'}
+                  {tab === 'navigation'
+                    ? '🧭 Nav'
+                    : tab === 'floors'
+                      ? '🏢 Floors'
+                      : '🎨 Display'}
                 </button>
               ))}
             </div>
 
             <div className="p-4">
-              {/* Navigation tab */}
               {activeTab === 'navigation' && (
                 <div className="space-y-3">
                   {!hasActiveNavigation && (
                     <p className="text-sm text-gray-500 text-center py-2">
-                      Tap a node on the map, then use "Set as Start" or "Set as Destination"
+                      Tap a node on the map, then use "Set as Start" or "Set as
+                      Destination"
                     </p>
                   )}
-
                   {startPoint && (
                     <div className="flex items-center justify-between bg-red-50 rounded-lg p-2">
                       <div>
-                        <span className="text-xs text-red-500 font-semibold">START</span>
+                        <span className="text-xs text-red-500 font-semibold">
+                          START
+                        </span>
                         <p className="text-sm font-medium">{startPoint.label}</p>
                         {startPoint.floor !== undefined && (
-                          <p className="text-xs text-gray-400">Floor {startPoint.floor}</p>
+                          <p className="text-xs text-gray-400">
+                            Floor {startPoint.floor}
+                          </p>
                         )}
                       </div>
                       <button
@@ -443,14 +442,19 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
                       </button>
                     </div>
                   )}
-
                   {destinationPoint && (
                     <div className="flex items-center justify-between bg-green-50 rounded-lg p-2">
                       <div>
-                        <span className="text-xs text-green-500 font-semibold">DESTINATION</span>
-                        <p className="text-sm font-medium">{destinationPoint.label}</p>
+                        <span className="text-xs text-green-500 font-semibold">
+                          DESTINATION
+                        </span>
+                        <p className="text-sm font-medium">
+                          {destinationPoint.label}
+                        </p>
                         {destinationPoint.floor !== undefined && (
-                          <p className="text-xs text-gray-400">Floor {destinationPoint.floor}</p>
+                          <p className="text-xs text-gray-400">
+                            Floor {destinationPoint.floor}
+                          </p>
                         )}
                       </div>
                       <button
@@ -461,11 +465,12 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
                       </button>
                     </div>
                   )}
-
                   {currentRoute && currentRoute.success && (
                     <div className="bg-yellow-50 rounded-lg p-2 flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-yellow-600 font-semibold">ROUTE FOUND</p>
+                        <p className="text-xs text-yellow-600 font-semibold">
+                          ROUTE FOUND
+                        </p>
                         <p className="text-sm">
                           {currentRoute.totalDistance.toFixed(1)} units ·{' '}
                           {currentRoute.path.length} waypoints
@@ -482,10 +487,11 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
                 </div>
               )}
 
-              {/* Floors tab */}
               {activeTab === 'floors' && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Select a floor to view</p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Select a floor to view
+                  </p>
                   <div className="grid grid-cols-4 gap-2">
                     {availableFloors.map(floor => (
                       <button
@@ -504,17 +510,39 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
                 </div>
               )}
 
-              {/* Display tab */}
               {activeTab === 'display' && (
                 <div className="space-y-2">
                   {[
-                    {label: 'Path Nodes', value: showPathNodes, onChange: onShowPathNodesChange},
-                    {label: 'Room Nodes', value: showRoomNodes, onChange: onShowRoomNodesChange},
-                    {label: 'Path Edges', value: showPathEdges, onChange: onShowPathEdgesChange},
-                    {label: 'Room Connections', value: showRoomConnections, onChange: onShowRoomConnectionsChange},
-                    {label: 'Route', value: showRoute, onChange: onShowRouteChange},
+                    {
+                      label: 'Path Nodes',
+                      value: showPathNodes,
+                      onChange: onShowPathNodesChange,
+                    },
+                    {
+                      label: 'Room Nodes',
+                      value: showRoomNodes,
+                      onChange: onShowRoomNodesChange,
+                    },
+                    {
+                      label: 'Path Edges',
+                      value: showPathEdges,
+                      onChange: onShowPathEdgesChange,
+                    },
+                    {
+                      label: 'Room Connections',
+                      value: showRoomConnections,
+                      onChange: onShowRoomConnectionsChange,
+                    },
+                    {
+                      label: 'Route',
+                      value: showRoute,
+                      onChange: onShowRouteChange,
+                    },
                   ].map(({label, value, onChange}) => (
-                    <label key={label} className="flex items-center justify-between">
+                    <label
+                      key={label}
+                      className="flex items-center justify-between"
+                    >
                       <span className="text-sm text-gray-700">{label}</span>
                       <button
                         onClick={() => onChange?.(!value)}

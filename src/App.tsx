@@ -19,8 +19,14 @@ const initialBuildings: (Building & {id: number})[] = [];
 const sampleRooms: (Room & {id: number})[] = [];
 
 export default function App() {
-  const deviceType = useDeviceType();
-  const isMobileOrTablet = deviceType === 'mobile' || deviceType === 'tablet';
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
+    () => window.innerWidth < 1024,
+  );
+  useEffect(() => {
+    const handleResize = () => setIsMobileOrTablet(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(
