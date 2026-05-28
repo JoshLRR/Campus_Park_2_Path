@@ -17,10 +17,19 @@ export function useGraphData() {
     const loadGraphData = async () => {
       try {
         const response = await fetch('/graph.json');
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch graph.json: ${response.status}`);
+        }
+
         const data = await response.json();
 
+        const rawNodes: GraphNode[] = Array.isArray(data)
+          ? data
+          : (data.nodes ?? []);
+
         // Convert JSON data to GraphNode format
-        const nodes: GraphNode[] = data.map((node: GraphNode) => ({
+        const nodes: GraphNode[] = rawNodes.map((node: GraphNode) => ({
           ...node,
           position: {
             ...node.position,
