@@ -394,6 +394,14 @@ export default function App() {
             const node = graphNodes.find(n => n.id === selectedGraphNodeId);
             if (node) handleSetDestinationFromNode(node);
           }}
+          onSetStartFromNodeId={(nodeId) => {
+            const node = graphNodes.find(n => n.id === nodeId);
+            if (node) handleSetStartPointFromNode(node);
+          }}
+          onSetEndFromNodeId={(nodeId) => {
+            const node = graphNodes.find(n => n.id === nodeId);
+            if (node) handleSetDestinationFromNode(node);
+          }}
         />
       </div>
     );
