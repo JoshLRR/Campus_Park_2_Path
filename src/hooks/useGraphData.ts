@@ -33,7 +33,7 @@ export function useGraphData() {
           ...node,
           position: {
             ...node.position,
-            floorNum: node.position.floorNum || 1,
+            floorNum: node.position.floorNum ?? 1,
           },
         }));
 

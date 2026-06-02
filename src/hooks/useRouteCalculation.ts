@@ -36,13 +36,13 @@ export function useRouteCalculation({
         const startNodeId = pathfinder.findClosestNode(
           startPoint.x,
           startPoint.y,
-          startPoint.floor || 1,
+          startPoint.floor ?? 1,
         );
 
         const endNodeId = pathfinder.findClosestNode(
           destinationPoint.x,
           destinationPoint.y,
-          destinationPoint.floor || 1,
+          destinationPoint.floor ?? 1,
         );
 
         if (startNodeId === null || endNodeId === null) {
