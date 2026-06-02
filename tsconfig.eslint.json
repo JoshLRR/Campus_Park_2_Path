@@ -6,9 +6,8 @@
     "src/**/*.tsx",
     "vite.config.ts",
     "vitest.config.ts",
-    "server",
-    "server/**/*.ts",
-    "**/*.json"
+    "**/*.json",
+    "database/**/*.ts"
   ],
   "exclude": [
     "node_modules",
