@@ -15,6 +15,20 @@ import {MobileBottomSheet} from './MobileBottomSheet';
 
 const {WORLD_WIDTH, WORLD_HEIGHT} = MAP_CONSTANTS;
 
+const DEFAULT_MIN_SCALE = 0.4;
+const DEFAULT_MAX_SCALE = 4;
+
+export interface MapBounds {
+  /** Minimum world-space X the viewport left edge may reach */
+  minX: number;
+  /** Maximum world-space X the viewport left edge may reach */
+  maxX: number;
+  /** Minimum world-space Y the viewport top edge may reach */
+  minY: number;
+  /** Maximum world-space Y the viewport top edge may reach */
+  maxY: number;
+}
+
 export interface MobileMapViewProps {
   initialBuildings: (Building & {id: number})[];
   selectedRoomId?: number | null;
@@ -33,6 +47,12 @@ export interface MobileMapViewProps {
   showRoute?: boolean;
   currentFloor: number;
   availableFloors: number[];
+  /** Minimum zoom scale (default: 0.4) */
+  minScale?: number;
+  /** Maximum zoom scale (default: 4) */
+  maxScale?: number;
+  /** Optional pan boundaries in world-space coordinates */
+  bounds?: MapBounds;
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
@@ -68,6 +88,9 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
                                                               showRoute = true,
                                                               currentFloor,
                                                               availableFloors,
+                                                              minScale = DEFAULT_MIN_SCALE,
+                                                              maxScale = DEFAULT_MAX_SCALE,
+                                                              bounds,
                                                               onRoomSelect,
                                                               onGraphNodeSelect,
                                                               onStartPointClear,
@@ -97,16 +120,33 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
   const handleTransform = useCallback((ref: ReactZoomPanPinchRef) => {
     const {state} = ref;
     const rect = containerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setViewport({
-        x: -state.positionX / state.scale,
-        y: -state.positionY / state.scale,
-        width: rect.width,
-        height: rect.height,
-        scale: state.scale,
-      });
+    if (!rect) return;
+
+    if (bounds) {
+      // Convert world-space bounds to screen-space positions, then clamp.
+      const clampedX = Math.min(
+        -bounds.minX * state.scale,
+        Math.max(-bounds.maxX * state.scale, state.positionX),
+      );
+      const clampedY = Math.min(
+        -bounds.minY * state.scale,
+        Math.max(-bounds.maxY * state.scale, state.positionY),
+      );
+
+      if (clampedX !== state.positionX || clampedY !== state.positionY) {
+        ref.setTransform(clampedX, clampedY, state.scale, 0);
+        return;
+      }
     }
-  }, []);
+
+    setViewport({
+      x: -state.positionX / state.scale,
+      y: -state.positionY / state.scale,
+      width: rect.width,
+      height: rect.height,
+      scale: state.scale,
+    });
+  }, [bounds]);
 
   useEffect(() => {
     updateViewportSize();
@@ -133,8 +173,8 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
         wheel={{step: 0.08}}
         doubleClick={{disabled: true}}
         pinch={{step: 5}}
-        minScale={0.4}
-        maxScale={4}
+        minScale={minScale}
+        maxScale={maxScale}
         limitToBounds={false}
         onTransformed={handleTransform}
       >

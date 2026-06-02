@@ -358,6 +358,9 @@ export default function App() {
     return (
       <div className="w-full h-screen">
         <MobileMapView
+          minScale={0.5}
+          maxScale={3}
+          bounds={{ minX: 0, maxX: 8000, minY: 0, maxY: 8000 }}
           initialBuildings={initialBuildings}
           selectedRoomId={selectedRoomId}
           selectedGraphNodeId={selectedGraphNodeId}
