@@ -3,7 +3,12 @@ import {defineConfig} from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'jsdom',
-    include: ['src/__tests__/**/*.test.ts', 'database/__tests__/**/*.test.ts'],
+    setupFiles: ['src/test-setup.ts'],
+    include: [
+      'src/__tests__/**/*.test.ts',
+      'src/__tests__/**/*.test.tsx',
+      'database/__tests__/**/*.test.ts',
+    ],
     exclude: ['build/**', 'node_modules/**'],
   },
   esbuild: {
