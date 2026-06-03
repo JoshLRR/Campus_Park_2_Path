@@ -30,7 +30,7 @@ export function FloorInfoPanel({
   return (
     <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
       <h3 className="text-lg font-semibold text-blue-800 mb-2">
-        Floor {currentFloor + 1}
+        Floor {currentFloor}
       </h3>
       <div className="text-sm space-y-1">
         <p>
@@ -60,7 +60,7 @@ export function FloorInfoPanel({
                   : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
               }`}
             >
-              {floor + 1}
+              {floor}
             </button>
           ))}
         </div>

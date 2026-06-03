@@ -70,7 +70,7 @@ export function MobileBottomSheet({
 
   const hasNav = !!(startPoint || destinationPoint);
   const nodeName = selectedGraphNode?.roomNumber ?? (selectedGraphNode ? `Node ${selectedGraphNode.id}` : null);
-  const nodeAddress = selectedGraphNode ? `Floor ${selectedGraphNode.position.floorNum + 1} · ${selectedGraphNode.kind}` : null;
+  const nodeAddress = selectedGraphNode ? `Floor ${selectedGraphNode.position.floorNum} · ${selectedGraphNode.kind}` : null;
 
   const roomNodes = graphNodes.filter(n => n.kind === 'room' && n.roomNumber);
 
@@ -178,7 +178,7 @@ export function MobileBottomSheet({
                         <div>
                           <p className="text-xs text-red-500 font-bold">START</p>
                           <p className="text-sm font-semibold text-[#1e2022]">{startPoint.label}</p>
-                          {startPoint.floor !== undefined && <p className="text-xs text-gray-400">Floor {startPoint.floor + 1}</p>}
+                          {startPoint.floor !== undefined && <p className="text-xs text-gray-400">Floor {startPoint.floor}</p>}
                         </div>
                         <button onClick={onStartPointClear} className="text-red-400 text-xl">×</button>
                       </div>
@@ -188,7 +188,7 @@ export function MobileBottomSheet({
                         <div>
                           <p className="text-xs text-green-500 font-bold">DESTINATION</p>
                           <p className="text-sm font-semibold text-[#1e2022]">{destinationPoint.label}</p>
-                          {destinationPoint.floor !== undefined && <p className="text-xs text-gray-400">Floor {destinationPoint.floor + 1}</p>}
+                          {destinationPoint.floor !== undefined && <p className="text-xs text-gray-400">Floor {destinationPoint.floor}</p>}
                         </div>
                         <button onClick={onDestinationPointClear} className="text-green-400 text-xl">×</button>
                       </div>
@@ -231,7 +231,7 @@ export function MobileBottomSheet({
                         <div key={node.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
                           <div>
                             <p className="text-sm font-semibold text-[#1e2022]">{node.roomNumber}</p>
-                            <p className="text-xs text-gray-400">Floor {node.position.floorNum + 1}</p>
+                            <p className="text-xs text-gray-400">Floor {node.position.floorNum}</p>
                           </div>
                           <div className="flex gap-1">
                             <button
