@@ -2,16 +2,19 @@
  * Map view component.
  */
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, {useRef, useState, useCallback} from 'react';
 import TileSystem from './TileSystem';
-import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { RoomTile } from './RoomTile';
-import { StartMarker } from './StartMarker';
-import { DestinationMarker } from './DestinationMarker';
-import { GraphOverlay, GraphNode } from './GraphOverlay';
-import { RouteOverlay } from './RouteOverlay';
-import { PathResult } from './pathfinding';
-import { MAP_CONSTANTS, graphToMapCoords } from "./MapConstants";
+import {
+  TransformWrapper,
+  TransformComponent,
+  ReactZoomPanPinchRef,
+} from 'react-zoom-pan-pinch';
+import {RoomTile} from './RoomTile';
+import {StartMarker} from './StartMarker';
+import {DestinationMarker} from './DestinationMarker';
+import {GraphOverlay, GraphNode} from './GraphOverlay';
+import {RouteOverlay} from './RouteOverlay';
+import {PathResult} from './pathfinding';
 
 // Building type
 export interface Building {
@@ -51,11 +54,11 @@ export interface NavigationPoint {
 }
 
 interface MapViewProps {
-  initialBuildings: (Building & { id: number })[];
+  initialBuildings: (Building & {id: number})[];
   selectedRoomId?: number | null;
   selectedGraphNodeId?: number | null;
   focusBuildingId?: number | null;
-  rooms?: (Room & { id: number })[];
+  rooms?: (Room & {id: number})[];
   startPoint?: NavigationPoint | null;
   destinationPoint?: NavigationPoint | null;
   graphNodes?: GraphNode[];
@@ -75,36 +78,36 @@ interface MapViewProps {
   onFloorChange?: (floor: number) => void;
 }
 
-const WORLD_WIDTH = MAP_CONSTANTS.WORLD_WIDTH;
-const WORLD_HEIGHT = MAP_CONSTANTS.WORLD_HEIGHT;
+const WORLD_WIDTH = 20000;
+const WORLD_HEIGHT = 20000;
+const SCALE_FACTOR = 10;
 
 export const MapView: React.FC<MapViewProps> = ({
-                                                  initialBuildings,
-                                                  selectedRoomId,
-                                                  selectedGraphNodeId,
-                                                  focusBuildingId,
-                                                  rooms = [],
-                                                  startPoint,
-                                                  destinationPoint,
-                                                  graphNodes = [],
-                                                  showGraphDebug = false,
-                                                  showPathNodes = true,
-                                                  showPathEdges = true,
-                                                  showRoomConnections = true,
-                                                  showRoomNodes = true,
-                                                  currentRoute = null,
-                                                  showRoute = true,
-                                                  currentFloor,
-                                                  availableFloors,
-                                                  onRoomSelect,
-                                                  onGraphNodeSelect,
-                                                  onStartPointClear,
-                                                  onDestinationPointClear,
-                                                  onFloorChange,
-                                                }) => {
+  initialBuildings,
+  selectedRoomId,
+  selectedGraphNodeId,
+  focusBuildingId,
+  rooms = [],
+  startPoint,
+  destinationPoint,
+  graphNodes = [],
+  showGraphDebug = false,
+  showPathNodes = true,
+  showPathEdges = true,
+  showRoomConnections = true,
+  showRoomNodes = true,
+  currentRoute = null,
+  showRoute = true,
+  currentFloor,
+  availableFloors,
+  onRoomSelect,
+  onGraphNodeSelect,
+  onStartPointClear,
+  onDestinationPointClear,
+  onFloorChange,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
-  const scalePosition = graphToMapCoords;
 
   // Viewport tracking for tile culling
   const [viewport, setViewport] = useState({
@@ -116,8 +119,8 @@ export const MapView: React.FC<MapViewProps> = ({
   });
 
   // Update viewport for tile culling optimization
-  const handleTransform = useCallback((ref: ReactZoomPanPinchRef, event: any) => {
-    const { state } = ref;
+  const handleTransform = useCallback((ref: ReactZoomPanPinchRef) => {
+    const {state} = ref;
     const container = containerRef.current;
 
     if (container) {
@@ -165,7 +168,7 @@ export const MapView: React.FC<MapViewProps> = ({
   }, []);
 
   // Filter items based on current floor
-  const filterByFloor = <T extends { floor?: number }>(items: T[]): T[] => {
+  const filterByFloor = <T extends {floor?: number}>(items: T[]): T[] => {
     return items.filter(item => item.floor === currentFloor);
   };
 
@@ -188,10 +191,7 @@ export const MapView: React.FC<MapViewProps> = ({
   });
 
   // Handle room pointer down
-  const handleRoomPointerDown = (
-    e: React.PointerEvent<SVGRectElement>,
-    id: number,
-  ) => {
+  const handleRoomPointerDown = (e: React.PointerEvent<SVGRectElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };
@@ -200,6 +200,12 @@ export const MapView: React.FC<MapViewProps> = ({
   const handleRoomClick = (roomId: number) => {
     onRoomSelect?.(roomId);
   };
+
+  // Scale position function for route overlay
+  const scalePosition = (pos: {x: number; y: number}) => ({
+    x: pos.x * SCALE_FACTOR,
+    y: pos.y * SCALE_FACTOR,
+  });
 
   // Check if navigation points are on current floor
   const isStartPointOnCurrentFloor =
@@ -214,9 +220,9 @@ export const MapView: React.FC<MapViewProps> = ({
     >
       <TransformWrapper
         ref={transformRef}
-        wheel={{ step: 0.08 }}
-        doubleClick={{ disabled: true }}
-        pinch={{ step: 5 }}
+        wheel={{step: 0.08}}
+        doubleClick={{disabled: true}}
+        pinch={{step: 5}}
         minScale={0.4}
         maxScale={4}
         limitToBounds={false}
@@ -348,7 +354,7 @@ export const MapView: React.FC<MapViewProps> = ({
                       isDragging={false}
                       isSelected={selectedRoomId === room.id}
                       isHighlighted={focusBuildingId === room.buildingId}
-                      onPointerDown={e => handleRoomPointerDown(e, room.id)}
+                      onPointerDown={e => handleRoomPointerDown(e)}
                       onClick={() => handleRoomClick(room.id)}
                     />
                   ))}
@@ -359,7 +365,7 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Route overlay */}
             {currentRoute && currentRoute.success && showRoute && (
               <RouteOverlay
-                nodes={graphNodes}
+                nodes={currentFloorGraphNodes}
                 routePath={currentRoute.path}
                 scalePosition={scalePosition}
                 totalDistance={currentRoute.totalDistance}

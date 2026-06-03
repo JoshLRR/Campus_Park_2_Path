@@ -1,0 +1,163 @@
+{"roomFeatures": [
+	{
+		"feature_id" : 1,
+		"name" : "Men's Bathroom",
+		"description" : null
+	},
+	{
+		"feature_id" : 2,
+		"name" : "Men's Bathroom w/ Changing Table",
+		"description" : null
+	},
+	{
+		"feature_id" : 3,
+		"name" : "Women's Bathroom",
+		"description" : null
+	},
+	{
+		"feature_id" : 4,
+		"name" : "Women's Bathroom w/ Changing Table",
+		"description" : null
+	},
+	{
+		"feature_id" : 5,
+		"name" : "Family Bathroom",
+		"description" : null
+	},
+	{
+		"feature_id" : 6,
+		"name" : "All Gender Bathroom",
+		"description" : null
+	},
+	{
+		"feature_id" : 7,
+		"name" : "Elevator",
+		"description" : null
+	},
+	{
+		"feature_id" : 8,
+		"name" : "Vending Machine",
+		"description" : null
+	},
+	{
+		"feature_id" : 9,
+		"name" : "Classroom",
+		"description" : null
+	},
+	{
+		"feature_id" : 10,
+		"name" : "Office",
+		"description" : null
+	},
+	{
+		"feature_id" : 11,
+		"name" : "Parking Lot",
+		"description" : null
+	},
+	{
+		"feature_id" : 12,
+		"name" : "Parking Garage",
+		"description" : null
+	},
+	{
+		"feature_id" : 13,
+		"name" : "Cafe",
+		"description" : null
+	},
+	{
+		"feature_id" : 14,
+		"name" : "Cafeteria",
+		"description" : null
+	},
+	{
+		"feature_id" : 15,
+		"name" : "Library",
+		"description" : null
+	},
+	{
+		"feature_id" : 16,
+		"name" : "Printer",
+		"description" : null
+	},
+	{
+		"feature_id" : 17,
+		"name" : "Computer Lab",
+		"description" : null
+	},
+	{
+		"feature_id" : 18,
+		"name" : "Prayer Room",
+		"description" : null
+	},
+	{
+		"feature_id" : 19,
+		"name" : "Lactation Room",
+		"description" : null
+	},
+	{
+		"feature_id" : 20,
+		"name" : "Shower",
+		"description" : null
+	},
+	{
+		"feature_id" : 21,
+		"name" : "Gym",
+		"description" : null
+	},
+	{
+		"feature_id" : 22,
+		"name" : "Lockers",
+		"description" : null
+	},
+	{
+		"feature_id" : 23,
+		"name" : "Locker Room",
+		"description" : null
+	},
+	{
+		"feature_id" : 24,
+		"name" : "Confrence Room",
+		"description" : null
+	},
+	{
+		"feature_id" : 25,
+		"name" : "Study Room",
+		"description" : null
+	},
+	{
+		"feature_id" : 26,
+		"name" : "Study Room w/ whiteboard",
+		"description" : null
+	},
+	{
+		"feature_id" : 27,
+		"name" : "Smoke Shelter",
+		"description" : null
+	},
+	{
+		"feature_id" : 28,
+		"name" : "Parking Meter",
+		"description" : null
+	},
+	{
+		"feature_id" : 29,
+		"name" : "Bus Stop",
+		"description" : null
+	},
+	{
+		"feature_id" : 30,
+		"name" : "Emergency Phone",
+		"description" : null
+	},
+	{
+		"feature_id" : 31,
+		"name" : "EV Charging Station",
+		"description" : null
+	},
+	{
+		"feature_id" : 32,
+		"name" : "Other",
+		"description" : null
+	}
+]
+}
