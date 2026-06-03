@@ -33,7 +33,6 @@ export function useGraphData() {
           ...node,
           position: {
             ...node.position,
-            floorNum: node.position.floorNum ?? 1,
           },
         }));
 
@@ -44,7 +43,7 @@ export function useGraphData() {
           ...new Set(nodes.map(node => node.position.floorNum)),
         ].sort((a, b) => a - b);
 
-        setAvailableFloors(floors.length > 0 ? floors : [1]);
+        setAvailableFloors(floors.length > 0 ? floors : [0]);
 
         console.log(
           `Loaded ${nodes.length} graph nodes across ${floors.length} floors`,

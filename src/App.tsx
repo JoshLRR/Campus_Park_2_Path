@@ -4,7 +4,6 @@ import {
   Room,
   NavigationPoint,
   Building} from './components/Map/MapView';
-import {PathResult} from './components/Map/pathfinding';
 import {RightRoomPanel,
 } from './components/Map/RightRoomPanel';
 import {AppSidebar} from './components/AppSidebar';
@@ -17,7 +16,7 @@ import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
 import {usePathfinder} from './hooks/usePathfinder';
 import {useNavigationSelection} from './hooks/useNavigationSelection';
-import {initialBuildings, sampleRooms} from './data/mockCampusData';
+/*import {initialBuildings, sampleRooms} from './data/mockCampusData'; */
 import {MobileMapView} from './components/Map/MobileMapView';
 import {GraphNode} from './components/Map/GraphOverlay';
 import {Pathfinder, PathResult} from './components/Map/pathfinding';
@@ -32,6 +31,14 @@ const initialBuildings: (Building & {id: number})[] = [];
 const sampleRooms: (Room & {id: number})[] = [];
 
 export default function App() {
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
+    () => window.innerWidth < 1024,
+  );
+  useEffect(() => {
+    const handleResize = () => setIsMobileOrTablet(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(
@@ -44,7 +51,7 @@ export default function App() {
   const {graphNodes, availableFloors} = useGraphData();
 
   // Floor management
-  const [currentFloor, setCurrentFloor] = useState(1);
+  const [currentFloor, setCurrentFloor] = useState(0);
 
   // Debug mode toggle
   const [showGraphDebug, setShowGraphDebug] = useState(false);
@@ -181,6 +188,42 @@ export default function App() {
 
       {/* Main Map View */}
       <div className={getMapWidth(isLeftSidebarOpen, isRightPanelOpen)}>
+        {isMobileOrTablet ? (
+          <MobileMapView
+            initialBuildings={initialBuildings}
+            selectedRoomId={selectedRoomId}
+            selectedGraphNodeId={selectedGraphNodeId}
+            focusBuildingId={focusBuilding}
+            rooms={sampleRooms}
+            startPoint={startPoint}
+            destinationPoint={destinationPoint}
+            graphNodes={graphNodes}
+            showGraphDebug={showGraphDebug}
+            showPathNodes={showPathNodes}
+            showPathEdges={showPathEdges}
+            showRoomConnections={showRoomConnections}
+            showRoomNodes={showRoomNodes}
+            currentRoute={currentRoute}
+            showRoute={showRoute}
+            currentFloor={currentFloor}
+            availableFloors={availableFloors}
+            onRoomSelect={handleRoomSelect}
+            onGraphNodeSelect={handleGraphNodeSelect}
+            onStartPointClear={clearStartPoint}
+            onDestinationPointClear={clearDestination}
+            onFloorChange={handleFloorChange}
+            onClearRoute={clearRoute}
+            onSetStartFromSelected={handleSetStartPointFromNode.bind(null, selectedGraphNodeId!)}
+            onSetEndFromSelected={handleSetDestinationFromNode.bind(null, selectedGraphNodeId!)}
+            onSetStartFromNodeId={handleSetStartPointFromNode}
+            onSetEndFromNodeId={handleSetDestinationFromNode}
+            onShowPathNodesChange={setShowPathNodes}
+            onShowPathEdgesChange={setShowPathEdges}
+            onShowRoomConnectionsChange={setShowRoomConnections}
+            onShowRoomNodesChange={setShowRoomNodes}
+            onShowRouteChange={setShowRoute}
+          />
+        ) : (
         <MapView
           initialBuildings={initialBuildings}
           selectedRoomId={selectedRoomId}
@@ -205,6 +248,7 @@ export default function App() {
           onDestinationPointClear={clearDestination}
           onFloorChange={handleFloorChange}
         />
+          )}
       </div>
 
       {/* Right Panel - Room List (Optional) */}

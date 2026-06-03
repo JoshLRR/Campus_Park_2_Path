@@ -1,11 +1,5 @@
 // src/components/Map/pathfinding.ts
 import {GraphNode} from './GraphOverlay';
-import {
-  PathRequestDTO,
-  PathResponseDTO,
-  PositionDTO,
-} from '../../logic/PathingComponent/api/PathAPI.dto';
-import {createPathAPI} from '../../logic/PathingComponent/api/CreatePathingAPI';
 
 export interface PathResult {
   path: number[];
@@ -14,7 +8,80 @@ export interface PathResult {
   message?: string;
 }
 
-const api = createPathAPI();
+const NO_PREDECESSOR = -1;
+const UNREACHABLE_COST = Infinity;
+
+type QueueEntry = {nodeId: number; cumulativeCost: number};
+
+/**
+ * Dijkstra's shortest-path algorithm.
+ *
+ * Operates directly on the local graph — no API calls are made.
+ *
+ * @param graph    - All nodes available on the map.
+ * @param startId  - ID of the origin node.
+ * @param endId    - ID of the destination node.
+ * @returns A `PathResult` with the ordered node IDs and total distance,
+ *          or a failure result if no path exists.
+ */
+function dijkstra(
+  graph: Map<number, GraphNode>,
+  startId: number,
+  endId: number,
+): PathResult {
+  const shortestCost = new Map<number, number>();
+  const predecessor = new Map<number, number>();
+
+  for (const nodeId of graph.keys()) {
+    shortestCost.set(nodeId, UNREACHABLE_COST);
+    predecessor.set(nodeId, NO_PREDECESSOR);
+  }
+  shortestCost.set(startId, 0);
+
+  const settled = new Set<number>();
+  const queue: QueueEntry[] = [{nodeId: startId, cumulativeCost: 0}];
+
+  while (queue.length > 0) {
+    queue.sort((a, b) => a.cumulativeCost - b.cumulativeCost);
+    const entry = queue.shift();
+    if (entry === undefined) break;
+
+    const {nodeId, cumulativeCost} = entry;
+
+    if (settled.has(nodeId)) continue;
+    settled.add(nodeId);
+
+    if (nodeId === endId) {
+      // Reconstruct path
+      const orderedNodes: number[] = [];
+      let current = endId;
+      while (current !== NO_PREDECESSOR) {
+        orderedNodes.unshift(current);
+        current = predecessor.get(current) ?? NO_PREDECESSOR;
+      }
+      return {
+        path: orderedNodes,
+        totalDistance: shortestCost.get(endId) ?? 0,
+        success: true,
+      };
+    }
+
+    const currentNode = graph.get(nodeId);
+    if (currentNode === undefined) continue;
+
+    for (const edge of currentNode.neighbors) {
+      if (settled.has(edge.to)) continue;
+      const costThroughCurrent = cumulativeCost + edge.distance;
+      if (costThroughCurrent < (shortestCost.get(edge.to) ?? UNREACHABLE_COST)) {
+        shortestCost.set(edge.to, costThroughCurrent);
+        predecessor.set(edge.to, nodeId);
+        queue.push({nodeId: edge.to, cumulativeCost: costThroughCurrent});
+      }
+    }
+  }
+
+  return {path: [], totalDistance: 0, success: false, message: 'No path found'};
+}
 
 export class Pathfinder {
   private nodes: Map<number, GraphNode>;
@@ -24,9 +91,10 @@ export class Pathfinder {
   }
 
   /**
-   * Find the shortest path between two nodes using the local PathAPI
+   * Find the shortest path between two nodes using Dijkstra's algorithm.
+   * Runs entirely locally — no external API calls are made.
    */
-  async findPath(startNodeId: number, endNodeId: number): Promise<PathResult> {
+  findPath(startNodeId: number, endNodeId: number): PathResult {
     if (!this.nodes.has(startNodeId) || !this.nodes.has(endNodeId)) {
       return {
         path: [],
@@ -40,151 +108,7 @@ export class Pathfinder {
       return {path: [startNodeId], totalDistance: 0, success: true};
     }
 
-    const request: PathRequestDTO = {
-      origin: {
-        mode: 'node',
-        value: startNodeId.toString(),
-      },
-      destination: {
-        mode: 'node',
-        value: endNodeId.toString(),
-      },
-    };
-
-    const result = await api.path(request);
-    return this.transformApiResponse(result);
-  }
-
-  /**
-   * Find a path from coordinates to a node using the local PathAPI
-   */
-  async findPathFromCoordinates(
-    x: number,
-    y: number,
-    floor: number,
-    endNodeId: number,
-    scaleInverse: number = 0.1,
-  ): Promise<PathResult> {
-    if (!this.nodes.has(endNodeId)) {
-      return {
-        path: [],
-        totalDistance: 0,
-        success: false,
-        message: 'Invalid destination node ID',
-      };
-    }
-
-    const position: PositionDTO = {
-      x: x * scaleInverse,
-      y: y * scaleInverse,
-      floorNum: floor,
-    };
-
-    const request: PathRequestDTO = {
-      origin: {
-        mode: 'coordinate',
-        value: position,
-      },
-      destination: {
-        mode: 'node',
-        value: endNodeId.toString(),
-      },
-    };
-
-    const result = await api.path(request);
-    return this.transformApiResponse(result);
-  }
-
-  /**
-   * Find a path to a POI type using the local PathAPI
-   */
-  async findPathToPOI(
-    startNodeId: number,
-    poiType: string,
-    preferences?: {
-      avoidStairs?: boolean;
-      avoidUncovered?: boolean;
-      avoidUnpaved?: boolean;
-    },
-  ): Promise<PathResult> {
-    if (!this.nodes.has(startNodeId)) {
-      return {
-        path: [],
-        totalDistance: 0,
-        success: false,
-        message: 'Invalid start node ID',
-      };
-    }
-
-    const request: PathRequestDTO = {
-      origin: {
-        mode: 'node',
-        value: startNodeId.toString(),
-      },
-      destination: {
-        mode: 'poiType',
-        value: poiType,
-      },
-      preferences,
-    };
-
-    const result = await api.path(request);
-    return this.transformApiResponse(result);
-  }
-
-  /**
-   * Transform the PathResponseDTO into our PathResult format
-   */
-  private transformApiResponse(response: PathResponseDTO): PathResult {
-    switch (response.status) {
-      case 'success':
-        if (response.path) {
-          return {
-            path: response.path.nodes.map(nodeId => parseInt(nodeId, 10)),
-            totalDistance: response.path.totalDistance,
-            success: true,
-            message: response.message,
-          };
-        }
-        return {
-          path: [],
-          totalDistance: 0,
-          success: false,
-          message: 'API returned success but no path data',
-        };
-
-      case 'not_found':
-        return {
-          path: [],
-          totalDistance: 0,
-          success: false,
-          message: response.message || 'No path found',
-        };
-
-      case 'validation_error':
-        return {
-          path: [],
-          totalDistance: 0,
-          success: false,
-          message: response.message || 'Request validation failed',
-        };
-
-      case 'internal_error':
-        return {
-          path: [],
-          totalDistance: 0,
-          success: false,
-          message: response.message || 'Internal server error',
-        };
-
-      default:
-        return {
-          path: [],
-          totalDistance: 0,
-          success: false,
-          message: 'Unknown response status',
-        };
-    }
+    return dijkstra(this.nodes, startNodeId, endNodeId);
   }
 
   /**
@@ -193,18 +117,19 @@ export class Pathfinder {
   findClosestNode(
     x: number,
     y: number,
-    scaleInverse: number = 0.1,
+    floor: number,
   ): number | null {
     let closestNodeId: number | null = null;
     let minDistance = Infinity;
 
     for (const [nodeId, node] of this.nodes) {
+      if (node.position.floorNum !== floor) continue;
       const nodeX = node.position.x;
       const nodeY = node.position.y;
 
       const distance = Math.sqrt(
-        Math.pow(nodeX - x * scaleInverse, 2) +
-          Math.pow(nodeY - y * scaleInverse, 2),
+        Math.pow(nodeX - x, 2) +
+        Math.pow(nodeY - y, 2),
       );
 
       if (distance < minDistance) {
