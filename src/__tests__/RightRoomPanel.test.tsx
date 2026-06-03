@@ -6,8 +6,24 @@ import {Room} from '../components/Map/MapView';
 type PanelRoom = Room & {id: number};
 
 const rooms: PanelRoom[] = [
-  {id: 1, name: 'Room A', building: 'Library', buildingId: 1, floor: 1, x: 0, y: 0},
-  {id: 2, name: 'Room B', building: 'Science', buildingId: 2, floor: 2, x: 0, y: 0},
+  {
+    id: 1,
+    name: 'Room A',
+    building: 'Library',
+    buildingId: 1,
+    floor: 1,
+    x: 0,
+    y: 0,
+  },
+  {
+    id: 2,
+    name: 'Room B',
+    building: 'Science',
+    buildingId: 2,
+    floor: 2,
+    x: 0,
+    y: 0,
+  },
 ];
 
 function renderPanel(overrides = {}) {

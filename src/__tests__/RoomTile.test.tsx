@@ -26,13 +26,17 @@ describe('RoomTile', () => {
 
   it('uses the selected fill and renders a selection ring', () => {
     const {container} = render(svg(<RoomTile {...baseProps} isSelected />));
-    expect(container.querySelector('rect')!.getAttribute('fill')).toBe('#ef4444');
+    expect(container.querySelector('rect')!.getAttribute('fill')).toBe(
+      '#ef4444',
+    );
     expect(container.querySelector('circle')).not.toBeNull();
   });
 
   it('uses the highlighted fill', () => {
     const {container} = render(svg(<RoomTile {...baseProps} isHighlighted />));
-    expect(container.querySelector('rect')!.getAttribute('fill')).toBe('#3b82f6');
+    expect(container.querySelector('rect')!.getAttribute('fill')).toBe(
+      '#3b82f6',
+    );
   });
 
   it('truncates long names', () => {
@@ -44,7 +48,9 @@ describe('RoomTile', () => {
 
   it('stops propagation and calls onClick', () => {
     const onClick = vi.fn();
-    const {container} = render(svg(<RoomTile {...baseProps} onClick={onClick} />));
+    const {container} = render(
+      svg(<RoomTile {...baseProps} onClick={onClick} />),
+    );
     fireEvent.click(container.querySelector('rect')!);
     expect(onClick).toHaveBeenCalled();
   });

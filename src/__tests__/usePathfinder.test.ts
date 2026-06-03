@@ -20,20 +20,18 @@ describe('usePathfinder', () => {
   });
 
   it('memoizes the instance across re-renders with the same nodes', () => {
-    const {result, rerender} = renderHook(
-      ({n}) => usePathfinder(n),
-      {initialProps: {n: nodes}},
-    );
+    const {result, rerender} = renderHook(({n}) => usePathfinder(n), {
+      initialProps: {n: nodes},
+    });
     const first = result.current;
     rerender({n: nodes});
     expect(result.current).toBe(first);
   });
 
   it('creates a new instance when the nodes array changes', () => {
-    const {result, rerender} = renderHook(
-      ({n}) => usePathfinder(n),
-      {initialProps: {n: nodes}},
-    );
+    const {result, rerender} = renderHook(({n}) => usePathfinder(n), {
+      initialProps: {n: nodes},
+    });
     const first = result.current;
     rerender({n: [...nodes]});
     expect(result.current).not.toBe(first);

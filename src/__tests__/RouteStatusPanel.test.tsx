@@ -23,7 +23,11 @@ describe('RouteStatusPanel', () => {
   });
 
   it('summarizes a successful route and toggles visibility', () => {
-    const route: PathResult = {success: true, path: [1, 2, 3], totalDistance: 12.34};
+    const route: PathResult = {
+      success: true,
+      path: [1, 2, 3],
+      totalDistance: 12.34,
+    };
     const setShowRoute = vi.fn();
     const clearRoute = vi.fn();
     render(
@@ -59,7 +63,9 @@ describe('RouteStatusPanel', () => {
         clearRoute={vi.fn()}
       />,
     );
-    expect(screen.getByRole('button', {name: 'Show Route'})).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {name: 'Show Route'}),
+    ).toBeInTheDocument();
   });
 
   it('shows an error when the route failed and both points are set', () => {
@@ -75,7 +81,9 @@ describe('RouteStatusPanel', () => {
       />,
     );
     expect(screen.getByText('Route Error')).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Clear Points'})).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {name: 'Clear Points'}),
+    ).toBeInTheDocument();
   });
 
   it('does not show the error when a point is missing', () => {

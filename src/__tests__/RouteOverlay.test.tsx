@@ -72,7 +72,9 @@ describe('RouteOverlay', () => {
         />,
       ),
     );
-    expect(screen.getByText('Route continues on other floors')).toBeInTheDocument();
+    expect(
+      screen.getByText('Route continues on other floors'),
+    ).toBeInTheDocument();
   });
 
   it('renders nothing when segments have no edge and no other floor exists', () => {

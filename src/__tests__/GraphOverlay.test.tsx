@@ -77,16 +77,20 @@ describe('GraphOverlay', () => {
   it('calls onNodeClick with the node id when a node is clicked', () => {
     const onNodeClick = vi.fn();
     const {container} = renderOverlay([node(7, 'path', 1)], {onNodeClick});
-    const circle = container.querySelector('circle[style*="cursor"]')
-      || container.querySelector('circle');
+    const circle =
+      container.querySelector('circle[style*="cursor"]') ||
+      container.querySelector('circle');
     fireEvent.click(circle!);
     expect(onNodeClick).toHaveBeenCalledWith(7);
   });
 
   it('renders selection highlights for the selected node', () => {
-    const {container} = renderOverlay([node(1, 'room', 1, [], {roomNumber: 'A1'})], {
-      selectedNodeId: 1,
-    });
+    const {container} = renderOverlay(
+      [node(1, 'room', 1, [], {roomNumber: 'A1'})],
+      {
+        selectedNodeId: 1,
+      },
+    );
     // selection adds animated glow rings on top of the base node circle
     expect(container.querySelectorAll('circle').length).toBeGreaterThan(1);
   });

@@ -39,9 +39,12 @@ function renderPanel(overrides = {}) {
 describe('RoomSearchPanel', () => {
   it('updates the search term on input', () => {
     const handlers = renderPanel();
-    fireEvent.change(screen.getByPlaceholderText('Search rooms or buildings...'), {
-      target: {value: 'lib'},
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText('Search rooms or buildings...'),
+      {
+        target: {value: 'lib'},
+      },
+    );
     expect(handlers.setSearchTerm).toHaveBeenCalledWith('lib');
   });
 
@@ -68,13 +71,13 @@ describe('RoomSearchPanel', () => {
     renderPanel({searchTerm: 'room', filteredRooms: makeRooms(7)});
     expect(screen.getByText('7 results found')).toBeInTheDocument();
     expect(screen.getAllByRole('button', {name: 'Select'})).toHaveLength(5);
-    expect(
-      screen.getByText(/Showing first 5 results/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Showing first 5 results/)).toBeInTheDocument();
   });
 
   it('shows a no-results message when nothing matches', () => {
     renderPanel({searchTerm: 'zzz', filteredRooms: []});
-    expect(screen.getByText(/No rooms found matching "zzz"/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No rooms found matching "zzz"/),
+    ).toBeInTheDocument();
   });
 });

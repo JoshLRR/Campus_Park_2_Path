@@ -32,7 +32,9 @@ describe('StartMarker', () => {
 
   it('calls onClick when clicked', () => {
     const onClick = vi.fn();
-    const {container} = render(svg(<StartMarker x={0} y={0} onClick={onClick} />));
+    const {container} = render(
+      svg(<StartMarker x={0} y={0} onClick={onClick} />),
+    );
     fireEvent.click(container.querySelector('g')!);
     expect(onClick).toHaveBeenCalled();
   });

@@ -12,7 +12,12 @@ const nodes: GraphNode[] = [
     neighbors: [{to: 2, distance: 1}],
     roomNumber: 'A1',
   },
-  {id: 2, kind: 'path', position: {x: 0, y: 0, floorNum: 1}, neighbors: [{to: 1, distance: 1}]},
+  {
+    id: 2,
+    kind: 'path',
+    position: {x: 0, y: 0, floorNum: 1},
+    neighbors: [{to: 1, distance: 1}],
+  },
 ];
 
 const floorStats = {nodes: 2, pathNodes: 1, roomNodes: 1, rooms: 1};

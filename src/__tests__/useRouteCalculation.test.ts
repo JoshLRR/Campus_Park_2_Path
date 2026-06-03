@@ -40,10 +40,7 @@ describe('useRouteCalculation', () => {
       totalDistance: 42,
     };
     const pathfinder = makePathfinder({
-      findClosestNode: vi
-        .fn()
-        .mockReturnValueOnce(1)
-        .mockReturnValueOnce(3),
+      findClosestNode: vi.fn().mockReturnValueOnce(1).mockReturnValueOnce(3),
       findPath: vi.fn().mockResolvedValue(route),
     });
     const setCurrentRoute = vi.fn();
