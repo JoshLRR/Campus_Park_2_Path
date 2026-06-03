@@ -10,9 +10,9 @@ export function MobileMapHeader({onMenuOpen}: {onMenuOpen: () => void}) {
         aria-label="Open room list"
       >
         <svg width="20" height="14" fill="none" viewBox="0 0 20 14">
-          <path d="M1 7H19" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+          {/*<path d="M1 7H19" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
           <path d="M1 1H19" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-          <path d="M1 13H19" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+          <path d="M1 13H19" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /> */}
         </svg>
       </button>
       <p className="absolute inset-0 flex items-center justify-center text-white text-base font-semibold tracking-[0.864px]">

@@ -64,7 +64,7 @@ export default function App() {
   const [showRoute, setShowRoute] = useState(true);
 
   // Toggle states for sidebars
-  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
 
   // Route state
