@@ -7,7 +7,8 @@
     "vite.config.ts",
     "vitest.config.ts",
     "**/*.json",
-    "database/**/*.ts"
+    "database/**/*.ts",
+    "backend/**/*.ts"
   ],
   "exclude": [
     "node_modules",

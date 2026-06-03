@@ -7,7 +7,7 @@ CREATE TABLE buildings (
 CREATE TABLE rooms (
     room_id INT AUTO_INCREMENT PRIMARY KEY,
     building_id INT NOT NULL,
-    room_code VARCHAR(20) NOT NULL,
+    room_code VARCHAR(100) NOT NULL,
     display_name VARCHAR(100),
     floor INT NOT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -33,7 +33,7 @@ CREATE TABLE room_feature_map (
 );
 
 CREATE TABLE graph_nodes (
-    graph_node_id INT AUTO_INCREMENT PRIMARY KEY,
+    graph_node_id INT PRIMARY KEY,
     x FLOAT NOT NULL,
     y FLOAT NOT NULL,
     building_id INT NULL,
