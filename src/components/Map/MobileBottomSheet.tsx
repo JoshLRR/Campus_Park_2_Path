@@ -1,10 +1,9 @@
-
 import React, {useState} from 'react';
 import {GraphNode} from './GraphOverlay';
 import {PathResult} from './pathfinding';
 import {NavigationPoint} from './MapView';
 
-type DrawerTab = 'navigation' | 'floors' | 'display';
+type DrawerTab = 'navigation' | 'rooms' | 'display';
 
 interface MobileBottomSheetProps {
   selectedGraphNode: GraphNode | null;
@@ -67,6 +66,7 @@ export function MobileBottomSheet({
   const [endSearch, setEndSearch] = useState('');
   const [startFocused, setStartFocused] = useState(false);
   const [endFocused, setEndFocused] = useState(false);
+  const [roomSearch, setRoomSearch] = useState('');
 
   const hasNav = !!(startPoint || destinationPoint);
   const nodeName = selectedGraphNode?.roomNumber ?? (selectedGraphNode ? `Node ${selectedGraphNode.id}` : null);
@@ -81,6 +81,10 @@ export function MobileBottomSheet({
   const filteredEndNodes = endSearch.trim()
     ? roomNodes.filter(n => n.roomNumber!.toLowerCase().includes(endSearch.toLowerCase()))
     : [];
+
+  const filteredRoomNodes = roomSearch.trim()
+    ? roomNodes.filter(n => n.roomNumber!.toLowerCase().includes(roomSearch.toLowerCase()))
+    : roomNodes;
 
   const handleSelectStart = (node: GraphNode) => {
     onSetStartFromNodeId?.(node.id);
@@ -226,13 +230,13 @@ export function MobileBottomSheet({
         {isExpanded && (
           <div className="max-h-80 overflow-y-auto">
             <div className="flex border-b border-gray-200">
-              {(['navigation', 'floors', 'display'] as DrawerTab[]).map(tab => (
+              {(['navigation', 'rooms', 'display'] as DrawerTab[]).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`flex-1 py-2 text-sm font-semibold tracking-wide transition-colors ${activeTab === tab ? 'border-b-2 border-[#2563EB] text-[#2563EB]' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                  {tab === 'navigation' ? '🧭 Nav' : tab === 'floors' ? '🏢 Floors' : '🎨 Display'}
+                  {tab === 'navigation' ? '🧭 Nav' : tab === 'rooms' ? '🚪 Rooms' : '🎨 Display'}
                 </button>
               ))}
             </div>
@@ -288,18 +292,49 @@ export function MobileBottomSheet({
                 </div>
               )}
 
-              {activeTab === 'floors' && (
+              {activeTab === 'rooms' && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-3">Select a floor to view</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {availableFloors.map(floor => (
+                  <div className="relative mb-3">
+                    <input
+                      className="w-full text-sm bg-gray-100 rounded-xl px-3 py-2 outline-none text-[#1e2022] placeholder-gray-400"
+                      placeholder="Search rooms…"
+                      value={roomSearch}
+                      onChange={e => setRoomSearch(e.target.value)}
+                    />
+                    {roomSearch && (
                       <button
-                        key={floor}
-                        onClick={() => onFloorChange?.(floor)}
-                        className={`py-2 rounded-xl text-sm font-semibold transition-colors ${floor === currentFloor ? 'bg-[#2563EB] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                        onClick={() => setRoomSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-lg leading-none"
                       >
-                        {floor}
+                        ×
                       </button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {filteredRoomNodes.length === 0 && (
+                      <p className="text-sm text-gray-400 text-center py-2">No rooms found</p>
+                    )}
+                    {filteredRoomNodes.map(node => (
+                      <div key={node.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+                        <div>
+                          <p className="text-sm font-semibold text-[#1e2022]">{node.roomNumber}</p>
+                          <p className="text-xs text-gray-400">Floor {node.position.floorNum}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => onSetStartFromNodeId?.(node.id)}
+                            className="text-xs px-2 py-1 rounded-lg border border-[#2563EB] text-[#2563EB] font-semibold"
+                          >
+                            Start
+                          </button>
+                          <button
+                            onClick={() => onSetEndFromNodeId?.(node.id)}
+                            className="text-xs px-2 py-1 rounded-lg bg-[#2563EB] text-white font-semibold"
+                          >
+                            End
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
