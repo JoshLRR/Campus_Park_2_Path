@@ -278,7 +278,7 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
               onClick={() => onFloorChange?.(floor)}
               className={`px-3 py-1 text-sm rounded-full font-semibold transition-colors ${floor === currentFloor ? 'bg-[#2563EB] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
             >
-              {floor}
+              {floor + 1}
             </button>
           ))}
         </div>

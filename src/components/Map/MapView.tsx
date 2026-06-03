@@ -437,14 +437,14 @@ export const MapView: React.FC<MapViewProps> = ({
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
-              title={`Switch to Floor ${floor}`}
+              title={`Switch to Floor ${floor + 1}`}
             >
-              {floor}
+              {floor + 1}
             </button>
           ))}
         </div>
         <div className="text-xs text-gray-500 mt-1">
-          Current: Floor {currentFloor}
+          Current: Floor {currentFloor + 1}
         </div>
       </div>
 
