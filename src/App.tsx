@@ -213,10 +213,22 @@ export default function App() {
             onDestinationPointClear={clearDestination}
             onFloorChange={handleFloorChange}
             onClearRoute={clearRoute}
-            onSetStartFromSelected={handleSetStartPointFromNode.bind(null, selectedGraphNodeId!)}
-            onSetEndFromSelected={handleSetDestinationFromNode.bind(null, selectedGraphNodeId!)}
-            onSetStartFromNodeId={handleSetStartPointFromNode}
-            onSetEndFromNodeId={handleSetDestinationFromNode}
+            onSetStartFromSelected={() => {
+              const node = graphNodes.find(n => n.id === selectedGraphNodeId);
+              if (node) handleSetStartPointFromNode(node);
+            }}
+            onSetEndFromSelected={() => {
+              const node = graphNodes.find(n => n.id === selectedGraphNodeId);
+              if (node) handleSetDestinationFromNode(node);
+            }}
+            onSetStartFromNodeId={(nodeId) => {
+              const node = graphNodes.find(n => n.id === nodeId);
+              if (node) handleSetStartPointFromNode(node);
+            }}
+            onSetEndFromNodeId={(nodeId) => {
+              const node = graphNodes.find(n => n.id === nodeId);
+              if (node) handleSetDestinationFromNode(node);
+            }}
             onShowPathNodesChange={setShowPathNodes}
             onShowPathEdgesChange={setShowPathEdges}
             onShowRoomConnectionsChange={setShowRoomConnections}

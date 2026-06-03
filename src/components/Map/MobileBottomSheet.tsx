@@ -1,3 +1,4 @@
+
 import React, {useState} from 'react';
 import {GraphNode} from './GraphOverlay';
 import {PathResult} from './pathfinding';
@@ -28,6 +29,9 @@ interface MobileBottomSheetProps {
   onShowPathEdgesChange?: (v: boolean) => void;
   onShowRoomConnectionsChange?: (v: boolean) => void;
   onShowRouteChange?: (v: boolean) => void;
+  graphNodes?: GraphNode[];
+  onSetStartFromNodeId?: (nodeId: number) => void;
+  onSetEndFromNodeId?: (nodeId: number) => void;
 }
 
 export function MobileBottomSheet({
@@ -53,13 +57,42 @@ export function MobileBottomSheet({
                                     onShowPathEdgesChange,
                                     onShowRoomConnectionsChange,
                                     onShowRouteChange,
+                                    graphNodes = [],
+                                    onSetStartFromNodeId,
+                                    onSetEndFromNodeId,
                                   }: MobileBottomSheetProps) {
   const [activeTab, setActiveTab] = useState<DrawerTab>('navigation');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [startSearch, setStartSearch] = useState('');
+  const [endSearch, setEndSearch] = useState('');
+  const [startFocused, setStartFocused] = useState(false);
+  const [endFocused, setEndFocused] = useState(false);
 
   const hasNav = !!(startPoint || destinationPoint);
   const nodeName = selectedGraphNode?.roomNumber ?? (selectedGraphNode ? `Node ${selectedGraphNode.id}` : null);
   const nodeAddress = selectedGraphNode ? `Floor ${selectedGraphNode.position.floorNum} · ${selectedGraphNode.kind}` : null;
+
+  const roomNodes = graphNodes.filter(n => n.kind === 'room' && n.roomNumber);
+
+  const filteredStartNodes = startSearch.trim()
+    ? roomNodes.filter(n => n.roomNumber!.toLowerCase().includes(startSearch.toLowerCase()))
+    : [];
+
+  const filteredEndNodes = endSearch.trim()
+    ? roomNodes.filter(n => n.roomNumber!.toLowerCase().includes(endSearch.toLowerCase()))
+    : [];
+
+  const handleSelectStart = (node: GraphNode) => {
+    onSetStartFromNodeId?.(node.id);
+    setStartSearch('');
+    setStartFocused(false);
+  };
+
+  const handleSelectEnd = (node: GraphNode) => {
+    onSetEndFromNodeId?.(node.id);
+    setEndSearch('');
+    setEndFocused(false);
+  };
 
   const displayToggles = [
     {label: 'Path Nodes', value: showPathNodes, onChange: onShowPathNodesChange},
@@ -82,14 +115,82 @@ export function MobileBottomSheet({
 
         {!isExpanded && (
           <div className="px-4 pb-6">
-            <p className="text-[18px] font-bold text-[#1e2022] text-center tracking-[0.5px] mb-1">
-              {nodeName ?? (hasNav ? 'Navigation active' : 'Select a node')}
-            </p>
-            <p className="text-[14px] text-[#77838f] text-center tracking-[0.5px] mb-4">
-              {nodeAddress ?? (hasNav
-                ? `${startPoint ? `From: ${startPoint.label}` : ''}${startPoint && destinationPoint ? ' → ' : ''}${destinationPoint ? `To: ${destinationPoint.label}` : ''}`
-                : 'Tap a node on the map')}
-            </p>
+            {/* Navigation search inputs */}
+            <div className="space-y-2 mb-4">
+              {/* Start input */}
+              <div className="relative">
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-3 py-2">
+                  <span className="text-red-500 text-xs font-bold flex-shrink-0">FROM</span>
+                  {startPoint ? (
+                    <span className="flex-1 text-sm font-semibold text-[#1e2022] truncate">{startPoint.label}</span>
+                  ) : (
+                    <input
+                      className="flex-1 text-sm bg-transparent outline-none text-[#1e2022] placeholder-gray-400"
+                      placeholder="Search start room…"
+                      value={startSearch}
+                      onChange={e => setStartSearch(e.target.value)}
+                      onFocus={() => setStartFocused(true)}
+                      onBlur={() => setTimeout(() => setStartFocused(false), 150)}
+                    />
+                  )}
+                  {startPoint && (
+                    <button onClick={onStartPointClear} className="text-red-400 text-lg leading-none flex-shrink-0">×</button>
+                  )}
+                </div>
+                {startFocused && filteredStartNodes.length > 0 && (
+                  <div className="absolute left-0 right-0 bottom-full mb-1 bg-white rounded-2xl shadow-lg border border-gray-100 max-h-40 overflow-y-auto z-50">
+                    {filteredStartNodes.slice(0, 8).map(node => (
+                      <button
+                        key={node.id}
+                        onMouseDown={() => handleSelectStart(node)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm text-[#1e2022]"
+                      >
+                        <span className="font-semibold">{node.roomNumber}</span>
+                        <span className="text-gray-400 text-xs ml-2">Floor {node.position.floorNum}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* End input */}
+              <div className="relative">
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-2xl px-3 py-2">
+                  <span className="text-green-600 text-xs font-bold flex-shrink-0">TO</span>
+                  {destinationPoint ? (
+                    <span className="flex-1 text-sm font-semibold text-[#1e2022] truncate">{destinationPoint.label}</span>
+                  ) : (
+                    <input
+                      className="flex-1 text-sm bg-transparent outline-none text-[#1e2022] placeholder-gray-400"
+                      placeholder="Search destination room…"
+                      value={endSearch}
+                      onChange={e => setEndSearch(e.target.value)}
+                      onFocus={() => setEndFocused(true)}
+                      onBlur={() => setTimeout(() => setEndFocused(false), 150)}
+                    />
+                  )}
+                  {destinationPoint && (
+                    <button onClick={onDestinationPointClear} className="text-green-500 text-lg leading-none flex-shrink-0">×</button>
+                  )}
+                </div>
+                {endFocused && filteredEndNodes.length > 0 && (
+                  <div className="absolute left-0 right-0 bottom-full mb-1 bg-white rounded-2xl shadow-lg border border-gray-100 max-h-40 overflow-y-auto z-50">
+                    {filteredEndNodes.slice(0, 8).map(node => (
+                      <button
+                        key={node.id}
+                        onMouseDown={() => handleSelectEnd(node)}
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm text-[#1e2022]"
+                      >
+                        <span className="font-semibold">{node.roomNumber}</span>
+                        <span className="text-gray-400 text-xs ml-2">Floor {node.position.floorNum}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Route status */}
             {currentRoute?.success && (
               <div className="flex justify-center mb-4">
                 <div className="bg-[#2563EB] rounded-full px-4 py-1 text-white text-sm font-semibold">
@@ -102,14 +203,23 @@ export function MobileBottomSheet({
                 <div className="bg-red-100 rounded-full px-4 py-1 text-red-700 text-sm font-semibold">No route found</div>
               </div>
             )}
-            <div className="flex gap-3">
-              <button onClick={onSetStart} disabled={!selectedGraphNode} className="flex-1 h-[50px] rounded-[25px] border-2 border-[#2563EB] text-[#2563EB] text-[14px] font-bold tracking-[1px] disabled:opacity-40 transition-opacity">
-                Set as Start
-              </button>
-              <button onClick={onSetEnd} disabled={!selectedGraphNode} className="flex-1 h-[50px] rounded-[25px] bg-[#2563EB] text-white text-[14px] font-bold tracking-[1px] disabled:opacity-40 transition-opacity">
-                Set as End
-              </button>
-            </div>
+
+            {/* Selected node quick-set buttons */}
+            {selectedGraphNode && (
+              <div className="flex gap-3">
+                <button onClick={onSetStart} className="flex-1 h-[50px] rounded-[25px] border-2 border-[#2563EB] text-[#2563EB] text-[14px] font-bold tracking-[1px] transition-opacity">
+                  Set as Start
+                </button>
+                <button onClick={onSetEnd} className="flex-1 h-[50px] rounded-[25px] bg-[#2563EB] text-white text-[14px] font-bold tracking-[1px] transition-opacity">
+                  Set as End
+                </button>
+              </div>
+            )}
+            {!selectedGraphNode && (
+              <p className="text-xs text-center text-gray-400">
+                {nodeName ? '' : 'Search above or tap a node on the map'}
+              </p>
+            )}
           </div>
         )}
 

@@ -311,8 +311,8 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
         showPathEdges={showPathEdges}
         showRoomConnections={showRoomConnections}
         showRoute={showRoute}
-        onSetStart={() => onSetStartFromSelected?.()}
-        onSetEnd={() => onSetEndFromSelected?.()}
+        onSetStart={() => selectedGraphNode && onSetStartFromNodeId?.(selectedGraphNode.id)}
+        onSetEnd={() => selectedGraphNode && onSetEndFromNodeId?.(selectedGraphNode.id)}
         onStartPointClear={onStartPointClear}
         onDestinationPointClear={onDestinationPointClear}
         onClearRoute={onClearRoute}
@@ -322,6 +322,9 @@ export const MobileMapView: React.FC<MobileMapViewProps> = ({
         onShowPathEdgesChange={onShowPathEdgesChange}
         onShowRoomConnectionsChange={onShowRoomConnectionsChange}
         onShowRouteChange={onShowRouteChange}
+        graphNodes={graphNodes}
+        onSetStartFromNodeId={onSetStartFromNodeId}
+        onSetEndFromNodeId={onSetEndFromNodeId}
       />
     </div>
   );
