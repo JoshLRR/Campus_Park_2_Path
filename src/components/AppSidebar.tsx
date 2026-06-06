@@ -71,9 +71,7 @@ type AppSidebarProps = {
   handleSetStartPointFromNode: (node: GraphNode) => void;
   handleSetDestinationFromNode: (node: GraphNode) => void;
 
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  filteredRooms: AppRoom[];
+  rooms: AppRoom[];
   isRightPanelOpen: boolean;
   setIsRightPanelOpen: (value: boolean) => void;
   handleSetStartPoint: (room: AppRoom) => void;
@@ -114,9 +112,7 @@ export function AppSidebar({
   clearSelection,
   handleSetStartPointFromNode,
   handleSetDestinationFromNode,
-  searchTerm,
-  setSearchTerm,
-  filteredRooms,
+  rooms,
   isRightPanelOpen,
   setIsRightPanelOpen,
   handleSetStartPoint,
@@ -212,9 +208,7 @@ export function AppSidebar({
 
         {/* Room Search */}
         <RoomSearchPanel
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filteredRooms={filteredRooms}
+          rooms={rooms}
           isRightPanelOpen={isRightPanelOpen}
           setIsRightPanelOpen={setIsRightPanelOpen}
           onSetStartPoint={handleSetStartPoint}

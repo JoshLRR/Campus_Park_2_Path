@@ -7,16 +7,16 @@
  * This component was extracted from App.tsx without changing behavior.
  */
 
+import {useState} from 'react';
 import {Room} from '../Map/MapView';
+import {filterRooms} from '../../logic/filterRooms';
 
 type SearchRoom = Room & {
   id: number;
 };
 
 type RoomSearchPanelProps = {
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  filteredRooms: SearchRoom[];
+  rooms: SearchRoom[];
   isRightPanelOpen: boolean;
   setIsRightPanelOpen: (value: boolean) => void;
   onSetStartPoint: (room: SearchRoom) => void;
@@ -25,15 +25,15 @@ type RoomSearchPanelProps = {
 };
 
 export function RoomSearchPanel({
-  searchTerm,
-  setSearchTerm,
-  filteredRooms,
+  rooms,
   isRightPanelOpen,
   setIsRightPanelOpen,
   onSetStartPoint,
   onSetDestination,
   onRoomSelect,
 }: RoomSearchPanelProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const filteredRooms = filterRooms(rooms, searchTerm);
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-3">

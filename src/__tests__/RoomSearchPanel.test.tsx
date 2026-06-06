@@ -18,7 +18,6 @@ const makeRooms = (n: number): SearchRoom[] =>
 
 function renderPanel(overrides = {}) {
   const handlers = {
-    setSearchTerm: vi.fn(),
     setIsRightPanelOpen: vi.fn(),
     onSetStartPoint: vi.fn(),
     onSetDestination: vi.fn(),
@@ -26,8 +25,7 @@ function renderPanel(overrides = {}) {
   };
   render(
     <RoomSearchPanel
-      searchTerm=""
-      filteredRooms={[]}
+      rooms={[]}
       isRightPanelOpen={true}
       {...handlers}
       {...overrides}
@@ -37,15 +35,13 @@ function renderPanel(overrides = {}) {
 }
 
 describe('RoomSearchPanel', () => {
-  it('updates the search term on input', () => {
-    const handlers = renderPanel();
+  it('shows matching results when the user types', () => {
+    renderPanel({rooms: makeRooms(2)});
     fireEvent.change(
       screen.getByPlaceholderText('Search rooms or buildings...'),
-      {
-        target: {value: 'lib'},
-      },
+      {target: {value: 'Room'}},
     );
-    expect(handlers.setSearchTerm).toHaveBeenCalledWith('lib');
+    expect(screen.getByText('2 results found')).toBeInTheDocument();
   });
 
   it('shows a "Show Rooms" button only when the panel is closed', () => {
@@ -57,7 +53,11 @@ describe('RoomSearchPanel', () => {
 
   it('renders results and wires the per-room actions', () => {
     const rooms = makeRooms(1);
-    const handlers = renderPanel({searchTerm: 'room', filteredRooms: rooms});
+    const handlers = renderPanel({rooms});
+    fireEvent.change(
+      screen.getByPlaceholderText('Search rooms or buildings...'),
+      {target: {value: 'Room'}},
+    );
     expect(screen.getByText('1 results found')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', {name: 'Start'}));
     expect(handlers.onSetStartPoint).toHaveBeenCalledWith(rooms[0]);
@@ -68,14 +68,22 @@ describe('RoomSearchPanel', () => {
   });
 
   it('caps the list at 5 and notes more results exist', () => {
-    renderPanel({searchTerm: 'room', filteredRooms: makeRooms(7)});
+    renderPanel({rooms: makeRooms(7)});
+    fireEvent.change(
+      screen.getByPlaceholderText('Search rooms or buildings...'),
+      {target: {value: 'Room'}},
+    );
     expect(screen.getByText('7 results found')).toBeInTheDocument();
     expect(screen.getAllByRole('button', {name: 'Select'})).toHaveLength(5);
     expect(screen.getByText(/Showing first 5 results/)).toBeInTheDocument();
   });
 
   it('shows a no-results message when nothing matches', () => {
-    renderPanel({searchTerm: 'zzz', filteredRooms: []});
+    renderPanel({rooms: makeRooms(3)});
+    fireEvent.change(
+      screen.getByPlaceholderText('Search rooms or buildings...'),
+      {target: {value: 'zzz'}},
+    );
     expect(
       screen.getByText(/No rooms found matching "zzz"/),
     ).toBeInTheDocument();

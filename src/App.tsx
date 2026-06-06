@@ -5,7 +5,6 @@ import {RightRoomPanel} from './components/Map/RightRoomPanel';
 import {AppSidebar} from './components/AppSidebar';
 import {getMapWidth} from './logic/getMapWidth';
 import {getFloorStats} from './logic/getFloorStats';
-import {filterRooms} from './logic/filterRooms';
 import {getSelectedGraphNode, getSelectedRoom} from './logic/getSelectedItems';
 import {SidebarToggleButton} from './components/SidebarToggleButton';
 import {useGraphData} from './hooks/useGraphData';
@@ -17,7 +16,6 @@ import './index.css';
 import './App.css';
 
 export default function App() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(
     null,
@@ -58,9 +56,6 @@ export default function App() {
     pathfinder,
     setCurrentRoute,
   });
-
-  // Filter rooms based on search term
-  const filteredRooms = filterRooms(sampleRooms, searchTerm);
 
   // Handle floor change
   const handleFloorChange = (floor: number) => {
@@ -147,9 +142,7 @@ export default function App() {
         clearSelection={clearSelection}
         handleSetStartPointFromNode={handleSetStartPointFromNode}
         handleSetDestinationFromNode={handleSetDestinationFromNode}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filteredRooms={filteredRooms}
+        rooms={sampleRooms}
         isRightPanelOpen={isRightPanelOpen}
         setIsRightPanelOpen={setIsRightPanelOpen}
         handleSetStartPoint={handleSetStartPoint}
