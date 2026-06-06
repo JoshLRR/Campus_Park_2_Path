@@ -42,6 +42,7 @@ export interface Room {
   y: number;
   width?: number;
   height?: number;
+  features?: number[];
 }
 
 // Navigation points interface
@@ -71,7 +72,7 @@ interface MapViewProps {
   showRoute?: boolean;
   currentFloor: number;
   availableFloors: number[];
-  focusPoint?: {x: number; y: number; seq: number} | null;
+  focusPoint?: {x: number; y: number; seq: number; targetScale?: number} | null;
   highlightedSegment?: {from: number; to: number} | null;
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
@@ -179,7 +180,7 @@ export const MapView: React.FC<MapViewProps> = ({
     if (!focusPoint || !transformRef.current || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const currentScale = transformRef.current.state?.scale ?? 0.1;
-    const targetScale = Math.max(currentScale, 0.7);
+    const targetScale = Math.max(currentScale, focusPoint.targetScale ?? 0.7);
     const posX = rect.width / 2 - focusPoint.x * targetScale;
     const posY = rect.height / 2 - focusPoint.y * targetScale;
     transformRef.current.setTransform(

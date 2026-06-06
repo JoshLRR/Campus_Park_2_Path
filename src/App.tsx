@@ -84,6 +84,15 @@ export default function App() {
     setHighlightedSegment({from: fromNodeId, to: toNodeId});
   };
 
+  const handleFocusRoom = (room: {x: number; y: number}) => {
+    setFocusPoint(prev => ({
+      x: room.x * NODE_SCALE - NODE_OFFSET_X,
+      y: room.y * NODE_SCALE - NODE_OFFSET_Y,
+      seq: (prev?.seq ?? 0) + 1,
+      targetScale: 0.6,
+    }));
+  };
+
   const handleClearRoute = () => {
     clearRoute();
     setViewMode('search');
@@ -192,6 +201,7 @@ export default function App() {
             onSetStartPoint={handleSetStartPoint}
             onSetDestination={handleSetDestination}
             onRoomSelect={handleRoomSelect}
+            onFocusRoom={handleFocusRoom}
             clearRoute={handleClearRoute}
             clearStartPoint={clearStartPoint}
             clearDestination={clearDestination}

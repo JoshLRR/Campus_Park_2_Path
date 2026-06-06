@@ -56,6 +56,7 @@ export function useGraphData() {
               floor: node.position.floorNum,
               x: node.position.x,
               y: node.position.y,
+              features: node.features,
             };
           });
 
