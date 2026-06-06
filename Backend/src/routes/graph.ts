@@ -50,7 +50,10 @@ router.get('/', async (_req: Request, res: Response) => {
       WHERE is_active = 1;
     `);
 
-    const neighborsByNodeId = new Map<number, {to: number; distance: number}[]>();
+    const neighborsByNodeId = new Map<
+      number,
+      {to: number; distance: number}[]
+    >();
 
     for (const edge of edgeRows) {
       const existingNeighbors = neighborsByNodeId.get(edge.fromNodeId) ?? [];

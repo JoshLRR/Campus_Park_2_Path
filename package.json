@@ -16,7 +16,6 @@
     "pretest": "npm run compile",
     "posttest": "npm run lint",
     "tailwind:init": "tailwindcss init"
-    "tailwind:init": "tailwindcss init"
   },
   "repository": {
     "type": "git",

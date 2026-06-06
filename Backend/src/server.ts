@@ -5,7 +5,7 @@ import graphRouter from './routes/graph';
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 const port = process.env.PORT ?? 3001;
 
 app.use(cors());
@@ -17,6 +17,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/graph', graphRouter);
 
-app.listen(port, () => {
-  console.log(`CPP backend running on http://localhost:${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`CPP backend running on http://localhost:${port}`);
+  });
+}
