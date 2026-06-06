@@ -6,6 +6,9 @@ import {
   PositionDTO,
 } from '../../logic/PathingComponent/api/PathAPI.dto';
 import {createPathAPI} from '../../logic/PathingComponent/api/CreatePathingAPI';
+import {DijkstraAlgorithm} from '../../logic/PathingComponent/application/DijkstraAlgorithm';
+import type {Node} from '../../types/Node';
+import type {GraphRepository} from '../../repositories/GraphRepository';
 
 export interface PathResult {
   path: number[];
@@ -14,17 +17,21 @@ export interface PathResult {
   message?: string;
 }
 
-const api = createPathAPI();
-
 export class Pathfinder {
-  private nodes: Map<number, GraphNode>;
+  private readonly nodes: Map<number, GraphNode>;
+  private readonly api: ReturnType<typeof createPathAPI>;
 
   constructor(graphNodes: GraphNode[]) {
     this.nodes = new Map(graphNodes.map(node => [node.id, node]));
+    // Build the POI/coordinate API from live nodes, not the static graph.json.
+    const liveRepo: GraphRepository = {
+      getGraph: () => [...this.nodes.values()] as Node[],
+    };
+    this.api = createPathAPI(liveRepo);
   }
 
   /**
-   * Find the shortest path between two nodes using the local PathAPI
+   * Find the shortest path between two nodes using Dijkstra on the live graph.
    */
   async findPath(startNodeId: number, endNodeId: number): Promise<PathResult> {
     if (!this.nodes.has(startNodeId) || !this.nodes.has(endNodeId)) {
@@ -40,19 +47,26 @@ export class Pathfinder {
       return {path: [startNodeId], totalDistance: 0, success: true};
     }
 
-    const request: PathRequestDTO = {
-      origin: {
-        mode: 'node',
-        value: startNodeId.toString(),
-      },
-      destination: {
-        mode: 'node',
-        value: endNodeId.toString(),
-      },
-    };
+    const algorithm = new DijkstraAlgorithm([...this.nodes.values()] as Node[]);
+    const result = await algorithm.findPath(startNodeId, {
+      kind: 'node',
+      nodeId: endNodeId,
+    });
 
-    const result = await api.path(request);
-    return this.transformApiResponse(result);
+    if (result.status === 'not_found') {
+      return {
+        path: [],
+        totalDistance: 0,
+        success: false,
+        message: 'No path found',
+      };
+    }
+
+    return {
+      path: result.nodes,
+      totalDistance: result.totalDistance,
+      success: true,
+    };
   }
 
   /**
@@ -91,7 +105,7 @@ export class Pathfinder {
       },
     };
 
-    const result = await api.path(request);
+    const result = await this.api.path(request);
     return this.transformApiResponse(result);
   }
 
@@ -128,7 +142,7 @@ export class Pathfinder {
       preferences,
     };
 
-    const result = await api.path(request);
+    const result = await this.api.path(request);
     return this.transformApiResponse(result);
   }
 
@@ -188,25 +202,17 @@ export class Pathfinder {
   }
 
   /**
-   * Find the closest node to a given position
+   * Find the closest node on the given floor to (x, y).
    */
-  findClosestNode(
-    x: number,
-    y: number,
-    scaleInverse: number = 0.1,
-  ): number | null {
+  findClosestNode(x: number, y: number, floor: number = 1): number | null {
     let closestNodeId: number | null = null;
     let minDistance = Infinity;
 
     for (const [nodeId, node] of this.nodes) {
-      const nodeX = node.position.x;
-      const nodeY = node.position.y;
-
-      const distance = Math.sqrt(
-        Math.pow(nodeX - x * scaleInverse, 2) +
-          Math.pow(nodeY - y * scaleInverse, 2),
-      );
-
+      if (node.position.floorNum !== floor) continue;
+      const dx = node.position.x - x;
+      const dy = node.position.y - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < minDistance) {
         minDistance = distance;
         closestNodeId = nodeId;
