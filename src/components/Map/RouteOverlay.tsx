@@ -84,6 +84,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
         strokeLinecap="round"
         strokeLinejoin="round"
         opacity={0.9}
+        vectorEffect="non-scaling-stroke"
       />
       {/* Main route line */}
       <path
@@ -94,6 +95,7 @@ export const RouteOverlay: React.FC<RouteOverlayProps> = ({
         strokeLinecap="round"
         strokeLinejoin="round"
         opacity={1}
+        vectorEffect="non-scaling-stroke"
       />
     </g>
   );

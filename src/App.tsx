@@ -1,8 +1,16 @@
-import {useState} from 'react';
-import {MapView, NavigationPoint} from './components/Map/MapView';
+import {useState, useEffect, useMemo} from 'react';
+import {
+  MapView,
+  NavigationPoint,
+  NODE_SCALE,
+  NODE_OFFSET_X,
+  NODE_OFFSET_Y,
+} from './components/Map/MapView';
 import {PathResult} from './components/Map/pathfinding';
 import {SearchPanel} from './components/SearchPanel';
 import {DevPanel} from './components/DevPanel';
+import {DirectionsPanel} from './components/DirectionsPanel';
+import {buildDirections} from './logic/buildDirections';
 import {getFloorStats} from './logic/getFloorStats';
 import {getSelectedGraphNode} from './logic/getSelectedItems';
 import {useGraphData} from './hooks/useGraphData';
@@ -27,6 +35,12 @@ export default function App() {
   const [currentRoute, setCurrentRoute] = useState<PathResult | null>(null);
 
   const [devMode, setDevMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'search' | 'directions'>('search');
+  const [focusPoint, setFocusPoint] = useState<{
+    x: number;
+    y: number;
+    seq: number;
+  } | null>(null);
 
   // Graph visibility — off by default; toggled in dev panel
   const [showPathNodes, setShowPathNodes] = useState(false);
@@ -37,6 +51,34 @@ export default function App() {
   const [showGraphDebug, setShowGraphDebug] = useState(false);
 
   const pathfinder = usePathfinder(graphNodes);
+
+  // Auto-switch to directions view when a route is successfully calculated
+  useEffect(() => {
+    if (currentRoute?.success) setViewMode('directions');
+  }, [currentRoute]);
+
+  const directions = useMemo(() => {
+    if (!currentRoute?.success || !startPoint || !destinationPoint) return [];
+    return buildDirections(
+      currentRoute.path,
+      graphNodes,
+      startPoint.label,
+      destinationPoint.label,
+    );
+  }, [currentRoute, graphNodes, startPoint, destinationPoint]);
+
+  const handleFocusStep = (position: {x: number; y: number}) => {
+    setFocusPoint(prev => ({
+      x: position.x * NODE_SCALE - NODE_OFFSET_X,
+      y: position.y * NODE_SCALE - NODE_OFFSET_Y,
+      seq: (prev?.seq ?? 0) + 1,
+    }));
+  };
+
+  const handleClearRoute = () => {
+    clearRoute();
+    setViewMode('search');
+  };
 
   useRouteCalculation({
     startPoint,
@@ -111,6 +153,7 @@ export default function App() {
           showRoute={showRoute}
           currentFloor={currentFloor}
           availableFloors={availableFloors}
+          focusPoint={focusPoint}
           onRoomSelect={handleRoomSelect}
           onGraphNodeSelect={handleGraphNodeSelect}
           onStartPointClear={clearStartPoint}
@@ -121,18 +164,28 @@ export default function App() {
 
       {/* Search / Directions panel — top left */}
       <div className="absolute top-4 left-4 z-20">
-        <SearchPanel
-          rooms={rooms}
-          startPoint={startPoint}
-          destinationPoint={destinationPoint}
-          currentRoute={currentRoute}
-          onSetStartPoint={handleSetStartPoint}
-          onSetDestination={handleSetDestination}
-          onRoomSelect={handleRoomSelect}
-          clearRoute={clearRoute}
-          clearStartPoint={clearStartPoint}
-          clearDestination={clearDestination}
-        />
+        {viewMode === 'directions' && directions.length > 0 ? (
+          <DirectionsPanel
+            steps={directions}
+            totalDistance={currentRoute?.totalDistance ?? 0}
+            onBack={() => setViewMode('search')}
+            onClear={handleClearRoute}
+            onFocusStep={handleFocusStep}
+          />
+        ) : (
+          <SearchPanel
+            rooms={rooms}
+            startPoint={startPoint}
+            destinationPoint={destinationPoint}
+            currentRoute={currentRoute}
+            onSetStartPoint={handleSetStartPoint}
+            onSetDestination={handleSetDestination}
+            onRoomSelect={handleRoomSelect}
+            clearRoute={handleClearRoute}
+            clearStartPoint={clearStartPoint}
+            clearDestination={clearDestination}
+          />
+        )}
       </div>
 
       {/* Developer panel — top right */}

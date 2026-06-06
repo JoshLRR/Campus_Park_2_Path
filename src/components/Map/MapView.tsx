@@ -71,6 +71,7 @@ interface MapViewProps {
   showRoute?: boolean;
   currentFloor: number;
   availableFloors: number[];
+  focusPoint?: {x: number; y: number; seq: number} | null;
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
@@ -80,7 +81,10 @@ interface MapViewProps {
 
 const WORLD_WIDTH = 20000;
 const WORLD_HEIGHT = 20000;
-const SCALE_FACTOR = 10;
+// Matches GraphOverlay's calibrated formula: x * 5.5 - 2080, y * 5.5 - 70
+export const NODE_SCALE = 5.5;
+export const NODE_OFFSET_X = 2080;
+export const NODE_OFFSET_Y = 70;
 
 export const MapView: React.FC<MapViewProps> = ({
   initialBuildings,
@@ -100,6 +104,7 @@ export const MapView: React.FC<MapViewProps> = ({
   showRoute = true,
   currentFloor,
   availableFloors,
+  focusPoint,
   onRoomSelect,
   onGraphNodeSelect,
   onStartPointClear,
@@ -167,6 +172,17 @@ export const MapView: React.FC<MapViewProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Animate to a CSS world position when focusPoint changes
+  React.useEffect(() => {
+    if (!focusPoint || !transformRef.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const currentScale = transformRef.current.state?.scale ?? 0.1;
+    const targetScale = currentScale < 0.2 ? 0.3 : currentScale;
+    const posX = rect.width / 2 - focusPoint.x * targetScale;
+    const posY = rect.height / 2 - focusPoint.y * targetScale;
+    transformRef.current.setTransform(posX, posY, targetScale, 400, 'easeOutCubic');
+  }, [focusPoint]);
+
   // Filter items based on current floor
   const filterByFloor = <T extends {floor?: number}>(items: T[]): T[] => {
     return items.filter(item => item.floor === currentFloor);
@@ -201,10 +217,10 @@ export const MapView: React.FC<MapViewProps> = ({
     onRoomSelect?.(roomId);
   };
 
-  // Scale position function for route overlay
+  // Scale position function — must match GraphOverlay's formula
   const scalePosition = (pos: {x: number; y: number}) => ({
-    x: pos.x * SCALE_FACTOR,
-    y: pos.y * SCALE_FACTOR,
+    x: pos.x * NODE_SCALE - NODE_OFFSET_X,
+    y: pos.y * NODE_SCALE - NODE_OFFSET_Y,
   });
 
   // Check if navigation points are on current floor
@@ -227,8 +243,8 @@ export const MapView: React.FC<MapViewProps> = ({
         maxScale={4}
         limitToBounds={false}
         initialScale={0.1}
-        initialPositionX={230}
-        initialPositionY={0}
+        initialPositionX={176}
+        initialPositionY={-432}
         onTransformed={handleTransform}
       >
         <TransformComponent
@@ -379,8 +395,8 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Navigation markers */}
             {startPoint && isStartPointOnCurrentFloor && (
               <StartMarker
-                x={startPoint.x}
-                y={startPoint.y}
+                x={scalePosition(startPoint).x}
+                y={scalePosition(startPoint).y}
                 label={startPoint.label}
                 isAnimated={true}
                 onClick={onStartPointClear}
@@ -389,8 +405,8 @@ export const MapView: React.FC<MapViewProps> = ({
 
             {destinationPoint && isDestinationPointOnCurrentFloor && (
               <DestinationMarker
-                x={destinationPoint.x}
-                y={destinationPoint.y}
+                x={scalePosition(destinationPoint).x}
+                y={scalePosition(destinationPoint).y}
                 label={destinationPoint.label}
                 isAnimated={true}
                 onClick={onDestinationPointClear}
