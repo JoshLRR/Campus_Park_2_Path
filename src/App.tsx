@@ -11,7 +11,6 @@ import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
 import {usePathfinder} from './hooks/usePathfinder';
 import {useNavigationSelection} from './hooks/useNavigationSelection';
-import {initialBuildings, sampleRooms} from './data/mockCampusData';
 import './index.css';
 import './App.css';
 
@@ -24,7 +23,7 @@ export default function App() {
   const [startPoint, setStartPoint] = useState<NavigationPoint | null>(null);
   const [destinationPoint, setDestinationPoint] =
     useState<NavigationPoint | null>(null);
-  const {graphNodes, availableFloors} = useGraphData();
+  const {graphNodes, availableFloors, rooms} = useGraphData();
 
   // Floor management
   const [currentFloor, setCurrentFloor] = useState(1);
@@ -63,7 +62,7 @@ export default function App() {
 
     // Clear selection if selected room/node is not on the new floor
     const selectedRoom = selectedRoomId
-      ? sampleRooms.find(r => r.id === selectedRoomId)
+      ? rooms.find(r => r.id === selectedRoomId)
       : null;
     const selectedNode = selectedGraphNodeId
       ? graphNodes.find(n => n.id === selectedGraphNodeId)
@@ -91,7 +90,7 @@ export default function App() {
     clearDestination,
     clearRoute,
   } = useNavigationSelection({
-    buildings: initialBuildings,
+    buildings: [],
     setSelectedRoomId,
     setSelectedGraphNodeId,
     setStartPoint,
@@ -99,14 +98,14 @@ export default function App() {
     setCurrentRoute,
   });
 
-  const selectedRoom = getSelectedRoom(sampleRooms, selectedRoomId);
+  const selectedRoom = getSelectedRoom(rooms, selectedRoomId);
 
   const selectedGraphNode = getSelectedGraphNode(
     graphNodes,
     selectedGraphNodeId,
   );
 
-  const floorStats = getFloorStats(graphNodes, sampleRooms, currentFloor);
+  const floorStats = getFloorStats(graphNodes, rooms, currentFloor);
 
   return (
     <div className="w-full h-screen flex relative">
@@ -142,7 +141,7 @@ export default function App() {
         clearSelection={clearSelection}
         handleSetStartPointFromNode={handleSetStartPointFromNode}
         handleSetDestinationFromNode={handleSetDestinationFromNode}
-        rooms={sampleRooms}
+        rooms={rooms}
         isRightPanelOpen={isRightPanelOpen}
         setIsRightPanelOpen={setIsRightPanelOpen}
         handleSetStartPoint={handleSetStartPoint}
@@ -160,11 +159,11 @@ export default function App() {
       {/* Main Map View */}
       <div className={getMapWidth(isLeftSidebarOpen, isRightPanelOpen)}>
         <MapView
-          initialBuildings={initialBuildings}
+          initialBuildings={[]}
           selectedRoomId={selectedRoomId}
           selectedGraphNodeId={selectedGraphNodeId}
           focusBuildingId={focusBuilding}
-          rooms={sampleRooms}
+          rooms={rooms}
           startPoint={startPoint}
           destinationPoint={destinationPoint}
           graphNodes={graphNodes}
@@ -190,7 +189,7 @@ export default function App() {
         isRightPanelOpen={isRightPanelOpen}
         setIsRightPanelOpen={setIsRightPanelOpen}
         currentFloor={currentFloor}
-        sampleRooms={sampleRooms}
+        rooms={rooms}
         selectedRoomId={selectedRoomId}
         onRoomSelect={handleRoomSelect}
         onSetStartPoint={handleSetStartPoint}

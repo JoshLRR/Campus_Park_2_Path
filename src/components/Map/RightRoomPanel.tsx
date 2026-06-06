@@ -16,7 +16,7 @@ type RightRoomPanelProps = {
   isRightPanelOpen: boolean;
   setIsRightPanelOpen: (value: boolean) => void;
   currentFloor: number;
-  sampleRooms: PanelRoom[];
+  rooms: PanelRoom[];
   selectedRoomId: number | null;
   onRoomSelect: (roomId: number) => void;
   onSetStartPoint: (room: PanelRoom) => void;
@@ -27,7 +27,7 @@ export function RightRoomPanel({
   isRightPanelOpen,
   setIsRightPanelOpen,
   currentFloor,
-  sampleRooms,
+  rooms,
   selectedRoomId,
   onRoomSelect,
   onSetStartPoint,
@@ -37,9 +37,7 @@ export function RightRoomPanel({
     return null;
   }
 
-  const currentFloorRooms = sampleRooms.filter(
-    room => room.floor === currentFloor,
-  );
+  const currentFloorRooms = rooms.filter(room => room.floor === currentFloor);
 
   return (
     <div className="w-1/4 h-full bg-gray-50 overflow-hidden transition-all duration-300 ease-in-out">

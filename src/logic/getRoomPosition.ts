@@ -28,7 +28,7 @@ export function getRoomPosition(
   const building = buildings.find(b => b.name === room.building);
 
   if (!building) {
-    return {x: 0, y: 0};
+    return {x: room.x, y: room.y};
   }
 
   return {

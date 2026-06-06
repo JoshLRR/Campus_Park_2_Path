@@ -33,7 +33,7 @@ test('resolves position for a different building by name', () => {
   expect(getRoomPosition(room, buildings)).toEqual({x: 301, y: 402});
 });
 
-test('returns the origin when no building matches', () => {
-  const room = makeRoom({building: 'Unknown'});
-  expect(getRoomPosition(room, buildings)).toEqual({x: 0, y: 0});
+test("uses the room's own coordinates when no building matches", () => {
+  const room = makeRoom({building: 'Unknown', x: 5, y: 7});
+  expect(getRoomPosition(room, buildings)).toEqual({x: 5, y: 7});
 });

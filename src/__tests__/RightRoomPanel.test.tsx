@@ -37,7 +37,7 @@ function renderPanel(overrides = {}) {
     <RightRoomPanel
       isRightPanelOpen={true}
       currentFloor={1}
-      sampleRooms={rooms}
+      rooms={rooms}
       selectedRoomId={null}
       {...handlers}
       {...overrides}
