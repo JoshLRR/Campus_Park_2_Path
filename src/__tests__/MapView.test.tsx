@@ -125,7 +125,7 @@ describe('MapView', () => {
 
   it('changes floor from the floor selector', () => {
     const {onFloorChange} = renderMap();
-    fireEvent.click(screen.getByTitle('Switch to Floor 2'));
+    fireEvent.click(screen.getByTitle('Floor 2'));
     expect(onFloorChange).toHaveBeenCalledWith(2);
   });
 
@@ -169,9 +169,9 @@ describe('MapView', () => {
       path: [1, 2],
       totalDistance: 5,
     };
-    renderMap({currentRoute, showRoute: true});
-    // START/DESTINATION labels are rendered only by the RouteOverlay
-    expect(screen.getByText('START')).toBeInTheDocument();
-    expect(screen.getByText('DESTINATION')).toBeInTheDocument();
+    const {container} = renderMap({currentRoute, showRoute: true});
+    // RouteOverlay renders a casing + main path in Google blue
+    const paths = Array.from(container.querySelectorAll('path'));
+    expect(paths.some(p => p.getAttribute('stroke') === '#4285f4')).toBe(true);
   });
 });

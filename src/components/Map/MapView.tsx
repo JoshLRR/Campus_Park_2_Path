@@ -216,16 +216,19 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-gray-200 relative overflow-hidden"
+      className="w-full h-full bg-stone-100 relative overflow-hidden"
     >
       <TransformWrapper
         ref={transformRef}
         wheel={{step: 0.08}}
         doubleClick={{disabled: true}}
         pinch={{step: 5}}
-        minScale={0.4}
+        minScale={0.05}
         maxScale={4}
         limitToBounds={false}
+        initialScale={0.1}
+        initialPositionX={230}
+        initialPositionY={0}
         onTransformed={handleTransform}
       >
         <TransformComponent
@@ -431,99 +434,24 @@ export const MapView: React.FC<MapViewProps> = ({
       )}
 
       {/* Floor Selector */}
-      <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg">
-        <h4 className="font-semibold mb-2 text-sm">Floor</h4>
-        <div className="flex flex-wrap gap-1">
-          {availableFloors.map(floor => (
+      {availableFloors.length > 1 && (
+        <div className="absolute bottom-6 right-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1.5">
+          {[...availableFloors].reverse().map(floor => (
             <button
               key={floor}
               onClick={() => onFloorChange?.(floor)}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
+              className={`w-9 h-9 text-sm font-bold rounded-xl transition-colors ${
                 floor === currentFloor
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-blue-500 text-white shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-100'
               }`}
-              title={`Switch to Floor ${floor}`}
+              title={`Floor ${floor}`}
             >
               {floor}
             </button>
           ))}
         </div>
-        <div className="text-xs text-gray-500 mt-1">
-          Current: Floor {currentFloor}
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg text-xs">
-        <div className="flex justify-between items-center mb-2">
-          <h4 className="font-semibold">Legend</h4>
-        </div>
-        <div className="space-y-1">
-          {showPathNodes && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>Path Node</span>
-            </div>
-          )}
-          {showRoomNodes && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span>Room Node</span>
-            </div>
-          )}
-          {showPathEdges && (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-1 bg-indigo-600"></div>
-              <span>Path Edge</span>
-            </div>
-          )}
-          {showRoomConnections && (
-            <div className="flex items-center gap-2">
-              <div
-                className="w-6 h-1 bg-indigo-600"
-                style={{
-                  background:
-                    'repeating-linear-gradient(90deg, #4f46e5 0px, #4f46e5 4px, transparent 4px, transparent 8px)',
-                }}
-              ></div>
-              <span>Room Connection</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-sky-500 border border-black rounded-sm"></div>
-            <span>Building</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <span>Start Point</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span>Destination</span>
-          </div>
-          {showRoute && currentRoute && currentRoute.success && (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-1 bg-yellow-500"></div>
-              <span>Route</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg text-xs max-w-48">
-        <p>
-          <strong>Controls:</strong>
-        </p>
-        <p>• Mouse wheel: Zoom</p>
-        <p>• Drag: Pan around map</p>
-        <p>• Click floor buttons: Change floor</p>
-        <p>• Click buildings: Highlight rooms</p>
-        <p>• Click rooms: Select</p>
-        <p>• Click graph nodes: Select node</p>
-        <p>• Click markers: Remove</p>
-      </div>
+      )}
     </div>
   );
 };

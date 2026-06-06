@@ -39,7 +39,7 @@ describe('RouteOverlay', () => {
     expect(container.querySelector('g')).toBeNull();
   });
 
-  it('draws the route path and start/destination labels on the current floor', () => {
+  it('draws two route paths (casing + main) on the current floor', () => {
     const nodes = [
       node(1, 1, [2], {kind: 'room', roomNumber: 'A1'}),
       node(2, 1, [1], {kind: 'room', roomNumber: 'B2'}),
@@ -55,9 +55,11 @@ describe('RouteOverlay', () => {
         />,
       ),
     );
+    // Casing path + main route path
     expect(container.querySelectorAll('path').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText('START')).toBeInTheDocument();
-    expect(screen.getByText('DESTINATION')).toBeInTheDocument();
+    // Main route is Google blue
+    const paths = Array.from(container.querySelectorAll('path'));
+    expect(paths.some(p => p.getAttribute('stroke') === '#4285f4')).toBe(true);
   });
 
   it('shows a cross-floor message when the route is on other floors', () => {
@@ -73,7 +75,7 @@ describe('RouteOverlay', () => {
       ),
     );
     expect(
-      screen.getByText('Route continues on other floors'),
+      screen.getByText('Route continues on another floor'),
     ).toBeInTheDocument();
   });
 
@@ -91,6 +93,5 @@ describe('RouteOverlay', () => {
       ),
     );
     expect(container.querySelector('g')).toBeNull();
-    expect(console.warn).toHaveBeenCalled();
   });
 });

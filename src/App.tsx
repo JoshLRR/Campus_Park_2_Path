@@ -1,12 +1,10 @@
 import {useState} from 'react';
 import {MapView, NavigationPoint} from './components/Map/MapView';
 import {PathResult} from './components/Map/pathfinding';
-import {RightRoomPanel} from './components/Map/RightRoomPanel';
-import {AppSidebar} from './components/AppSidebar';
-import {getMapWidth} from './logic/getMapWidth';
+import {SearchPanel} from './components/SearchPanel';
+import {DevPanel} from './components/DevPanel';
 import {getFloorStats} from './logic/getFloorStats';
-import {getSelectedGraphNode, getSelectedRoom} from './logic/getSelectedItems';
-import {SidebarToggleButton} from './components/SidebarToggleButton';
+import {getSelectedGraphNode} from './logic/getSelectedItems';
 import {useGraphData} from './hooks/useGraphData';
 import {useRouteCalculation} from './hooks/useRouteCalculation';
 import {usePathfinder} from './hooks/usePathfinder';
@@ -19,36 +17,27 @@ export default function App() {
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<number | null>(
     null,
   );
-  const [focusBuilding, setFocusBuilding] = useState<number | null>(null);
+  const focusBuilding = null;
   const [startPoint, setStartPoint] = useState<NavigationPoint | null>(null);
   const [destinationPoint, setDestinationPoint] =
     useState<NavigationPoint | null>(null);
   const {graphNodes, availableFloors, rooms} = useGraphData();
 
-  // Floor management
   const [currentFloor, setCurrentFloor] = useState(1);
-
-  // Debug mode toggle
-  const [showGraphDebug, setShowGraphDebug] = useState(false);
-
-  // Graph element visibility toggles
-  const [showPathNodes, setShowPathNodes] = useState(true);
-  const [showPathEdges, setShowPathEdges] = useState(true);
-  const [showRoomConnections, setShowRoomConnections] = useState(true);
-  const [showRoomNodes, setShowRoomNodes] = useState(true);
-  const [showRoute, setShowRoute] = useState(true);
-
-  // Toggle states for sidebars
-  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-
-  // Route state
   const [currentRoute, setCurrentRoute] = useState<PathResult | null>(null);
 
-  // Create pathfinder instance
+  const [devMode, setDevMode] = useState(false);
+
+  // Graph visibility — off by default; toggled in dev panel
+  const [showPathNodes, setShowPathNodes] = useState(false);
+  const [showPathEdges, setShowPathEdges] = useState(false);
+  const [showRoomConnections, setShowRoomConnections] = useState(false);
+  const [showRoomNodes, setShowRoomNodes] = useState(false);
+  const [showRoute, setShowRoute] = useState(true);
+  const [showGraphDebug, setShowGraphDebug] = useState(false);
+
   const pathfinder = usePathfinder(graphNodes);
 
-  // Calculate route whenever start/destination points or pathfinder changes
   useRouteCalculation({
     startPoint,
     destinationPoint,
@@ -56,11 +45,9 @@ export default function App() {
     setCurrentRoute,
   });
 
-  // Handle floor change
   const handleFloorChange = (floor: number) => {
     setCurrentFloor(floor);
 
-    // Clear selection if selected room/node is not on the new floor
     const selectedRoom = selectedRoomId
       ? rooms.find(r => r.id === selectedRoomId)
       : null;
@@ -70,9 +57,7 @@ export default function App() {
 
     if (selectedRoom && selectedRoom.floor !== floor) {
       setSelectedRoomId(null);
-      setFocusBuilding(null);
     }
-
     if (selectedNode && selectedNode.position.floorNum !== floor) {
       setSelectedGraphNodeId(null);
     }
@@ -98,66 +83,16 @@ export default function App() {
     setCurrentRoute,
   });
 
-  const selectedRoom = getSelectedRoom(rooms, selectedRoomId);
-
   const selectedGraphNode = getSelectedGraphNode(
     graphNodes,
     selectedGraphNodeId,
   );
-
   const floorStats = getFloorStats(graphNodes, rooms, currentFloor);
 
   return (
-    <div className="w-full h-screen flex relative">
-      {/* Left Sidebar */}
-      <AppSidebar
-        isLeftSidebarOpen={isLeftSidebarOpen}
-        setIsLeftSidebarOpen={setIsLeftSidebarOpen}
-        currentFloor={currentFloor}
-        floorStats={floorStats}
-        availableFloors={availableFloors}
-        handleFloorChange={handleFloorChange}
-        currentRoute={currentRoute}
-        graphNodes={graphNodes}
-        showPathNodes={showPathNodes}
-        setShowPathNodes={setShowPathNodes}
-        showRoomNodes={showRoomNodes}
-        setShowRoomNodes={setShowRoomNodes}
-        showPathEdges={showPathEdges}
-        setShowPathEdges={setShowPathEdges}
-        showRoomConnections={showRoomConnections}
-        setShowRoomConnections={setShowRoomConnections}
-        showRoute={showRoute}
-        setShowRoute={setShowRoute}
-        startPoint={startPoint}
-        destinationPoint={destinationPoint}
-        clearRoute={clearRoute}
-        pathfinder={pathfinder}
-        showGraphDebug={showGraphDebug}
-        setShowGraphDebug={setShowGraphDebug}
-        clearStartPoint={clearStartPoint}
-        clearDestination={clearDestination}
-        selectedGraphNode={selectedGraphNode}
-        clearSelection={clearSelection}
-        handleSetStartPointFromNode={handleSetStartPointFromNode}
-        handleSetDestinationFromNode={handleSetDestinationFromNode}
-        rooms={rooms}
-        isRightPanelOpen={isRightPanelOpen}
-        setIsRightPanelOpen={setIsRightPanelOpen}
-        handleSetStartPoint={handleSetStartPoint}
-        handleSetDestination={handleSetDestination}
-        handleRoomSelect={handleRoomSelect}
-        selectedRoom={selectedRoom}
-      />
-
-      {/* Toggle button for closed sidebar */}
-      <SidebarToggleButton
-        isLeftSidebarOpen={isLeftSidebarOpen}
-        setIsLeftSidebarOpen={setIsLeftSidebarOpen}
-      />
-
-      {/* Main Map View */}
-      <div className={getMapWidth(isLeftSidebarOpen, isRightPanelOpen)}>
+    <div className="w-full h-screen relative overflow-hidden">
+      {/* Full-screen map */}
+      <div className="w-full h-full">
         <MapView
           initialBuildings={[]}
           selectedRoomId={selectedRoomId}
@@ -184,17 +119,79 @@ export default function App() {
         />
       </div>
 
-      {/* Right Panel - Room List (Optional) */}
-      <RightRoomPanel
-        isRightPanelOpen={isRightPanelOpen}
-        setIsRightPanelOpen={setIsRightPanelOpen}
-        currentFloor={currentFloor}
-        rooms={rooms}
-        selectedRoomId={selectedRoomId}
-        onRoomSelect={handleRoomSelect}
-        onSetStartPoint={handleSetStartPoint}
-        onSetDestination={handleSetDestination}
-      />
+      {/* Search / Directions panel — top left */}
+      <div className="absolute top-4 left-4 z-20">
+        <SearchPanel
+          rooms={rooms}
+          startPoint={startPoint}
+          destinationPoint={destinationPoint}
+          currentRoute={currentRoute}
+          onSetStartPoint={handleSetStartPoint}
+          onSetDestination={handleSetDestination}
+          onRoomSelect={handleRoomSelect}
+          clearRoute={clearRoute}
+          clearStartPoint={clearStartPoint}
+          clearDestination={clearDestination}
+        />
+      </div>
+
+      {/* Developer panel — top right */}
+      {devMode && (
+        <div className="absolute top-4 right-4 z-20">
+          <DevPanel
+            onClose={() => setDevMode(false)}
+            showPathNodes={showPathNodes}
+            setShowPathNodes={setShowPathNodes}
+            showRoomNodes={showRoomNodes}
+            setShowRoomNodes={setShowRoomNodes}
+            showPathEdges={showPathEdges}
+            setShowPathEdges={setShowPathEdges}
+            showRoomConnections={showRoomConnections}
+            setShowRoomConnections={setShowRoomConnections}
+            showRoute={showRoute}
+            setShowRoute={setShowRoute}
+            showGraphDebug={showGraphDebug}
+            setShowGraphDebug={setShowGraphDebug}
+            graphNodes={graphNodes}
+            floorStats={floorStats}
+            currentFloor={currentFloor}
+            availableFloors={availableFloors}
+            pathfinder={pathfinder}
+            selectedGraphNode={selectedGraphNode}
+            clearSelection={clearSelection}
+            onSetStartPointFromNode={handleSetStartPointFromNode}
+            onSetDestinationFromNode={handleSetDestinationFromNode}
+          />
+        </div>
+      )}
+
+      {/* Dev mode toggle — bottom left */}
+      <div className="absolute bottom-6 left-4 z-20">
+        <button
+          onClick={() => setDevMode(v => !v)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
+            devMode
+              ? 'bg-indigo-600 text-white shadow-indigo-200'
+              : 'bg-white text-gray-500 hover:text-indigo-600 hover:shadow-md'
+          }`}
+          title="Toggle developer view"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+            />
+          </svg>
+          {devMode ? 'Dev on' : 'Dev'}
+        </button>
+      </div>
     </div>
   );
 }

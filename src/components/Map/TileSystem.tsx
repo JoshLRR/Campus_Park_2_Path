@@ -294,32 +294,6 @@ const TileSystem: React.FC<TileSystemProps> = ({
           </div>
         );
       })}
-
-      {/* Optional: Tile grid info for debugging */}
-      {process.env.NODE_ENV === 'development' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            padding: '8px',
-            borderRadius: '4px',
-            fontSize: '10px',
-            fontFamily: 'monospace',
-            pointerEvents: 'none',
-            zIndex: 1000,
-          }}
-        >
-          <div>Total tiles: {tiles.length}</div>
-          <div>Visible: {visibleTiles.length}</div>
-          <div>
-            Grid: {gridInfo.gridWidth}×{gridInfo.gridHeight}
-          </div>
-          <div>Tile size: {scaledTileSize}px</div>
-        </div>
-      )}
     </div>
   );
 };
