@@ -47,11 +47,29 @@ export class Pathfinder {
       return {path: [startNodeId], totalDistance: 0, success: true};
     }
 
-    const algorithm = new DijkstraAlgorithm([...this.nodes.values()] as Node[]);
-    const result = await algorithm.findPath(startNodeId, {
-      kind: 'node',
-      nodeId: endNodeId,
-    });
+    const allNodes = [...this.nodes.values()] as Node[];
+
+    // Prefer paths that don't cut through room nodes as shortcuts
+    const roomNodeIds = new Set(
+      [...this.nodes.values()]
+        .filter(
+          n => n.kind === 'room' && n.id !== startNodeId && n.id !== endNodeId,
+        )
+        .map(n => n.id),
+    );
+
+    let result = await new DijkstraAlgorithm(allNodes, roomNodeIds).findPath(
+      startNodeId,
+      {kind: 'node', nodeId: endNodeId},
+    );
+
+    // Fall back to full graph if no room-avoiding path exists
+    if (result.status === 'not_found') {
+      result = await new DijkstraAlgorithm(allNodes).findPath(startNodeId, {
+        kind: 'node',
+        nodeId: endNodeId,
+      });
+    }
 
     if (result.status === 'not_found') {
       return {

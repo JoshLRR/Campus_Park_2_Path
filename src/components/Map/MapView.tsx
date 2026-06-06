@@ -72,6 +72,7 @@ interface MapViewProps {
   currentFloor: number;
   availableFloors: number[];
   focusPoint?: {x: number; y: number; seq: number} | null;
+  highlightedSegment?: {from: number; to: number} | null;
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
   onStartPointClear?: () => void;
@@ -105,6 +106,7 @@ export const MapView: React.FC<MapViewProps> = ({
   currentFloor,
   availableFloors,
   focusPoint,
+  highlightedSegment,
   onRoomSelect,
   onGraphNodeSelect,
   onStartPointClear,
@@ -177,10 +179,16 @@ export const MapView: React.FC<MapViewProps> = ({
     if (!focusPoint || !transformRef.current || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const currentScale = transformRef.current.state?.scale ?? 0.1;
-    const targetScale = currentScale < 0.2 ? 0.3 : currentScale;
+    const targetScale = Math.max(currentScale, 0.7);
     const posX = rect.width / 2 - focusPoint.x * targetScale;
     const posY = rect.height / 2 - focusPoint.y * targetScale;
-    transformRef.current.setTransform(posX, posY, targetScale, 400, 'easeOutCubic');
+    transformRef.current.setTransform(
+      posX,
+      posY,
+      targetScale,
+      400,
+      'easeOutCubic',
+    );
   }, [focusPoint]);
 
   // Filter items based on current floor
@@ -389,6 +397,7 @@ export const MapView: React.FC<MapViewProps> = ({
                 scalePosition={scalePosition}
                 totalDistance={currentRoute.totalDistance}
                 currentFloor={currentFloor}
+                highlightedSegment={highlightedSegment}
               />
             )}
 

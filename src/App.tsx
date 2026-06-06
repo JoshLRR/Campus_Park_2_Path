@@ -41,6 +41,10 @@ export default function App() {
     y: number;
     seq: number;
   } | null>(null);
+  const [highlightedSegment, setHighlightedSegment] = useState<{
+    from: number;
+    to: number;
+  } | null>(null);
 
   // Graph visibility — off by default; toggled in dev panel
   const [showPathNodes, setShowPathNodes] = useState(false);
@@ -67,17 +71,23 @@ export default function App() {
     );
   }, [currentRoute, graphNodes, startPoint, destinationPoint]);
 
-  const handleFocusStep = (position: {x: number; y: number}) => {
+  const handleFocusStep = (
+    position: {x: number; y: number},
+    fromNodeId: number,
+    toNodeId: number,
+  ) => {
     setFocusPoint(prev => ({
       x: position.x * NODE_SCALE - NODE_OFFSET_X,
       y: position.y * NODE_SCALE - NODE_OFFSET_Y,
       seq: (prev?.seq ?? 0) + 1,
     }));
+    setHighlightedSegment({from: fromNodeId, to: toNodeId});
   };
 
   const handleClearRoute = () => {
     clearRoute();
     setViewMode('search');
+    setHighlightedSegment(null);
   };
 
   useRouteCalculation({
@@ -154,6 +164,7 @@ export default function App() {
           currentFloor={currentFloor}
           availableFloors={availableFloors}
           focusPoint={focusPoint}
+          highlightedSegment={highlightedSegment}
           onRoomSelect={handleRoomSelect}
           onGraphNodeSelect={handleGraphNodeSelect}
           onStartPointClear={clearStartPoint}

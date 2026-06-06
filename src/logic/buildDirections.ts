@@ -5,8 +5,42 @@ export type DirectionStep = {
   position: {x: number; y: number; floorNum: number};
   label: string;
   distanceTo: number;
-  kind: 'start' | 'waypoint' | 'destination';
+  kind:
+    | 'start'
+    | 'waypoint'
+    | 'destination'
+    | 'turn-left'
+    | 'turn-right'
+    | 'straight';
 };
+
+// Minimum angle (radians) to call something a turn — ~30 degrees
+const TURN_THRESHOLD_RAD = Math.PI / 6;
+// Emit "continue straight" after this many consecutive non-instruction path nodes
+const STRAIGHT_RUN_THRESHOLD = 3;
+
+function detectTurn(
+  prev: {x: number; y: number},
+  curr: {x: number; y: number},
+  next: {x: number; y: number},
+): 'left' | 'right' | 'straight' {
+  const inX = curr.x - prev.x;
+  const inY = curr.y - prev.y;
+  const outX = next.x - curr.x;
+  const outY = next.y - curr.y;
+
+  const magIn = Math.sqrt(inX * inX + inY * inY);
+  const magOut = Math.sqrt(outX * outX + outY * outY);
+  if (magIn === 0 || magOut === 0) return 'straight';
+
+  const cosAngle = (inX * outX + inY * outY) / (magIn * magOut);
+  const angle = Math.acos(Math.max(-1, Math.min(1, cosAngle)));
+  if (angle < TURN_THRESHOLD_RAD) return 'straight';
+
+  // y-down coord system: positive cross product = clockwise = right turn
+  const cross = inX * outY - inY * outX;
+  return cross > 0 ? 'right' : 'left';
+}
 
 export function buildDirections(
   path: number[],
@@ -31,11 +65,13 @@ export function buildDirections(
   });
 
   let accDistance = 0;
+  let consecutivePathNodes = 0;
 
   for (let i = 1; i < path.length - 1; i++) {
     const prevNode = nodeMap.get(path[i - 1]);
     const currNode = nodeMap.get(path[i]);
-    if (!prevNode || !currNode) continue;
+    const nextNode = nodeMap.get(path[i + 1]);
+    if (!prevNode || !currNode || !nextNode) continue;
 
     const edge = prevNode.neighbors.find(n => n.to === path[i]);
     accDistance += edge?.distance ?? 0;
@@ -49,6 +85,39 @@ export function buildDirections(
         kind: 'waypoint',
       });
       accDistance = 0;
+      consecutivePathNodes = 0;
+      continue;
+    }
+
+    const turn = detectTurn(
+      prevNode.position,
+      currNode.position,
+      nextNode.position,
+    );
+
+    if (turn !== 'straight') {
+      steps.push({
+        nodeId: path[i],
+        position: currNode.position,
+        label: turn === 'left' ? 'Turn left' : 'Turn right',
+        distanceTo: accDistance,
+        kind: turn === 'left' ? 'turn-left' : 'turn-right',
+      });
+      accDistance = 0;
+      consecutivePathNodes = 0;
+    } else {
+      consecutivePathNodes++;
+      if (consecutivePathNodes > STRAIGHT_RUN_THRESHOLD) {
+        steps.push({
+          nodeId: path[i],
+          position: currNode.position,
+          label: 'Continue straight',
+          distanceTo: accDistance,
+          kind: 'straight',
+        });
+        accDistance = 0;
+        consecutivePathNodes = 0;
+      }
     }
   }
 

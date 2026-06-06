@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {DirectionStep} from '../logic/buildDirections';
 
 type DirectionsPanelProps = {
@@ -5,7 +6,11 @@ type DirectionsPanelProps = {
   totalDistance: number;
   onBack: () => void;
   onClear: () => void;
-  onFocusStep: (position: {x: number; y: number}) => void;
+  onFocusStep: (
+    position: {x: number; y: number},
+    fromNodeId: number,
+    toNodeId: number,
+  ) => void;
 };
 
 function StepIcon({kind}: {kind: DirectionStep['kind']}) {
@@ -25,6 +30,51 @@ function StepIcon({kind}: {kind: DirectionStep['kind']}) {
       </svg>
     );
   }
+  if (kind === 'turn-left') {
+    return (
+      <svg
+        className="w-4 h-4 text-orange-500 flex-shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+      </svg>
+    );
+  }
+  if (kind === 'turn-right') {
+    return (
+      <svg
+        className="w-4 h-4 text-orange-500 flex-shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+      </svg>
+    );
+  }
+  if (kind === 'straight') {
+    return (
+      <svg
+        className="w-4 h-4 text-gray-400 flex-shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 19V5m0 0l-4 4m4-4l4 4" />
+      </svg>
+    );
+  }
   return (
     <div className="w-4 h-4 rounded-full border-2 border-gray-400 bg-white flex-shrink-0" />
   );
@@ -37,6 +87,8 @@ export function DirectionsPanel({
   onClear,
   onFocusStep,
 }: DirectionsPanelProps) {
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
   if (steps.length === 0) return null;
 
   const startLabel = steps[0].label;
@@ -110,8 +162,16 @@ export function DirectionsPanel({
           <div key={step.nodeId}>
             {/* Step row */}
             <button
-              onClick={() => onFocusStep(step.position)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+              onClick={() => {
+                setFocusedIndex(i);
+                const isLast = i === steps.length - 1;
+                const fromId = isLast ? steps[i - 1].nodeId : step.nodeId;
+                const toId = isLast ? step.nodeId : steps[i + 1].nodeId;
+                onFocusStep(step.position, fromId, toId);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
+                focusedIndex === i ? 'bg-amber-50' : 'hover:bg-gray-50'
+              }`}
             >
               <StepIcon kind={step.kind} />
               <div className="flex-1 min-w-0">
@@ -121,17 +181,29 @@ export function DirectionsPanel({
                       ? 'text-blue-600'
                       : step.kind === 'destination'
                         ? 'text-red-600'
-                        : 'text-gray-700'
+                        : step.kind === 'turn-left' ||
+                            step.kind === 'turn-right'
+                          ? 'text-orange-600'
+                          : 'text-gray-600'
                   }`}
                 >
-                  {step.kind === 'start'
-                    ? 'Start'
-                    : step.kind === 'destination'
-                      ? 'Arrive'
-                      : 'Pass'}
-                  <span className="text-gray-800 font-semibold ml-1">
-                    {step.label}
-                  </span>
+                  {step.kind === 'start' || step.kind === 'destination' ? (
+                    <>
+                      {step.kind === 'start' ? 'Start' : 'Arrive'}
+                      <span className="text-gray-800 font-semibold ml-1">
+                        {step.label}
+                      </span>
+                    </>
+                  ) : step.kind === 'waypoint' ? (
+                    <>
+                      Pass
+                      <span className="text-gray-800 font-semibold ml-1">
+                        {step.label}
+                      </span>
+                    </>
+                  ) : (
+                    step.label
+                  )}
                 </p>
               </div>
               {/* Pan icon */}

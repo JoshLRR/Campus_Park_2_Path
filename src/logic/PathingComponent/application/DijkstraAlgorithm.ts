@@ -22,9 +22,11 @@ type QueueEntry = {nodeId: NodeId; cumulativeCost: number};
  */
 export class DijkstraAlgorithm implements PathAlgorithm {
   private readonly nodeById: Map<NodeId, Node>;
+  private readonly blockedNodeIds: Set<NodeId>;
 
-  constructor(graph: Node[]) {
+  constructor(graph: Node[], blockedNodeIds: Set<NodeId> = new Set()) {
     this.nodeById = new Map(graph.map(node => [node.id, node]));
+    this.blockedNodeIds = blockedNodeIds;
   }
 
   async findPath(
@@ -66,6 +68,7 @@ export class DijkstraAlgorithm implements PathAlgorithm {
 
       for (const edge of currentNode.neighbors) {
         if (settledNodes.has(edge.to)) continue;
+        if (this.blockedNodeIds.has(edge.to)) continue;
         const costThroughCurrent = cumulativeCost + edge.distance;
         if (
           costThroughCurrent <
