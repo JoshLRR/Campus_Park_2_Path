@@ -296,8 +296,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Dev mode toggle — bottom left */}
-      <div className="absolute bottom-6 left-4 z-20">
+      {/* Dev mode toggle — bottom right */}
+      <div className="absolute bottom-6 right-20 z-20">
         <button
           onClick={() => setDevMode(v => !v)}
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${

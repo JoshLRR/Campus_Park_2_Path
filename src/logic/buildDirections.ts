@@ -16,8 +16,9 @@ export type DirectionStep = {
 
 // Minimum angle (radians) to call something a turn — ~30 degrees
 const TURN_THRESHOLD_RAD = Math.PI / 6;
-// Emit "continue straight" after this many consecutive non-instruction path nodes
-const STRAIGHT_RUN_THRESHOLD = 3;
+// Emit "continue straight" after walking this far without a turn (meters) —
+// roughly a minute's walk, a reasonable interval for a wayfinding reminder
+const STRAIGHT_RUN_DISTANCE_THRESHOLD = 75;
 
 function detectTurn(
   prev: {x: number; y: number},
@@ -65,7 +66,6 @@ export function buildDirections(
   });
 
   let accDistance = 0;
-  let consecutivePathNodes = 0;
 
   for (let i = 1; i < path.length - 1; i++) {
     const prevNode = nodeMap.get(path[i - 1]);
@@ -85,7 +85,6 @@ export function buildDirections(
         kind: 'waypoint',
       });
       accDistance = 0;
-      consecutivePathNodes = 0;
       continue;
     }
 
@@ -104,20 +103,15 @@ export function buildDirections(
         kind: turn === 'left' ? 'turn-left' : 'turn-right',
       });
       accDistance = 0;
-      consecutivePathNodes = 0;
-    } else {
-      consecutivePathNodes++;
-      if (consecutivePathNodes > STRAIGHT_RUN_THRESHOLD) {
-        steps.push({
-          nodeId: path[i],
-          position: currNode.position,
-          label: 'Continue straight',
-          distanceTo: accDistance,
-          kind: 'straight',
-        });
-        accDistance = 0;
-        consecutivePathNodes = 0;
-      }
+    } else if (accDistance > STRAIGHT_RUN_DISTANCE_THRESHOLD) {
+      steps.push({
+        nodeId: path[i],
+        position: currNode.position,
+        label: 'Continue straight',
+        distanceTo: accDistance,
+        kind: 'straight',
+      });
+      accDistance = 0;
     }
   }
 
