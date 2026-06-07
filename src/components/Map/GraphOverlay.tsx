@@ -30,8 +30,7 @@ interface GraphOverlayProps {
   onNodeClick?: (nodeId: number) => void;
 }
 
-// Simple scale factor to convert graph coordinates to map coordinates
-const SCALE_FACTOR = 7; // Adjust this to fit your map scale
+const SCALE_FACTOR = 1 / 0.1445603396126786;
 
 export const GraphOverlay: React.FC<GraphOverlayProps> = ({
   nodes, //eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -48,8 +47,8 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
 }) => {
   // Convert graph coordinates to map coordinates
   const scalePosition = (pos: {x: number; y: number}) => ({
-    x: pos.x * (SCALE_FACTOR - 1.5) - 2080,
-    y: pos.y * (SCALE_FACTOR - 1.5) - 70,
+    x: pos.x * SCALE_FACTOR,
+    y: pos.y * SCALE_FACTOR,
   });
 
   const handleNodeClick = (nodeId: number, e: React.MouseEvent) => {

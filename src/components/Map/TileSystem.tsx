@@ -76,8 +76,13 @@ const TileSystem: React.FC<TileSystemProps> = ({
   const [loadedTiles, setLoadedTiles] = useState<Set<string>>(new Set());
   const loadingTiles = useRef<Set<string>>(new Set());
 
-  // Apply scale to the effective tile size
-  const scaledTileSize = tileSize * scale;
+  const [tileNaturalSize, setTileNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const tileWidth = (tileNaturalSize?.width ?? tileSize) * scale;
+  const tileHeight = (tileNaturalSize?.height ?? tileSize) * scale;
 
   // Memoize grid calculations
   const gridInfo = useMemo(() => {
@@ -112,22 +117,20 @@ const TileSystem: React.FC<TileSystemProps> = ({
 
     const startCol = Math.max(
       gridInfo.minCol,
-      Math.floor((viewLeft - buffer * scaledTileSize) / scaledTileSize) +
-        gridInfo.minCol,
+      Math.floor((viewLeft - buffer * tileWidth) / tileWidth) + gridInfo.minCol,
     );
     const endCol = Math.min(
       gridInfo.maxCol,
-      Math.ceil((viewRight + buffer * scaledTileSize) / scaledTileSize) +
-        gridInfo.minCol,
+      Math.ceil((viewRight + buffer * tileWidth) / tileWidth) + gridInfo.minCol,
     );
     const startRow = Math.max(
       gridInfo.minRow,
-      Math.floor((viewTop - buffer * scaledTileSize) / scaledTileSize) +
+      Math.floor((viewTop - buffer * tileHeight) / tileHeight) +
         gridInfo.minRow,
     );
     const endRow = Math.min(
       gridInfo.maxRow,
-      Math.ceil((viewBottom + buffer * scaledTileSize) / scaledTileSize) +
+      Math.ceil((viewBottom + buffer * tileHeight) / tileHeight) +
         gridInfo.minRow,
     );
 
@@ -140,7 +143,7 @@ const TileSystem: React.FC<TileSystemProps> = ({
     );
 
     return visible;
-  }, [tiles, gridInfo, viewport, scaledTileSize]);
+  }, [tiles, gridInfo, viewport, tileWidth, tileHeight]);
 
   const handleTileLoad = useCallback((tileKey: string) => {
     setLoadedTiles(prev => new Set([...prev, tileKey]));
@@ -160,14 +163,12 @@ const TileSystem: React.FC<TileSystemProps> = ({
     const centerY = viewport.y + viewport.height / (2 * viewport.scale);
 
     const sortedTiles = [...visibleTiles].sort((a, b) => {
-      const aX =
-        (a.col - (gridInfo?.minCol || 0)) * scaledTileSize + scaledTileSize / 2;
+      const aX = (a.col - (gridInfo?.minCol || 0)) * tileWidth + tileWidth / 2;
       const aY =
-        (a.row - (gridInfo?.minRow || 0)) * scaledTileSize + scaledTileSize / 2;
-      const bX =
-        (b.col - (gridInfo?.minCol || 0)) * scaledTileSize + scaledTileSize / 2;
+        (a.row - (gridInfo?.minRow || 0)) * tileHeight + tileHeight / 2;
+      const bX = (b.col - (gridInfo?.minCol || 0)) * tileWidth + tileWidth / 2;
       const bY =
-        (b.row - (gridInfo?.minRow || 0)) * scaledTileSize + scaledTileSize / 2;
+        (b.row - (gridInfo?.minRow || 0)) * tileHeight + tileHeight / 2;
 
       const aDist = Math.sqrt((aX - centerX) ** 2 + (aY - centerY) ** 2);
       const bDist = Math.sqrt((bX - centerX) ** 2 + (bY - centerY) ** 2);
@@ -190,7 +191,13 @@ const TileSystem: React.FC<TileSystemProps> = ({
         currentLoads++;
 
         const img = new Image();
-        img.onload = () => handleTileLoad(tileKey);
+        img.onload = () => {
+          setTileNaturalSize(
+            prev =>
+              prev ?? {width: img.naturalWidth, height: img.naturalHeight},
+          );
+          handleTileLoad(tileKey);
+        };
         img.onerror = () => handleTileError(tileKey);
         img.src = tile.src;
       }
@@ -201,7 +208,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
     handleTileLoad,
     handleTileError,
     gridInfo,
-    scaledTileSize,
+    tileWidth,
+    tileHeight,
     viewport,
   ]);
 
@@ -236,8 +244,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: gridInfo.gridWidth * scaledTileSize,
-        height: gridInfo.gridHeight * scaledTileSize,
+        width: gridInfo.gridWidth * tileWidth,
+        height: gridInfo.gridHeight * tileHeight,
       }}
     >
       {visibleTiles.map(({row, col, src}) => {
@@ -245,8 +253,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
         const isLoaded = loadedTiles.has(tileKey);
         const isLoading = loadingTiles.current.has(tileKey);
 
-        const x = (col - gridInfo.minCol) * scaledTileSize;
-        const y = (row - gridInfo.minRow) * scaledTileSize;
+        const x = (col - gridInfo.minCol) * tileWidth;
+        const y = (row - gridInfo.minRow) * tileHeight;
 
         return (
           <div
@@ -255,8 +263,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
               position: 'absolute',
               left: x,
               top: y,
-              width: scaledTileSize,
-              height: scaledTileSize,
+              width: tileWidth,
+              height: tileHeight,
               backgroundColor: isLoaded ? 'transparent' : '#f0f0f0',
             }}
           >
@@ -266,7 +274,7 @@ const TileSystem: React.FC<TileSystemProps> = ({
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                objectFit: 'fill',
                 opacity: isLoaded ? 1 : 0,
                 transition: 'opacity 0.3s ease-in-out',
                 display: 'block',

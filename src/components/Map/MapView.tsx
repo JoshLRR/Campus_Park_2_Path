@@ -83,10 +83,9 @@ interface MapViewProps {
 
 const WORLD_WIDTH = 20000;
 const WORLD_HEIGHT = 20000;
-// Matches GraphOverlay's calibrated formula: x * 5.5 - 2080, y * 5.5 - 70
-export const NODE_SCALE = 5.5;
-export const NODE_OFFSET_X = 2080;
-export const NODE_OFFSET_Y = 70;
+export const NODE_SCALE = 1 / 0.1445603396126786;
+export const NODE_OFFSET_X = 0;
+export const NODE_OFFSET_Y = 0;
 
 export const MapView: React.FC<MapViewProps> = ({
   initialBuildings,
