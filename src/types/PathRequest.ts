@@ -1,3 +1,11 @@
+/**
+ * PathRequest.ts
+ *
+ * Internal domain representation of a routing request: a resolved
+ * origin/destination pair plus the path features to avoid, consumed
+ * by the `PathOrchestrator`/`PathAlgorithm` layer.
+ */
+
 import type {NodeId, Position} from './Node';
 import type {PathFeatures} from './PathFeatures';
 

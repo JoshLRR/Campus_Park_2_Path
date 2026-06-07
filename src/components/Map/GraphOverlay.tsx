@@ -1,3 +1,13 @@
+/**
+ * GraphOverlay.tsx
+ *
+ * Defines the `GraphNode` shape used throughout the map/routing layer
+ * and renders the raw graph (nodes and connecting edges) on top of the
+ * tiled map for debugging — converting stored `position` units into
+ * on-screen pixels via `scalePosition` (derived from `graph.json`'s
+ * `calibration.unitsPerPixel`).
+ */
+
 import React from 'react';
 
 export interface GraphNode {

@@ -1,3 +1,10 @@
+/**
+ * index.ts
+ *
+ * Leftover `gts`-generated scaffold/demo file (deliberately styled
+ * "wrong" to exercise `npm run lint`/`fix`). Not imported by the app.
+ */
+
 console.log('Try npm run lint/fix!');
 
 const longString =

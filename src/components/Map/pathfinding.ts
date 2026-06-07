@@ -1,4 +1,12 @@
-// src/components/Map/pathfinding.ts
+/**
+ * pathfinding.ts
+ *
+ * `Pathfinder` — the map layer's routing facade over the live graph.
+ * Wraps Dijkstra (point-to-point and "nearest room with feature") and
+ * the local `PathAPI`/coordinate-based pathing, plus closest-node lookup,
+ * normalizing every result into the UI-facing `PathResult` shape.
+ */
+
 import {GraphNode} from './GraphOverlay';
 import {
   PathRequestDTO,

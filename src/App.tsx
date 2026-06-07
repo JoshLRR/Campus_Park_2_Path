@@ -1,3 +1,13 @@
+/**
+ * App.tsx
+ *
+ * Root component — owns navigation state (start/destination, current
+ * route, selected floor, dev-mode toggles) and composes the map with
+ * the search/directions panel and developer panel. Wires graph data,
+ * the pathfinder, and route calculation into the UI, and derives
+ * turn-by-turn directions from the active route.
+ */
+
 import {useState, useEffect, useMemo} from 'react';
 import {
   MapView,

@@ -1,3 +1,10 @@
+/**
+ * PathResponse.ts
+ *
+ * Internal result shape returned by `PathAlgorithm`/`PathOrchestrator`:
+ * either a found path with distance and warnings, or `not_found`.
+ */
+
 import type {NodeId} from './Node';
 
 export type PathResult =

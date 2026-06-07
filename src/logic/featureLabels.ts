@@ -1,3 +1,10 @@
+/**
+ * featureLabels.ts
+ *
+ * Display-name lookup for room feature IDs (the numeric tags stored on
+ * `RoomNode.features`), used by search and the "nearest feature" UI.
+ */
+
 export const FEATURE_LABELS: Record<number, string> = {
   1: "Men's Bathroom",
   2: "Men's Bathroom (Changing Table)",

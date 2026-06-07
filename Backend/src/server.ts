@@ -1,3 +1,11 @@
+/**
+ * server.ts
+ *
+ * Express entry point for the CPP backend. Wires up CORS, JSON parsing,
+ * a health check endpoint, and the `/api/graph` router, then starts
+ * listening when run directly (not when imported by tests).
+ */
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

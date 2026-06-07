@@ -1,3 +1,10 @@
+/**
+ * pinoBrowserLogger.ts
+ *
+ * Pino-backed `Logger` implementation for the browser, with sensible
+ * defaults for redacting sensitive fields (passwords, tokens, cookies).
+ */
+
 import pino, {Logger as PinoLogger} from 'pino';
 import type {LogContext, LogLevel, Logger} from './logger';
 

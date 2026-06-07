@@ -1,3 +1,11 @@
+/**
+ * JsonGraphRepository.ts
+ *
+ * `GraphRepository` implementation that builds the graph from a plain
+ * JSON document (e.g. the seeded `graph.json`), mapping each raw node
+ * into a `RoomNode` or `PathNode` based on its `kind`.
+ */
+
 import type {GraphRepository} from './GraphRepository';
 import type {Node} from '../types/Node';
 import {PathNode} from '../types/PathNode';

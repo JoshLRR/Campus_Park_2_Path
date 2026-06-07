@@ -1,3 +1,10 @@
+/**
+ * PathNode.ts
+ *
+ * Concrete `Node` implementation representing a non-room waypoint
+ * (hallway junction, outdoor path segment, etc.) in the campus graph.
+ */
+
 import {Node} from './Node';
 import {NodeId} from './Node';
 import {Position} from './Node';

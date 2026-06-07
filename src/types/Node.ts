@@ -1,3 +1,10 @@
+/**
+ * Node.ts
+ *
+ * Core graph primitives: `NodeId`, `Position`, and the base `Node`
+ * interface that `PathNode` and `RoomNode` implement.
+ */
+
 import {Edge} from './Edge';
 
 export type NodeId = number;

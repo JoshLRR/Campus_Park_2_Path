@@ -1,3 +1,13 @@
+/**
+ * SearchPanel.tsx
+ *
+ * Primary search/navigation entry panel. Toggles between two modes:
+ * "Directions" — search rooms/buildings and set them as start or
+ * destination — and "Nearest feature" — search amenities and route to
+ * the closest matching room from the chosen start point. Also previews
+ * the calculated route's distance and estimated walking time.
+ */
+
 import {useState} from 'react';
 import {NavigationPoint, Room} from './Map/MapView';
 import {PathResult} from './Map/pathfinding';

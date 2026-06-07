@@ -1,3 +1,10 @@
+/**
+ * Room.ts
+ *
+ * Canonical list of room and destination identifiers, and the `Room`
+ * union type derived from it for use throughout the app and graph data.
+ */
+
 // TODO Add every room and destination to this list. Yaaaaay.
 const rooms = [
   'A109',

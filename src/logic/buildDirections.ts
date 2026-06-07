@@ -1,3 +1,12 @@
+/**
+ * buildDirections.ts
+ *
+ * Converts a raw graph path into turn-by-turn `DirectionStep`s for the
+ * `DirectionsPanel` — detecting turns via angle between consecutive
+ * edges, calling out room waypoints, and emitting periodic "Continue
+ * straight" reminders based on accumulated walking distance.
+ */
+
 import {GraphNode} from '../components/Map/GraphOverlay';
 
 export type DirectionStep = {

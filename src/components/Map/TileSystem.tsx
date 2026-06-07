@@ -1,3 +1,14 @@
+/**
+ * TileSystem.tsx
+ *
+ * Renders the campus map as a virtualized grid of image tiles, sized
+ * and positioned from each tile's natural aspect ratio so the stitched
+ * result exactly matches the full-resolution reference image (the same
+ * pixel space the graph's `imagePosition` coordinates were authored
+ * against). Loads only the tiles near the current viewport/floor,
+ * prioritizing those closest to view.
+ */
+
 import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 
 interface TileData {

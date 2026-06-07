@@ -1,3 +1,12 @@
+/**
+ * DirectionsPanel.tsx
+ *
+ * Active turn-by-turn directions UI shown after a route is calculated —
+ * lists each `DirectionStep` with an icon and distance, summarizes the
+ * total distance/walking time with a meters/feet toggle, and lets the
+ * user pan the map to a step or clear the route.
+ */
+
 import {useState} from 'react';
 import {DirectionStep} from '../logic/buildDirections';
 import {DistanceUnit, formatDistance} from '../logic/formatDistance';

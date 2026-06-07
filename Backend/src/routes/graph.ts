@@ -1,3 +1,11 @@
+/**
+ * routes/graph.ts
+ *
+ * Express router exposing the campus graph (`/api/graph`) — reads
+ * nodes, edges, and room-feature associations from MySQL and assembles
+ * them into the JSON graph shape the frontend's `JsonGraphRepository` expects.
+ */
+
 import express, {Request, Response} from 'express';
 import {RowDataPacket} from 'mysql2';
 import {pool} from '../db/pool';

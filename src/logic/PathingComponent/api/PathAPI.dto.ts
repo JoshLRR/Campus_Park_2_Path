@@ -1,3 +1,12 @@
+/**
+ * PathAPI.dto.ts
+ *
+ * Wire-format DTOs for the Pathfinding API boundary — the raw
+ * request/response shapes exchanged with the frontend, validated
+ * against `PathRequest.schema.json` before being mapped to internal
+ * domain types (`PathRequest`/`PathResult`).
+ */
+
 export type PositionDTO = {
   x: number;
   y: number;

@@ -1,3 +1,12 @@
+/**
+ * DevPanel.tsx
+ *
+ * Developer-only overlay (toggled via the "Dev" button) for inspecting
+ * and debugging the live graph — toggles for graph/route overlay
+ * visibility, per-floor node/room stats, and quick "set as start/destination"
+ * actions on the currently selected graph node.
+ */
+
 import {GraphNode} from './Map/GraphOverlay';
 import {Pathfinder} from './Map/pathfinding';
 

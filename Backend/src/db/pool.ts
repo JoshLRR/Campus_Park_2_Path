@@ -1,3 +1,10 @@
+/**
+ * pool.ts
+ *
+ * Shared MySQL connection pool for the backend, configured from
+ * environment variables (with local-dev defaults) via `dotenv`.
+ */
+
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 

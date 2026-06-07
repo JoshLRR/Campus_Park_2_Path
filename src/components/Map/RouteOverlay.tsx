@@ -1,3 +1,12 @@
+/**
+ * RouteOverlay.tsx
+ *
+ * Draws the calculated route on the map — the path line through the
+ * route's nodes (with an optional highlighted segment) plus the total
+ * distance — scaled and positioned via the same `scalePosition` helper
+ * as `GraphOverlay`.
+ */
+
 import React from 'react';
 import {GraphNode} from './GraphOverlay';
 

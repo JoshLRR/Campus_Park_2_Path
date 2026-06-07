@@ -1,3 +1,10 @@
+/**
+ * RoomNode.ts
+ *
+ * Concrete `Node` implementation representing a navigable room or
+ * destination in the campus graph, with its room number and feature tags.
+ */
+
 import {Node} from './Node';
 import {RoomFeatures} from './RoomFeatures';
 import {NodeId} from './Node';

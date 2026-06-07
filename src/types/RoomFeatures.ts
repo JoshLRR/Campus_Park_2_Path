@@ -1,3 +1,10 @@
+/**
+ * RoomFeatures.ts
+ *
+ * Numeric feature-ID map for amenities a room can be tagged with
+ * (bathrooms, elevators, labs, etc.), used by `RoomNode.features`.
+ */
+
 // TODO - Update numbers
 // Note: This list is not final. We gonna be like league of legends where everything is coded as minions, except in our case everything is a room l o l
 export const RoomFeatures = {
