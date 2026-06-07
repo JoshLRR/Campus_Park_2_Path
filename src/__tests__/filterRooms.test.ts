@@ -43,6 +43,44 @@ const rooms: RoomWithId[] = [
     y: 0,
     features: [1, 3], // Men's Bathroom, Women's Bathroom
   },
+  {
+    id: 5,
+    name: 'Tech Hub',
+    building: 'Annex',
+    buildingId: 4,
+    floor: 4,
+    x: 0,
+    y: 0,
+    features: [17], // Computer Lab
+  },
+  {
+    id: 6,
+    name: 'Elevator Lobby',
+    building: 'Annex',
+    buildingId: 4,
+    floor: 5,
+    x: 0,
+    y: 0,
+  },
+  {
+    id: 7,
+    name: 'Gym Annex',
+    building: 'Annex',
+    buildingId: 4,
+    floor: 6,
+    x: 0,
+    y: 0,
+    features: [21], // Gym
+  },
+  {
+    id: 8,
+    name: 'Gymnasium Storage',
+    building: 'Annex',
+    buildingId: 4,
+    floor: 7,
+    x: 0,
+    y: 0,
+  },
 ];
 
 test('matches rooms by name (case-insensitive)', () => {
@@ -61,7 +99,7 @@ test('matches rooms by floor number', () => {
 });
 
 test('returns all rooms for an empty search term', () => {
-  expect(filterRooms(rooms, '')).toHaveLength(4);
+  expect(filterRooms(rooms, '')).toHaveLength(8);
 });
 
 test('returns an empty array when nothing matches', () => {
@@ -70,7 +108,9 @@ test('returns an empty array when nothing matches', () => {
 
 test('matches rooms by feature label (case-insensitive)', () => {
   const result = filterRooms(rooms, 'elevator');
-  expect(result.map(r => r.id)).toEqual([3]);
+  // Room 3 matches via an exact feature-label match ("Elevator"); room 6
+  // ("Elevator Lobby") only matches partially by name, so it ranks after.
+  expect(result.map(r => r.id)).toEqual([3, 6]);
 });
 
 test('matches multiple rooms sharing a feature label', () => {
@@ -81,4 +121,19 @@ test('matches multiple rooms sharing a feature label', () => {
 test('rooms without features are not matched by feature search', () => {
   const result = filterRooms(rooms, 'vending');
   expect(result.map(r => r.id)).toEqual([3]);
+});
+
+test('ranks partial room-name matches above partial feature-label matches', () => {
+  // 'lab' partially matches room 1's name ("Chemistry Lab") and room 5's
+  // feature label ("Computer Lab") — the room-name match should come first.
+  const result = filterRooms(rooms, 'lab');
+  expect(result.map(r => r.id)).toEqual([1, 5]);
+});
+
+test('ranks exact feature-label matches above partial room-name matches', () => {
+  // 'gym' is an exact match for room 7's feature label ("Gym") and only a
+  // partial match for room 8's name ("Gymnasium Storage") — the exact
+  // feature match should outrank the partial name match.
+  const result = filterRooms(rooms, 'gym');
+  expect(result.map(r => r.id)).toEqual([7, 8]);
 });

@@ -84,7 +84,15 @@ export default function App() {
     setHighlightedSegment({from: fromNodeId, to: toNodeId});
   };
 
-  const handleFocusRoom = (room: {x: number; y: number}) => {
+  const handleFocusRoom = (room: {
+    id: number;
+    x: number;
+    y: number;
+    floor: number;
+  }) => {
+    setSelectedRoomId(room.id);
+    setSelectedGraphNodeId(null);
+    setCurrentFloor(room.floor);
     setFocusPoint(prev => ({
       x: room.x * NODE_SCALE - NODE_OFFSET_X,
       y: room.y * NODE_SCALE - NODE_OFFSET_Y,

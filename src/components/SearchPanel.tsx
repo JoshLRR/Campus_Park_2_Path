@@ -14,7 +14,12 @@ type SearchPanelProps = {
   onSetStartPoint: (room: SearchRoom) => void;
   onSetDestination: (room: SearchRoom) => void;
   onRoomSelect: (roomId: number) => void;
-  onFocusRoom: (room: {x: number; y: number}) => void;
+  onFocusRoom: (room: {
+    id: number;
+    x: number;
+    y: number;
+    floor: number;
+  }) => void;
   clearRoute: () => void;
   clearStartPoint: () => void;
   clearDestination: () => void;
@@ -217,7 +222,7 @@ export function SearchPanel({
                           }}
                           className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors font-medium"
                         >
-                          From
+                          Start
                         </button>
                         <button
                           onMouseDown={e => e.preventDefault()}
@@ -227,7 +232,7 @@ export function SearchPanel({
                           }}
                           className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full hover:bg-red-100 transition-colors font-medium"
                         >
-                          To
+                          End
                         </button>
                       </div>
                     </div>

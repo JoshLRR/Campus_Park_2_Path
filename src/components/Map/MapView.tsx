@@ -402,25 +402,79 @@ export const MapView: React.FC<MapViewProps> = ({
               />
             )}
 
-            {/* Navigation markers */}
+            {/* Focused room highlight — pulsing ring to help locate a room
+                zoomed to via search (e.g. the search panel's "view" eye icon) */}
+            {(() => {
+              const focusedRoom = selectedRoomId
+                ? currentFloorRooms.find(room => room.id === selectedRoomId)
+                : null;
+              if (!focusedRoom) return null;
+              const pos = scalePosition(focusedRoom);
+              return (
+                <g
+                  transform={`translate(${pos.x} ${pos.y}) scale(${
+                    1 / viewport.scale
+                  })`}
+                  pointerEvents="none"
+                >
+                  <circle
+                    cx={0}
+                    cy={0}
+                    r={18}
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth={3}
+                    opacity={0.85}
+                  >
+                    <animate
+                      attributeName="r"
+                      values="18;28;18"
+                      dur="1.4s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0.9;0.25;0.9"
+                      dur="1.4s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                </g>
+              );
+            })()}
+
+            {/* Navigation markers — wrapped in an inverse-scale group so they
+                stay a constant on-screen size regardless of map zoom level */}
             {startPoint && isStartPointOnCurrentFloor && (
-              <StartMarker
-                x={scalePosition(startPoint).x}
-                y={scalePosition(startPoint).y}
-                label={startPoint.label}
-                isAnimated={true}
-                onClick={onStartPointClear}
-              />
+              <g
+                transform={`translate(${scalePosition(startPoint).x} ${
+                  scalePosition(startPoint).y
+                }) scale(${1 / viewport.scale})`}
+              >
+                <StartMarker
+                  x={0}
+                  y={0}
+                  label={startPoint.label}
+                  isAnimated={true}
+                  onClick={onStartPointClear}
+                />
+              </g>
             )}
 
             {destinationPoint && isDestinationPointOnCurrentFloor && (
-              <DestinationMarker
-                x={scalePosition(destinationPoint).x}
-                y={scalePosition(destinationPoint).y}
-                label={destinationPoint.label}
-                isAnimated={true}
-                onClick={onDestinationPointClear}
-              />
+              <g
+                transform={`translate(${scalePosition(destinationPoint).x} ${
+                  scalePosition(destinationPoint).y
+                }) scale(${1 / viewport.scale})`}
+              >
+                <DestinationMarker
+                  x={0}
+                  y={0}
+                  label={destinationPoint.label}
+                  isAnimated={true}
+                  onClick={onDestinationPointClear}
+                />
+              </g>
             )}
           </svg>
         </TransformComponent>
