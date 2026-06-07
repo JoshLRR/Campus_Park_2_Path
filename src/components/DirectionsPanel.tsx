@@ -1,9 +1,12 @@
 import {useState} from 'react';
 import {DirectionStep} from '../logic/buildDirections';
+import {DistanceUnit, formatDistance} from '../logic/formatDistance';
 
 type DirectionsPanelProps = {
   steps: DirectionStep[];
   totalDistance: number;
+  distanceUnit: DistanceUnit;
+  onChangeDistanceUnit: (unit: DistanceUnit) => void;
   onBack: () => void;
   onClear: () => void;
   onFocusStep: (
@@ -12,6 +15,32 @@ type DirectionsPanelProps = {
     toNodeId: number,
   ) => void;
 };
+
+function DistanceUnitToggle({
+  unit,
+  onChange,
+}: {
+  unit: DistanceUnit;
+  onChange: (unit: DistanceUnit) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-[11px] font-semibold flex-shrink-0">
+      {(['m', 'ft'] as const).map(option => (
+        <button
+          key={option}
+          onClick={() => onChange(option)}
+          className={`px-2 py-0.5 transition-colors ${
+            unit === option
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function StepIcon({kind}: {kind: DirectionStep['kind']}) {
   if (kind === 'start') {
@@ -83,6 +112,8 @@ function StepIcon({kind}: {kind: DirectionStep['kind']}) {
 export function DirectionsPanel({
   steps,
   totalDistance,
+  distanceUnit,
+  onChangeDistanceUnit,
   onBack,
   onClear,
   onFocusStep,
@@ -151,9 +182,15 @@ export function DirectionsPanel({
             {destLabel}
           </span>
         </div>
-        <p className="text-xs text-blue-600 font-semibold mt-0.5">
-          ~{totalDistance.toFixed(0)} m total
-        </p>
+        <div className="flex items-center justify-between mt-0.5">
+          <p className="text-xs text-blue-600 font-semibold">
+            ~{formatDistance(totalDistance, distanceUnit)} total
+          </p>
+          <DistanceUnitToggle
+            unit={distanceUnit}
+            onChange={onChangeDistanceUnit}
+          />
+        </div>
       </div>
 
       {/* Steps */}
@@ -235,7 +272,7 @@ export function DirectionsPanel({
                   <div className="w-px h-6 bg-gray-200" />
                 </div>
                 <span className="text-xs text-gray-400">
-                  {steps[i + 1].distanceTo.toFixed(0)} m
+                  {formatDistance(steps[i + 1].distanceTo, distanceUnit)}
                 </span>
               </div>
             )}

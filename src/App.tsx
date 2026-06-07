@@ -12,6 +12,7 @@ import {DevPanel} from './components/DevPanel';
 import {DirectionsPanel} from './components/DirectionsPanel';
 import {buildDirections} from './logic/buildDirections';
 import {createNavigationPointFromRoom} from './logic/createNavigationPoint';
+import {DistanceUnit} from './logic/formatDistance';
 import {getFloorStats} from './logic/getFloorStats';
 import {getSelectedGraphNode} from './logic/getSelectedItems';
 import {useGraphData} from './hooks/useGraphData';
@@ -49,6 +50,7 @@ export default function App() {
   const [nearestFeatureMessage, setNearestFeatureMessage] = useState<
     string | null
   >(null);
+  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>('m');
 
   // Graph visibility — off by default; toggled in dev panel
   const [showPathNodes, setShowPathNodes] = useState(false);
@@ -243,6 +245,8 @@ export default function App() {
           <DirectionsPanel
             steps={directions}
             totalDistance={currentRoute?.totalDistance ?? 0}
+            distanceUnit={distanceUnit}
+            onChangeDistanceUnit={setDistanceUnit}
             onBack={() => setViewMode('search')}
             onClear={handleClearRoute}
             onFocusStep={handleFocusStep}
@@ -253,6 +257,7 @@ export default function App() {
             startPoint={startPoint}
             destinationPoint={destinationPoint}
             currentRoute={currentRoute}
+            distanceUnit={distanceUnit}
             onSetStartPoint={handleSetStartPoint}
             onSetDestination={handleSetDestination}
             onRoomSelect={handleRoomSelect}

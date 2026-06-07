@@ -4,6 +4,7 @@ import {PathResult} from './Map/pathfinding';
 import {filterRooms, matchedFeatureLabel} from '../logic/filterRooms';
 import {filterFeatures} from '../logic/filterFeatures';
 import {FEATURE_LABELS} from '../logic/featureLabels';
+import {DistanceUnit, formatDistance} from '../logic/formatDistance';
 
 type SearchRoom = Room & {id: number};
 
@@ -14,6 +15,7 @@ type SearchPanelProps = {
   startPoint: NavigationPoint | null;
   destinationPoint: NavigationPoint | null;
   currentRoute: PathResult | null;
+  distanceUnit: DistanceUnit;
   onSetStartPoint: (room: SearchRoom) => void;
   onSetDestination: (room: SearchRoom) => void;
   onRoomSelect: (roomId: number) => void;
@@ -35,6 +37,7 @@ export function SearchPanel({
   startPoint,
   destinationPoint,
   currentRoute,
+  distanceUnit,
   onSetStartPoint,
   onSetDestination,
   onRoomSelect,
@@ -455,7 +458,7 @@ export function SearchPanel({
           {currentRoute?.success && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
               <span className="text-sm font-semibold text-blue-600">
-                ~{currentRoute.totalDistance.toFixed(0)} m
+                ~{formatDistance(currentRoute.totalDistance, distanceUnit)}
               </span>
               <button
                 onClick={clearRoute}
