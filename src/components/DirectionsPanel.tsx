@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {DirectionStep} from '../logic/buildDirections';
 import {DistanceUnit, formatDistance} from '../logic/formatDistance';
+import {formatWalkingTime} from '../logic/estimateWalkingTime';
 
 type DirectionsPanelProps = {
   steps: DirectionStep[];
@@ -184,7 +185,8 @@ export function DirectionsPanel({
         </div>
         <div className="flex items-center justify-between mt-0.5">
           <p className="text-xs text-blue-600 font-semibold">
-            ~{formatDistance(totalDistance, distanceUnit)} total
+            ~{formatDistance(totalDistance, distanceUnit)} total ·{' '}
+            {formatWalkingTime(totalDistance)}
           </p>
           <DistanceUnitToggle
             unit={distanceUnit}

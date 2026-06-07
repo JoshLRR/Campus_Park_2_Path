@@ -5,6 +5,7 @@ import {filterRooms, matchedFeatureLabel} from '../logic/filterRooms';
 import {filterFeatures} from '../logic/filterFeatures';
 import {FEATURE_LABELS} from '../logic/featureLabels';
 import {DistanceUnit, formatDistance} from '../logic/formatDistance';
+import {formatWalkingTime} from '../logic/estimateWalkingTime';
 
 type SearchRoom = Room & {id: number};
 
@@ -459,6 +460,10 @@ export function SearchPanel({
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
               <span className="text-sm font-semibold text-blue-600">
                 ~{formatDistance(currentRoute.totalDistance, distanceUnit)}
+                <span className="text-gray-400 font-normal">
+                  {' '}
+                  · {formatWalkingTime(currentRoute.totalDistance)}
+                </span>
               </span>
               <button
                 onClick={clearRoute}
