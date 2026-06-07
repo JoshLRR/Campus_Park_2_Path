@@ -220,6 +220,82 @@ export class Pathfinder {
   }
 
   /**
+   * Find the shortest path from a node to the nearest room (by graph
+   * distance) whose features include the given feature ID.
+   */
+  async findNearestRoomWithFeature(
+    startNodeId: number,
+    featureId: number,
+  ): Promise<PathResult & {targetNodeId?: number}> {
+    if (!this.nodes.has(startNodeId)) {
+      return {
+        path: [],
+        totalDistance: 0,
+        success: false,
+        message: 'Invalid start node ID',
+      };
+    }
+
+    const shortestCostToNode = new Map<number, number>([[startNodeId, 0]]);
+    const predecessorOnPath = new Map<number, number>();
+    const settledNodes = new Set<number>();
+    const queue: {nodeId: number; cumulativeCost: number}[] = [
+      {nodeId: startNodeId, cumulativeCost: 0},
+    ];
+
+    while (queue.length > 0) {
+      queue.sort((a, b) => a.cumulativeCost - b.cumulativeCost);
+      const entry = queue.shift();
+      if (entry === undefined) break;
+
+      const {nodeId, cumulativeCost} = entry;
+      if (settledNodes.has(nodeId)) continue;
+      settledNodes.add(nodeId);
+
+      const node = this.nodes.get(nodeId);
+      if (node === undefined) continue;
+
+      if (
+        nodeId !== startNodeId &&
+        node.kind === 'room' &&
+        (node.features ?? []).includes(featureId)
+      ) {
+        const path: number[] = [];
+        let current: number | undefined = nodeId;
+        while (current !== undefined) {
+          path.unshift(current);
+          current = predecessorOnPath.get(current);
+        }
+        return {
+          path,
+          totalDistance: cumulativeCost,
+          success: true,
+          targetNodeId: nodeId,
+        };
+      }
+
+      for (const edge of node.neighbors) {
+        if (settledNodes.has(edge.to)) continue;
+        const costThroughCurrent = cumulativeCost + edge.distance;
+        if (
+          costThroughCurrent < (shortestCostToNode.get(edge.to) ?? Infinity)
+        ) {
+          shortestCostToNode.set(edge.to, costThroughCurrent);
+          predecessorOnPath.set(edge.to, nodeId);
+          queue.push({nodeId: edge.to, cumulativeCost: costThroughCurrent});
+        }
+      }
+    }
+
+    return {
+      path: [],
+      totalDistance: 0,
+      success: false,
+      message: 'No reachable room with that feature was found',
+    };
+  }
+
+  /**
    * Find the closest node on the given floor to (x, y).
    */
   findClosestNode(x: number, y: number, floor: number = 1): number | null {

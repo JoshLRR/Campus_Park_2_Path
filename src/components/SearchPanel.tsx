@@ -2,9 +2,12 @@ import {useState} from 'react';
 import {NavigationPoint, Room} from './Map/MapView';
 import {PathResult} from './Map/pathfinding';
 import {filterRooms, matchedFeatureLabel} from '../logic/filterRooms';
+import {filterFeatures} from '../logic/filterFeatures';
 import {FEATURE_LABELS} from '../logic/featureLabels';
 
 type SearchRoom = Room & {id: number};
+
+type SearchMode = 'directions' | 'nearest';
 
 type SearchPanelProps = {
   rooms: SearchRoom[];
@@ -20,6 +23,8 @@ type SearchPanelProps = {
     y: number;
     floor: number;
   }) => void;
+  onFindNearestFeature: (featureId: number) => void;
+  nearestFeatureMessage?: string | null;
   clearRoute: () => void;
   clearStartPoint: () => void;
   clearDestination: () => void;
@@ -34,16 +39,32 @@ export function SearchPanel({
   onSetDestination,
   onRoomSelect,
   onFocusRoom,
+  onFindNearestFeature,
+  nearestFeatureMessage,
   clearRoute,
   clearStartPoint,
   clearDestination,
 }: SearchPanelProps) {
+  const [mode, setMode] = useState<SearchMode>('directions');
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null);
 
   const filteredRooms = filterRooms(rooms, searchTerm);
+  const filteredFeatures = filterFeatures(searchTerm);
   const hasNavigation = !!(startPoint || destinationPoint);
+
+  const handleSelectMode = (next: SearchMode) => {
+    setMode(next);
+    setSearchTerm('');
+    setShowResults(false);
+  };
+
+  const handleSelectFeature = (featureId: number) => {
+    onFindNearestFeature(featureId);
+    setSearchTerm('');
+    setShowResults(false);
+  };
 
   const handleSelectRoom = (room: SearchRoom) => {
     onRoomSelect(room.id);
@@ -67,6 +88,30 @@ export function SearchPanel({
       className="w-80 bg-white rounded-2xl shadow-2xl overflow-hidden"
       style={{pointerEvents: 'auto'}}
     >
+      {/* Mode toggle */}
+      <div className="flex gap-1 px-4 pt-3">
+        <button
+          onClick={() => handleSelectMode('directions')}
+          className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
+            mode === 'directions'
+              ? 'bg-blue-50 text-blue-600'
+              : 'text-gray-400 hover:bg-gray-50'
+          }`}
+        >
+          Directions
+        </button>
+        <button
+          onClick={() => handleSelectMode('nearest')}
+          className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
+            mode === 'nearest'
+              ? 'bg-blue-50 text-blue-600'
+              : 'text-gray-400 hover:bg-gray-50'
+          }`}
+        >
+          Nearest feature
+        </button>
+      </div>
+
       {/* Search input */}
       <div className="flex items-center gap-3 px-4 py-3">
         <svg
@@ -84,7 +129,11 @@ export function SearchPanel({
         </svg>
         <input
           type="text"
-          placeholder="Search rooms or buildings..."
+          placeholder={
+            mode === 'directions'
+              ? 'Search rooms or buildings...'
+              : 'Search for a feature (e.g. bathroom)...'
+          }
           value={searchTerm}
           onChange={e => {
             setSearchTerm(e.target.value);
@@ -120,8 +169,8 @@ export function SearchPanel({
         )}
       </div>
 
-      {/* Search results */}
-      {showResults && searchTerm && (
+      {/* Room search results */}
+      {mode === 'directions' && showResults && searchTerm && (
         <div className="border-t border-gray-100 max-h-96 overflow-y-auto">
           {filteredRooms.length === 0 ? (
             <p className="px-4 py-3 text-sm text-gray-500">
@@ -265,6 +314,59 @@ export function SearchPanel({
                 </div>
               );
             })
+          )}
+        </div>
+      )}
+
+      {/* Nearest-feature mode */}
+      {mode === 'nearest' && (
+        <div className="border-t border-gray-100">
+          <div className="px-4 py-2 text-xs text-gray-500">
+            {startPoint ? (
+              <>
+                From{' '}
+                <span className="font-medium text-gray-700">
+                  {startPoint.label}
+                </span>
+              </>
+            ) : (
+              <span className="italic text-gray-400">
+                Choose a start point in Directions mode first
+              </span>
+            )}
+          </div>
+
+          {showResults && searchTerm && (
+            <div className="max-h-96 overflow-y-auto">
+              {filteredFeatures.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-500">
+                  No features found for &ldquo;{searchTerm}&rdquo;
+                </p>
+              ) : (
+                filteredFeatures.slice(0, 8).map(feature => (
+                  <button
+                    key={feature.id}
+                    disabled={!startPoint}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => handleSelectFeature(feature.id)}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed border-b border-gray-50 last:border-0 transition-colors"
+                  >
+                    <p className="text-sm font-medium text-gray-800">
+                      {feature.label}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Find the nearest room with this feature
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+
+          {nearestFeatureMessage && (
+            <p className="px-4 py-3 text-xs text-amber-600">
+              {nearestFeatureMessage}
+            </p>
           )}
         </div>
       )}

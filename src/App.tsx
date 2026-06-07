@@ -11,6 +11,7 @@ import {SearchPanel} from './components/SearchPanel';
 import {DevPanel} from './components/DevPanel';
 import {DirectionsPanel} from './components/DirectionsPanel';
 import {buildDirections} from './logic/buildDirections';
+import {createNavigationPointFromRoom} from './logic/createNavigationPoint';
 import {getFloorStats} from './logic/getFloorStats';
 import {getSelectedGraphNode} from './logic/getSelectedItems';
 import {useGraphData} from './hooks/useGraphData';
@@ -45,6 +46,9 @@ export default function App() {
     from: number;
     to: number;
   } | null>(null);
+  const [nearestFeatureMessage, setNearestFeatureMessage] = useState<
+    string | null
+  >(null);
 
   // Graph visibility — off by default; toggled in dev panel
   const [showPathNodes, setShowPathNodes] = useState(false);
@@ -105,6 +109,49 @@ export default function App() {
     clearRoute();
     setViewMode('search');
     setHighlightedSegment(null);
+    setNearestFeatureMessage(null);
+  };
+
+  const handleFindNearestFeature = async (featureId: number) => {
+    setNearestFeatureMessage(null);
+
+    if (!startPoint || !pathfinder) {
+      setNearestFeatureMessage('Choose a start point first.');
+      return;
+    }
+
+    const startNodeId = pathfinder.findClosestNode(
+      startPoint.x,
+      startPoint.y,
+      startPoint.floor ?? 1,
+    );
+    if (startNodeId === null) {
+      setNearestFeatureMessage(
+        'Could not find a graph node near the start point.',
+      );
+      return;
+    }
+
+    const result = await pathfinder.findNearestRoomWithFeature(
+      startNodeId,
+      featureId,
+    );
+    if (!result.success || result.targetNodeId === undefined) {
+      setNearestFeatureMessage(
+        result.message ?? 'No matching room could be found.',
+      );
+      return;
+    }
+
+    const room = rooms.find(r => r.id === result.targetNodeId);
+    if (!room) {
+      setNearestFeatureMessage(
+        'Found a match, but could not resolve the room.',
+      );
+      return;
+    }
+
+    setDestinationPoint(createNavigationPointFromRoom(room, []));
   };
 
   useRouteCalculation({
@@ -210,6 +257,8 @@ export default function App() {
             onSetDestination={handleSetDestination}
             onRoomSelect={handleRoomSelect}
             onFocusRoom={handleFocusRoom}
+            onFindNearestFeature={handleFindNearestFeature}
+            nearestFeatureMessage={nearestFeatureMessage}
             clearRoute={handleClearRoute}
             clearStartPoint={clearStartPoint}
             clearDestination={clearDestination}
