@@ -31,4 +31,6 @@ export const FEATURE_LABELS: Record<number, string> = {
   30: 'Emergency Phone',
   31: 'EV Charging Station',
   32: 'Other',
+  33: 'Food Prep Area',
+  34: 'Music Room',
 };

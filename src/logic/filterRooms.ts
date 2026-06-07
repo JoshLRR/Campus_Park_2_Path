@@ -28,3 +28,21 @@ export function filterRooms(
       ),
   );
 }
+
+/**
+ * Returns the label of the first feature on the room that matches the search
+ * term, or null if the term didn't match via a feature.
+ */
+export function matchedFeatureLabel(
+  room: RoomWithId,
+  searchTerm: string,
+): string | null {
+  const term = searchTerm.toLowerCase();
+  if (!term) return null;
+  const matchedFeatureId = (room.features ?? []).find(f =>
+    (FEATURE_LABELS[f] ?? '').toLowerCase().includes(term),
+  );
+  return matchedFeatureId !== undefined
+    ? (FEATURE_LABELS[matchedFeatureId] ?? null)
+    : null;
+}
