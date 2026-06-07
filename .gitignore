@@ -3,6 +3,11 @@ build/
 dist/
 coverage/
 *.tsbuildinfo
+
+# Stryker mutation testing output
+.stryker-tmp/
+reports/mutation/
+
 # Logs
 logs
 *.log

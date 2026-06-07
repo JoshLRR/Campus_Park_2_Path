@@ -6,6 +6,7 @@
     "src/**/*.tsx",
     "vite.config.ts",
     "vitest.config.ts",
+    "vitest.stryker.config.ts",
     "**/*.json",
     "database/**/*.ts",
     "backend/**/*.ts"
