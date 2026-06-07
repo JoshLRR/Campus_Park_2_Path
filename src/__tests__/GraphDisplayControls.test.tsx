@@ -33,6 +33,19 @@ describe('GraphDisplayControls', () => {
     expect(setters.setShowPathNodes).toHaveBeenCalledWith(false);
   });
 
+  it.each([
+    [/Show Room Nodes/, 'setShowRoomNodes'],
+    [/Show Path Edges/, 'setShowPathEdges'],
+    [/Show Room Connections/, 'setShowRoomConnections'],
+    [/Show Route/, 'setShowRoute'],
+  ] as const)('toggles %s off via its checkbox onChange handler', (label, setterName) => {
+    const setters = setup();
+    const checkbox = screen.getByRole('checkbox', {name: label});
+    expect(checkbox).toBeChecked();
+    fireEvent.click(checkbox);
+    expect(setters[setterName]).toHaveBeenCalledWith(false);
+  });
+
   it('Show All enables every layer', () => {
     const setters = setup();
     fireEvent.click(screen.getByRole('button', {name: 'Show All'}));

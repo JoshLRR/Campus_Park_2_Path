@@ -1,5 +1,5 @@
 import {beforeAll, describe, expect, it, vi} from 'vitest';
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {
   MapView,
   Building,
@@ -173,5 +173,128 @@ describe('MapView', () => {
     // RouteOverlay renders a casing + main path in Google blue
     const paths = Array.from(container.querySelectorAll('path'));
     expect(paths.some(p => p.getAttribute('stroke') === '#4285f4')).toBe(true);
+  });
+
+  it('recalculates viewport dimensions when the window resizes', () => {
+    const rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect');
+    renderMap();
+    const callsBeforeResize = rectSpy.mock.calls.length;
+    fireEvent(window, new Event('resize'));
+    // handleResize re-reads the container's bounding rect to update viewport
+    // dimensions — proving the listener ran rather than just being attached.
+    expect(rectSpy.mock.calls.length).toBeGreaterThan(callsBeforeResize);
+    rectSpy.mockRestore();
+  });
+
+  it('animates the view to a focus point when one is provided', () => {
+    const focusPoint = {x: 100, y: 200, seq: 1, targetScale: 0.6};
+    // The focus-point effect reads the container/transform refs, computes a
+    // target position and scale, and calls setTransform — if any guard or
+    // calculation along that path threw, this render would fail outright.
+    renderMap({focusPoint});
+    expect(screen.getByText('Library')).toBeInTheDocument();
+  });
+
+  it('updates the viewport scale via onTransformed once a focus-point animation completes', async () => {
+    // The "view" eye icon focuses on a room and zooms in via setTransform,
+    // which animates the underlying TransformWrapper and fires onTransformed
+    // (handleTransform) — that's what keeps `viewport.scale` in sync, which
+    // in turn drives the inverse-scale on markers and the highlight ring.
+    const focusPoint = {x: 100, y: 200, seq: 1, targetScale: 0.6};
+    const {container} = renderMap({selectedRoomId: 5, focusPoint});
+    const ring = () =>
+      container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
+    const initialTransform = ring()?.getAttribute('transform');
+    await waitFor(() => {
+      expect(ring()?.getAttribute('transform')).not.toBe(initialTransform);
+    });
+  });
+
+  it('prevents the default action and stops propagation on room pointer-down', () => {
+    const {container} = renderMap();
+    const roomRect = container.querySelector('[data-room-id="5"] rect')!;
+    const event = new Event('pointerdown', {bubbles: true, cancelable: true});
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+    const stopPropagationSpy = vi.spyOn(event, 'stopPropagation');
+    fireEvent(roomRect, event);
+    expect(preventDefaultSpy).toHaveBeenCalled();
+    expect(stopPropagationSpy).toHaveBeenCalled();
+  });
+
+  it('shows an off-floor indicator and jumps to that floor for the destination point', () => {
+    const destinationPoint: NavigationPoint = {
+      x: 10,
+      y: 10,
+      label: 'Target',
+      floor: 2,
+    };
+    const {onFloorChange} = renderMap({destinationPoint});
+    expect(screen.getByText(/Destination/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', {name: 'Go to Floor 2'}));
+    expect(onFloorChange).toHaveBeenCalledWith(2);
+  });
+
+  it('renders a pulsing highlight ring around the selected room', () => {
+    const {container} = renderMap({selectedRoomId: 5});
+    const ring = container.querySelector('circle[stroke="#f59e0b"]');
+    expect(ring).not.toBeNull();
+  });
+
+  it('highlights the focused building with a different fill, stroke, and label color', () => {
+    const {container} = renderMap({focusBuildingId: 1});
+    // Combine fill + stroke-width to disambiguate from a same-colored,
+    // highlighted RoomTile rect (which uses the same blue but stroke-width 2).
+    const focusedRect = container.querySelector(
+      'rect[fill="#3b82f6"][stroke-width="3"]',
+    );
+    expect(focusedRect).not.toBeNull();
+    expect(focusedRect?.getAttribute('stroke')).toBe('#2563eb');
+    expect(
+      container.querySelector('text[fill="#2563eb"]')?.textContent,
+    ).toContain('Library');
+  });
+
+  it('shows a multi-floor badge for buildings spanning more than one floor', () => {
+    const annex = {
+      id: 2,
+      name: 'Annex',
+      x: 300,
+      y: 300,
+      width: 40,
+      height: 40,
+      floors: [1, 2],
+    };
+    renderMap({initialBuildings: [...buildings, annex]});
+    expect(screen.getByText(/Floors: 1, 2/)).toBeInTheDocument();
+  });
+
+  it('includes floor-1 buildings that have neither rooms nor floors metadata for it', () => {
+    const tower = {
+      id: 3,
+      name: 'Tower',
+      x: 500,
+      y: 500,
+      width: 40,
+      height: 40,
+      floors: [3],
+    };
+    renderMap({initialBuildings: [...buildings, tower], currentFloor: 1});
+    expect(screen.getByText('Tower')).toBeInTheDocument();
+  });
+
+  it('falls back to default room dimensions when width/height are not set', () => {
+    const storage = {
+      id: 7,
+      name: 'Storage',
+      building: 'Library',
+      buildingId: 1,
+      floor: 1,
+      x: 40,
+      y: 40,
+    };
+    const {container} = renderMap({rooms: [...rooms, storage]});
+    const rect = container.querySelector('[data-room-id="7"] rect')!;
+    expect(rect.getAttribute('width')).toBe('30');
+    expect(rect.getAttribute('height')).toBe('20');
   });
 });

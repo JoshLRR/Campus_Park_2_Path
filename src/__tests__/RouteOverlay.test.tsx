@@ -94,4 +94,83 @@ describe('RouteOverlay', () => {
     );
     expect(container.querySelector('g')).toBeNull();
   });
+
+  it('draws a highlight overlay for a valid highlighted segment on the route', () => {
+    const nodes = [node(1, 1, [2]), node(2, 1, [1, 3]), node(3, 1, [2])];
+    const {container} = render(
+      svg(
+        <RouteOverlay
+          nodes={nodes}
+          routePath={[1, 2, 3]}
+          scalePosition={identity}
+          currentFloor={1}
+          highlightedSegment={{from: 1, to: 2}}
+        />,
+      ),
+    );
+    const paths = Array.from(container.querySelectorAll('path'));
+    // Casing + main route, plus highlight casing + highlight main
+    expect(paths.length).toBe(4);
+    expect(paths.some(p => p.getAttribute('stroke') === '#fbbf24')).toBe(true);
+    expect(paths.some(p => p.getAttribute('stroke') === '#f59e0b')).toBe(true);
+  });
+
+  it('omits the highlight overlay when the highlighted segment is not on the route', () => {
+    const nodes = [node(1, 1, [2]), node(2, 1, [1])];
+    const {container} = render(
+      svg(
+        <RouteOverlay
+          nodes={nodes}
+          routePath={[1, 2]}
+          scalePosition={identity}
+          currentFloor={1}
+          highlightedSegment={{from: 99, to: 100}}
+        />,
+      ),
+    );
+    const paths = Array.from(container.querySelectorAll('path'));
+    expect(paths.length).toBe(2);
+    expect(paths.some(p => p.getAttribute('stroke') === '#fbbf24')).toBe(false);
+  });
+
+  it('omits the highlight overlay when the highlighted segment crosses floors', () => {
+    // Node 3 is on a different floor; the main route still renders via the
+    // 1-2 segment, but the highlighted 2-3 segment has no same-floor pair.
+    const nodes = [node(1, 1, [2]), node(2, 1, [1, 3]), node(3, 2, [2])];
+    const {container} = render(
+      svg(
+        <RouteOverlay
+          nodes={nodes}
+          routePath={[1, 2, 3]}
+          scalePosition={identity}
+          currentFloor={1}
+          highlightedSegment={{from: 2, to: 3}}
+        />,
+      ),
+    );
+    const paths = Array.from(container.querySelectorAll('path'));
+    expect(paths.length).toBe(2);
+    expect(paths.some(p => p.getAttribute('stroke') === '#fbbf24')).toBe(false);
+  });
+
+  it('skips route and highlight segments whose endpoints are missing from the graph', () => {
+    // routePath references node 3, which doesn't exist in `nodes` — both the
+    // main segment loop and the highlight loop must skip over it gracefully.
+    const nodes = [node(1, 1, [2]), node(2, 1, [1])];
+    const {container} = render(
+      svg(
+        <RouteOverlay
+          nodes={nodes}
+          routePath={[1, 2, 3]}
+          scalePosition={identity}
+          currentFloor={1}
+          highlightedSegment={{from: 2, to: 3}}
+        />,
+      ),
+    );
+    const paths = Array.from(container.querySelectorAll('path'));
+    // Main route still renders via the 1-2 segment; no highlight overlay
+    expect(paths.length).toBe(2);
+    expect(paths.some(p => p.getAttribute('stroke') === '#fbbf24')).toBe(false);
+  });
 });

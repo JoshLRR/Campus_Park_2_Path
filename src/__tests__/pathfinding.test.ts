@@ -190,3 +190,189 @@ describe('Pathfinder.findPathToPOI', () => {
     });
   });
 });
+
+describe('Pathfinder response transformation', () => {
+  beforeEach(() => mockPath.mockReset());
+
+  it('reports an error when the API claims success but omits path data', async () => {
+    mockPath.mockResolvedValue({status: 'success'});
+    const pf = new Pathfinder(nodes);
+    const result = await pf.findPathToPOI(1, 'restroom');
+    expect(result).toEqual({
+      path: [],
+      totalDistance: 0,
+      success: false,
+      message: 'API returned success but no path data',
+    });
+  });
+
+  it.each([
+    [
+      {status: 'not_found', message: 'No route to that POI'},
+      'No route to that POI',
+    ],
+    [{status: 'not_found'}, 'No path found'],
+    [
+      {status: 'validation_error', message: 'Bad request shape'},
+      'Bad request shape',
+    ],
+    [{status: 'validation_error'}, 'Request validation failed'],
+    [
+      {status: 'internal_error', message: 'Server exploded'},
+      'Server exploded',
+    ],
+    [{status: 'internal_error'}, 'Internal server error'],
+    [{status: 'something_unexpected'}, 'Unknown response status'],
+  ])('maps %o to message %j', async (response, expectedMessage) => {
+    mockPath.mockResolvedValue(response);
+    const pf = new Pathfinder(nodes);
+    const result = await pf.findPathToPOI(1, 'restroom');
+    expect(result).toEqual({
+      path: [],
+      totalDistance: 0,
+      success: false,
+      message: expectedMessage,
+    });
+  });
+});
+
+describe('Pathfinder.findNearestRoomWithFeature', () => {
+  const COVERED = 1;
+
+  // 1 --10--> 2 --10--> 3 (room, no features)
+  //            \--5--> 4 (room, has the COVERED feature)
+  const branchingNodes: GraphNode[] = [
+    {
+      id: 1,
+      kind: 'path',
+      position: {x: 0, y: 0, floorNum: 1},
+      neighbors: [{to: 2, distance: 10}],
+    },
+    {
+      id: 2,
+      kind: 'path',
+      position: {x: 10, y: 0, floorNum: 1},
+      neighbors: [
+        {to: 3, distance: 10},
+        {to: 4, distance: 5},
+      ],
+    },
+    {
+      id: 3,
+      kind: 'room',
+      position: {x: 20, y: 0, floorNum: 1},
+      neighbors: [],
+      roomNumber: 'A101',
+      features: [],
+    },
+    {
+      id: 4,
+      kind: 'room',
+      position: {x: 10, y: 10, floorNum: 1},
+      neighbors: [],
+      roomNumber: 'B202',
+      features: [COVERED],
+    },
+  ];
+
+  it('fails when the start node is unknown', async () => {
+    const pf = new Pathfinder(branchingNodes);
+    const result = await pf.findNearestRoomWithFeature(999, COVERED);
+    expect(result).toEqual({
+      path: [],
+      totalDistance: 0,
+      success: false,
+      message: 'Invalid start node ID',
+    });
+  });
+
+  it('finds the nearest room with the requested feature, skipping rooms without it', async () => {
+    const pf = new Pathfinder(branchingNodes);
+    const result = await pf.findNearestRoomWithFeature(1, COVERED);
+    expect(result).toEqual({
+      path: [1, 2, 4],
+      totalDistance: 15,
+      success: true,
+      targetNodeId: 4,
+    });
+  });
+
+  it('reports failure when no reachable room has the requested feature', async () => {
+    const pf = new Pathfinder(branchingNodes);
+    const result = await pf.findNearestRoomWithFeature(1, 999);
+    expect(result).toEqual({
+      path: [],
+      totalDistance: 0,
+      success: false,
+      message: 'No reachable room with that feature was found',
+    });
+  });
+
+  it('handles re-settled queue entries, dangling edges, missing features, and worse-cost relaxations', async () => {
+    // A graph engineered so the Dijkstra-like search loop visits every guard:
+    //   - 1 -> 3 (cost 100) is later improved to cost 2 via 1 -> 2 -> 3,
+    //     leaving a stale {3, 100} queue entry that gets skipped once 3 is
+    //     already settled (`settledNodes.has(nodeId)`).
+    //   - 2 -> 99 points at a node ID absent from the graph (`node === undefined`).
+    //   - 5 has no `features` property at all, exercising the `?? []` fallback.
+    //   - 3 -> 2 is a back-edge to an already-settled node (`settledNodes.has(edge.to)`).
+    //   - 2 -> 5 (cost 51) arrives after 1 -> 5 (cost 1) already set a cheaper
+    //     route, so the relaxation comparison evaluates false and is skipped.
+    const dijkstraEdgeCaseNodes: GraphNode[] = [
+      {
+        id: 1,
+        kind: 'path',
+        position: {x: 0, y: 0, floorNum: 1},
+        neighbors: [
+          {to: 2, distance: 1},
+          {to: 3, distance: 100},
+          {to: 5, distance: 1},
+        ],
+      },
+      {
+        id: 2,
+        kind: 'path',
+        position: {x: 1, y: 0, floorNum: 1},
+        neighbors: [
+          {to: 3, distance: 1},
+          {to: 99, distance: 1},
+          {to: 5, distance: 50},
+        ],
+      },
+      {
+        id: 3,
+        kind: 'path',
+        position: {x: 2, y: 0, floorNum: 1},
+        neighbors: [
+          {to: 2, distance: 5},
+          {to: 4, distance: 200},
+        ],
+      },
+      {
+        id: 4,
+        kind: 'room',
+        position: {x: 3, y: 0, floorNum: 1},
+        neighbors: [],
+        roomNumber: 'C303',
+        features: [COVERED],
+      },
+      {
+        id: 5,
+        kind: 'room',
+        position: {x: 0, y: 1, floorNum: 1},
+        neighbors: [],
+        roomNumber: 'D404',
+        // Intentionally no `features` property — exercises `node.features ?? []`.
+      },
+    ];
+
+    const pf = new Pathfinder(dijkstraEdgeCaseNodes);
+    const result = await pf.findNearestRoomWithFeature(1, COVERED);
+    expect(result).toEqual({
+      path: [1, 2, 3, 4],
+      totalDistance: 202,
+      success: true,
+      targetNodeId: 4,
+    });
+  });
+});
