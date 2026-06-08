@@ -67,8 +67,6 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
     onNodeClick?.(nodeId);
   };
 
-  // O(1) neighbor lookups by id — avoids re-scanning the full node list
-  // (1000+ entries) for every edge/neighbor reference below
   const nodeById = React.useMemo(() => {
     const map = new Map<number, GraphNode>();
     for (const node of nodes) map.set(node.id, node);
@@ -92,8 +90,6 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
     [visibleNodes],
   );
 
-  // Which nodes have at least one neighbor on a different floor — precomputed
-  // once per node-list change instead of re-scanning neighbors per render
   const crossFloorNodeIds = React.useMemo(() => {
     const ids = new Set<number>();
     for (const node of nodes) {
@@ -446,7 +442,4 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
   );
 };
 
-// Memoized — its props (notably the per-floor node list) are now stable
-// across viewport-driven re-renders during pan/zoom, so this skips
-// re-rendering hundreds of SVG nodes/edges on every frame of a gesture
 export const GraphOverlay = React.memo(GraphOverlayComponent);

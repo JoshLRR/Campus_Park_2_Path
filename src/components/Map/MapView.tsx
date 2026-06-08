@@ -130,17 +130,9 @@ export const MapView: React.FC<MapViewProps> = ({
     scale: 1,
   });
 
-  // Update viewport for tile culling optimization. onTransformed fires at
-  // pointer-move frequency during gestures — far more often than the tile
-  // culling actually needs, since TileSystem already renders a 1-tile buffer
-  // around the visible area. rAF-coalescing still let pan gestures (which
-  // emit a steady stream of events for the whole drag) push one state update
-  // — and the resulting re-render of the large map tree — every frame, which
-  // competes with the browser's own work for that same frame budget and
-  // shows up as pan jank. Throttle on a wall-clock interval instead so
-  // updates land at a fixed, gesture-independent cadence, with a trailing
-  // call so the viewport still settles on the final position once a gesture
-  // ends.
+  // onTransformed fires at pointer-move frequency; throttled on a wall-clock
+  // interval (rather than per-frame) so the resulting re-renders don't
+  // compete with the browser's own gesture rendering for frame budget.
   const VIEWPORT_UPDATE_INTERVAL_MS = 150;
   const viewportThrottleRef = useRef<{
     timeoutId: ReturnType<typeof setTimeout> | null;
@@ -187,7 +179,6 @@ export const MapView: React.FC<MapViewProps> = ({
     [applyViewportFromTransform],
   );
 
-  // Cancel any pending trailing viewport update on unmount
   React.useEffect(() => {
     return () => {
       if (viewportThrottleRef.current.timeoutId !== null) {
@@ -271,21 +262,18 @@ export const MapView: React.FC<MapViewProps> = ({
     );
   }, [focusPoint]);
 
-  // Filter graph nodes by current floor — memoized so this (potentially
-  // 1000+ node) scan only re-runs when the underlying data or floor changes,
-  // not on every viewport-driven re-render during pan/zoom
+  // Memoized so these filters don't re-scan the full (1000+ node) graph on
+  // every viewport-driven re-render during pan/zoom
   const currentFloorGraphNodes = useMemo(
     () => graphNodes.filter(node => node.position.floorNum === currentFloor),
     [graphNodes, currentFloor],
   );
 
-  // Filter rooms by current floor
   const currentFloorRooms = useMemo(
     () => rooms.filter(room => room.floor === currentFloor),
     [rooms, currentFloor],
   );
 
-  // Filter buildings that have rooms/content on current floor
   const buildingsWithCurrentFloorContent = useMemo(
     () =>
       initialBuildings.filter(building => {
@@ -337,6 +325,8 @@ export const MapView: React.FC<MapViewProps> = ({
         wheel={{step: 0.08}}
         doubleClick={{disabled: true}}
         pinch={{step: 5}}
+        // Disables the library's default momentum/glide-on-release panning
+        panning={{velocityDisabled: true}}
         minScale={0.05}
         maxScale={4}
         limitToBounds={false}

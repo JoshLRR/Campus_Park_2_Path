@@ -197,10 +197,8 @@ describe('MapView', () => {
   });
 
   it('updates the viewport scale via onTransformed once a focus-point animation completes', async () => {
-    // The "view" eye icon focuses on a room and zooms in via setTransform,
-    // which animates the underlying TransformWrapper and fires onTransformed
-    // (handleTransform) — that's what keeps `viewport.scale` in sync, which
-    // in turn drives the inverse-scale on markers and the highlight ring.
+    // The ring's transform encodes the inverse of viewport.scale, so a
+    // change here is observable proof that onTransformed synced it.
     const focusPoint = {x: 100, y: 200, seq: 1, targetScale: 0.6};
     const {container} = renderMap({selectedRoomId: 5, focusPoint});
     const ring = () =>
@@ -219,9 +217,6 @@ describe('MapView', () => {
   });
 
   it('zooms in when the zoom-in button is clicked', async () => {
-    // Clicking calls transformRef.current.zoomIn(), which animates the
-    // TransformWrapper and fires onTransformed — observable here as a
-    // change in the highlight ring's inverse-scale transform.
     const {container} = renderMap({selectedRoomId: 5});
     const ring = () =>
       container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
@@ -244,9 +239,6 @@ describe('MapView', () => {
   });
 
   it('recenters the view on the default node when the recenter button is clicked', async () => {
-    // MapView centers on DEFAULT_VIEW_NODE_ID both on mount and on recenter,
-    // so — given the same graph data and container size — clicking "Recenter
-    // map" should animate the transform back to the same value it started at.
     const defaultViewNode: GraphNode = {
       id: DEFAULT_VIEW_NODE_ID,
       kind: 'path',
@@ -260,10 +252,6 @@ describe('MapView', () => {
     const ring = () =>
       container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
 
-    // handleTransform applies its first viewport sync immediately (its
-    // wall-clock throttle only delays *subsequent* updates that land within
-    // VIEWPORT_UPDATE_INTERVAL_MS of the last one), so the mount-centering
-    // effect's sync to the centered-on-306 value is already reflected here.
     const initialTransform = ring()?.getAttribute('transform');
 
     fireEvent.click(screen.getByTitle('Zoom in'));
