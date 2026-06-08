@@ -16,9 +16,10 @@ import {
   NODE_OFFSET_X,
   NODE_OFFSET_Y,
 } from './components/Map/MapView';
-import {PathResult} from './components/Map/pathfinding';
+import {PathResult, RoutePreferences} from './components/Map/pathfinding';
 import {SearchPanel} from './components/SearchPanel';
 import {DevPanel} from './components/DevPanel';
+import {AccessibilityPanel} from './components/AccessibilityPanel';
 import {DirectionsPanel} from './components/DirectionsPanel';
 import {buildDirections} from './logic/buildDirections';
 import {createNavigationPointFromRoom} from './logic/createNavigationPoint';
@@ -47,6 +48,10 @@ export default function App() {
   const [currentRoute, setCurrentRoute] = useState<PathResult | null>(null);
 
   const [devMode, setDevMode] = useState(false);
+  const [accessibilityMode, setAccessibilityMode] = useState(false);
+  const [routePreferences, setRoutePreferences] = useState<RoutePreferences>(
+    {},
+  );
   const [viewMode, setViewMode] = useState<'search' | 'directions'>('search');
   const [focusPoint, setFocusPoint] = useState<{
     x: number;
@@ -171,6 +176,7 @@ export default function App() {
     destinationPoint,
     pathfinder,
     setCurrentRoute,
+    preferences: routePreferences,
   });
 
   const handleFloorChange = (floor: number) => {
@@ -255,6 +261,7 @@ export default function App() {
           <DirectionsPanel
             steps={directions}
             totalDistance={currentRoute?.totalDistance ?? 0}
+            accessibilityWarning={currentRoute?.accessibilityWarning ?? null}
             distanceUnit={distanceUnit}
             onChangeDistanceUnit={setDistanceUnit}
             onBack={() => setViewMode('search')}
@@ -311,8 +318,44 @@ export default function App() {
         </div>
       )}
 
-      {/* Dev mode toggle — bottom right */}
-      <div className="absolute bottom-6 right-20 z-20">
+      {/* Accessibility panel — floats above the toggle row */}
+      {accessibilityMode && (
+        <div className="absolute bottom-20 right-4 z-20">
+          <AccessibilityPanel
+            onClose={() => setAccessibilityMode(false)}
+            preferences={routePreferences}
+            setPreferences={setRoutePreferences}
+          />
+        </div>
+      )}
+
+      {/* Mode toggles — bottom right */}
+      <div className="absolute bottom-6 right-4 z-20 flex items-center gap-2">
+        <button
+          onClick={() => setAccessibilityMode(v => !v)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
+            accessibilityMode
+              ? 'bg-emerald-600 text-white shadow-emerald-200'
+              : 'bg-white text-gray-500 hover:text-emerald-600 hover:shadow-md'
+          }`}
+          title="Toggle accessibility preferences"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          {accessibilityMode ? 'Accessibility on' : 'Accessibility'}
+        </button>
+
         <button
           onClick={() => setDevMode(v => !v)}
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${

@@ -9,13 +9,18 @@
 
 import {useEffect} from 'react';
 import {NavigationPoint} from '../components/Map/MapView';
-import {Pathfinder, PathResult} from '../components/Map/pathfinding';
+import {
+  Pathfinder,
+  PathResult,
+  RoutePreferences,
+} from '../components/Map/pathfinding';
 
 type UseRouteCalculationProps = {
   startPoint: NavigationPoint | null;
   destinationPoint: NavigationPoint | null;
   pathfinder: Pathfinder | null;
   setCurrentRoute: (route: PathResult | null) => void;
+  preferences?: RoutePreferences;
 };
 
 export function useRouteCalculation({
@@ -23,6 +28,7 @@ export function useRouteCalculation({
   destinationPoint,
   pathfinder,
   setCurrentRoute,
+  preferences,
 }: UseRouteCalculationProps) {
   useEffect(() => {
     const calculateRoute = async () => {
@@ -55,7 +61,11 @@ export function useRouteCalculation({
           return;
         }
 
-        const route = await pathfinder.findPath(startNodeId, endNodeId);
+        const route = await pathfinder.findPath(
+          startNodeId,
+          endNodeId,
+          preferences,
+        );
         setCurrentRoute(route);
       } catch (error) {
         console.error('Route calculation failed:', error);
@@ -69,5 +79,5 @@ export function useRouteCalculation({
     };
 
     void calculateRoute();
-  }, [startPoint, destinationPoint, pathfinder, setCurrentRoute]);
+  }, [startPoint, destinationPoint, pathfinder, setCurrentRoute, preferences]);
 }

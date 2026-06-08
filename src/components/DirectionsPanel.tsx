@@ -15,6 +15,7 @@ import {formatWalkingTime} from '../logic/estimateWalkingTime';
 type DirectionsPanelProps = {
   steps: DirectionStep[];
   totalDistance: number;
+  accessibilityWarning?: string | null;
   distanceUnit: DistanceUnit;
   onChangeDistanceUnit: (unit: DistanceUnit) => void;
   onBack: () => void;
@@ -122,6 +123,7 @@ function StepIcon({kind}: {kind: DirectionStep['kind']}) {
 export function DirectionsPanel({
   steps,
   totalDistance,
+  accessibilityWarning,
   distanceUnit,
   onChangeDistanceUnit,
   onBack,
@@ -203,6 +205,12 @@ export function DirectionsPanel({
           />
         </div>
       </div>
+
+      {accessibilityWarning && (
+        <p className="px-4 py-2.5 border-b border-gray-100 text-xs text-amber-600 bg-amber-50">
+          {accessibilityWarning}
+        </p>
+      )}
 
       {/* Steps */}
       <div className="overflow-y-auto flex-1">

@@ -15,6 +15,7 @@ import {
 } from '../../logic/PathingComponent/api/PathAPI.dto';
 import {createPathAPI} from '../../logic/PathingComponent/api/CreatePathingAPI';
 import {DijkstraAlgorithm} from '../../logic/PathingComponent/application/DijkstraAlgorithm';
+import {PathFeatures} from '../../types/PathFeatures';
 import type {Node} from '../../types/Node';
 import type {GraphRepository} from '../../repositories/GraphRepository';
 
@@ -23,6 +24,35 @@ export interface PathResult {
   totalDistance: number;
   success: boolean;
   message?: string;
+  /**
+   * Set when the returned route does not satisfy one or more requested
+   * accessibility preferences (e.g. no ADA-compliant route exists), so the
+   * UI can warn the user that it's showing the closest alternative instead.
+   */
+  accessibilityWarning?: string;
+}
+
+/**
+ * User-selectable accessibility preferences for route calculation. A `true`
+ * value means "only use path segments that satisfy this constraint."
+ */
+export interface RoutePreferences {
+  avoidStairs?: boolean;
+  avoidUncovered?: boolean;
+  avoidUnpaved?: boolean;
+}
+
+const PREFERENCE_LABELS: Array<[keyof RoutePreferences, string]> = [
+  ['avoidStairs', 'avoid stairs'],
+  ['avoidUncovered', 'covered paths only'],
+  ['avoidUnpaved', 'paved paths only'],
+];
+
+function describePreferences(preferences?: RoutePreferences): string[] {
+  if (!preferences) return [];
+  return PREFERENCE_LABELS.filter(([key]) => preferences[key]).map(
+    ([, label]) => label,
+  );
 }
 
 export class Pathfinder {
@@ -40,8 +70,18 @@ export class Pathfinder {
 
   /**
    * Find the shortest path between two nodes using Dijkstra on the live graph.
+   *
+   * When `preferences` are provided, path-type nodes that don't satisfy them
+   * (e.g. have stairs when `avoidStairs` is set) are avoided first. If no
+   * such route exists, the search is retried without that constraint and the
+   * result is flagged with `accessibilityWarning` so the UI can tell the user
+   * it's showing the closest alternative instead.
    */
-  async findPath(startNodeId: number, endNodeId: number): Promise<PathResult> {
+  async findPath(
+    startNodeId: number,
+    endNodeId: number,
+    preferences?: RoutePreferences,
+  ): Promise<PathResult> {
     if (!this.nodes.has(startNodeId) || !this.nodes.has(endNodeId)) {
       return {
         path: [],
@@ -66,33 +106,84 @@ export class Pathfinder {
         .map(n => n.id),
     );
 
-    let result = await new DijkstraAlgorithm(allNodes, roomNodeIds).findPath(
-      startNodeId,
-      {kind: 'node', nodeId: endNodeId},
-    );
+    const inaccessibleNodeIds = this.findInaccessibleNodeIds(preferences);
+    const preferenceLabels = describePreferences(preferences);
+    const accessibilityWarning =
+      preferenceLabels.length > 0
+        ? `No route matching your ${preferenceLabels.join(', ')} preference${
+            preferenceLabels.length > 1 ? 's' : ''
+          } was found — showing the closest alternative route instead.`
+        : undefined;
 
-    // Fall back to full graph if no room-avoiding path exists
-    if (result.status === 'not_found') {
-      result = await new DijkstraAlgorithm(allNodes).findPath(startNodeId, {
-        kind: 'node',
-        nodeId: endNodeId,
-      });
-    }
+    // Try, in order of decreasing strictness, until a route is found:
+    //   1. Avoid both room shortcuts and inaccessible path segments
+    //   2. Allow room shortcuts, but keep honoring accessibility preferences
+    //   3. Drop accessibility preferences (closest alternative; warn the user)
+    const attempts: Array<{blocked: Set<number>; honorsPreferences: boolean}> =
+      [
+        {
+          blocked: new Set([...roomNodeIds, ...inaccessibleNodeIds]),
+          honorsPreferences: true,
+        },
+        {blocked: inaccessibleNodeIds, honorsPreferences: true},
+        {blocked: roomNodeIds, honorsPreferences: false},
+        {blocked: new Set(), honorsPreferences: false},
+      ];
 
-    if (result.status === 'not_found') {
-      return {
-        path: [],
-        totalDistance: 0,
-        success: false,
-        message: 'No path found',
-      };
+    for (const attempt of attempts) {
+      // Skip redundant attempts when there are no preferences to relax
+      if (inaccessibleNodeIds.size === 0 && !attempt.honorsPreferences) {
+        continue;
+      }
+
+      const result = await new DijkstraAlgorithm(
+        allNodes,
+        attempt.blocked,
+      ).findPath(startNodeId, {kind: 'node', nodeId: endNodeId});
+
+      if (result.status !== 'not_found') {
+        return {
+          path: result.nodes,
+          totalDistance: result.totalDistance,
+          success: true,
+          accessibilityWarning: attempt.honorsPreferences
+            ? undefined
+            : accessibilityWarning,
+        };
+      }
     }
 
     return {
-      path: result.nodes,
-      totalDistance: result.totalDistance,
-      success: true,
+      path: [],
+      totalDistance: 0,
+      success: false,
+      message: 'No path found',
     };
+  }
+
+  /**
+   * Path-type nodes that violate the given accessibility preferences (e.g.
+   * have stairs when `avoidStairs` is set, or lack the "covered"/"paved"
+   * feature when those preferences require it).
+   */
+  private findInaccessibleNodeIds(preferences?: RoutePreferences): Set<number> {
+    const blocked = new Set<number>();
+    if (!preferences) return blocked;
+
+    for (const node of this.nodes.values()) {
+      if (node.kind !== 'path') continue;
+      const features = node.features ?? [];
+
+      const violatesPreferences =
+        (preferences.avoidStairs && features.includes(PathFeatures.Stairs)) ||
+        (preferences.avoidUncovered &&
+          !features.includes(PathFeatures.Covered)) ||
+        (preferences.avoidUnpaved && !features.includes(PathFeatures.Paved));
+
+      if (violatesPreferences) blocked.add(node.id);
+    }
+
+    return blocked;
   }
 
   /**
