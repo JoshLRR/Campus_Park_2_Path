@@ -225,6 +225,11 @@ export const MapView: React.FC<MapViewProps> = ({
     onRoomSelect?.(roomId);
   };
 
+  // Map zoom & recenter controls
+  const handleZoomIn = () => transformRef.current?.zoomIn();
+  const handleZoomOut = () => transformRef.current?.zoomOut();
+  const handleRecenter = () => transformRef.current?.resetTransform();
+
   // Scale position function — must match GraphOverlay's formula
   const scalePosition = (pos: {x: number; y: number}) => ({
     x: pos.x * NODE_SCALE - NODE_OFFSET_X,
@@ -478,6 +483,61 @@ export const MapView: React.FC<MapViewProps> = ({
           </svg>
         </TransformComponent>
       </TransformWrapper>
+
+      {/* Zoom & recenter controls */}
+      <div className="absolute bottom-6 left-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1.5">
+        <button
+          onClick={handleZoomIn}
+          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition-colors"
+          title="Zoom in"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition-colors"
+          title="Zoom out"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+          </svg>
+        </button>
+        <div className="h-px bg-gray-100 mx-1" />
+        <button
+          onClick={handleRecenter}
+          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition-colors"
+          title="Recenter map"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="12" r="6.5" />
+            <path strokeLinecap="round" d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        </button>
+      </div>
 
       {/* Floor indicators for off-floor navigation points */}
       {startPoint && !isStartPointOnCurrentFloor && (

@@ -210,6 +210,56 @@ describe('MapView', () => {
     });
   });
 
+  it('renders zoom and recenter controls', () => {
+    renderMap();
+    expect(screen.getByTitle('Zoom in')).toBeInTheDocument();
+    expect(screen.getByTitle('Zoom out')).toBeInTheDocument();
+    expect(screen.getByTitle('Recenter map')).toBeInTheDocument();
+  });
+
+  it('zooms in when the zoom-in button is clicked', async () => {
+    // Clicking calls transformRef.current.zoomIn(), which animates the
+    // TransformWrapper and fires onTransformed — observable here as a
+    // change in the highlight ring's inverse-scale transform.
+    const {container} = renderMap({selectedRoomId: 5});
+    const ring = () =>
+      container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
+    const initialTransform = ring()?.getAttribute('transform');
+    fireEvent.click(screen.getByTitle('Zoom in'));
+    await waitFor(() => {
+      expect(ring()?.getAttribute('transform')).not.toBe(initialTransform);
+    });
+  });
+
+  it('zooms out when the zoom-out button is clicked', async () => {
+    const {container} = renderMap({selectedRoomId: 5});
+    const ring = () =>
+      container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
+    const initialTransform = ring()?.getAttribute('transform');
+    fireEvent.click(screen.getByTitle('Zoom out'));
+    await waitFor(() => {
+      expect(ring()?.getAttribute('transform')).not.toBe(initialTransform);
+    });
+  });
+
+  it('recenters the view when the recenter button is clicked', async () => {
+    const {container} = renderMap({selectedRoomId: 5});
+    const ring = () =>
+      container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
+    const initialTransform = ring()?.getAttribute('transform');
+
+    fireEvent.click(screen.getByTitle('Zoom in'));
+    await waitFor(() => {
+      expect(ring()?.getAttribute('transform')).not.toBe(initialTransform);
+    });
+    const zoomedTransform = ring()?.getAttribute('transform');
+
+    fireEvent.click(screen.getByTitle('Recenter map'));
+    await waitFor(() => {
+      expect(ring()?.getAttribute('transform')).not.toBe(zoomedTransform);
+    });
+  });
+
   it('prevents the default action and stops propagation on room pointer-down', () => {
     const {container} = renderMap();
     const roomRect = container.querySelector('[data-room-id="5"] rect')!;
