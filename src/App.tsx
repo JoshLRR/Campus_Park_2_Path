@@ -323,9 +323,9 @@ export default function App() {
         </div>
       )}
 
-      {/* Accessibility panel — floats above the toggle row */}
+      {/* Accessibility panel — floats above the toggle column */}
       {accessibilityMode && (
-        <div className="absolute bottom-20 right-4 z-20">
+        <div className="absolute bottom-32 right-16 z-20">
           <AccessibilityPanel
             onClose={() => setAccessibilityMode(false)}
             preferences={routePreferences}
@@ -334,36 +334,11 @@ export default function App() {
         </div>
       )}
 
-      {/* Mode toggles — bottom right */}
-      <div className="absolute bottom-6 right-4 z-20 flex items-center gap-2">
-        <button
-          onClick={() => setAccessibilityMode(v => !v)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
-            accessibilityMode
-              ? 'bg-emerald-600 text-white shadow-emerald-200'
-              : 'bg-white text-gray-500 hover:text-emerald-600 hover:shadow-md'
-          }`}
-          title="Toggle accessibility preferences"
-        >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          {accessibilityMode ? 'Accessibility on' : 'Accessibility'}
-        </button>
-
+      {/* Mode toggles — bottom right, stacked to the left of the map's zoom controls */}
+      <div className="absolute bottom-6 right-16 z-20 flex flex-col items-end gap-2">
         <button
           onClick={() => setDevMode(v => !v)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
+          className={`flex items-center justify-center gap-2 w-32 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
             devMode
               ? 'bg-indigo-600 text-white shadow-indigo-200'
               : 'bg-white text-gray-500 hover:text-indigo-600 hover:shadow-md'
@@ -384,6 +359,31 @@ export default function App() {
             />
           </svg>
           {devMode ? 'Dev on' : 'Dev'}
+        </button>
+
+        <button
+          onClick={() => setAccessibilityMode(v => !v)}
+          className={`flex items-center justify-center gap-2 w-32 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
+            accessibilityMode
+              ? 'bg-emerald-600 text-white shadow-emerald-200'
+              : 'bg-white text-gray-500 hover:text-emerald-600 hover:shadow-md'
+          }`}
+          title="Toggle accessibility preferences"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          {accessibilityMode ? 'Accessibility on' : 'Accessibility'}
         </button>
       </div>
     </div>

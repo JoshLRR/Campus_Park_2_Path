@@ -517,14 +517,14 @@ export const MapView: React.FC<MapViewProps> = ({
       </TransformWrapper>
 
       {/* Zoom & recenter controls */}
-      <div className="absolute bottom-6 left-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1.5">
+      <div className="absolute bottom-6 right-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1">
         <button
           onClick={handleZoomIn}
-          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition-colors"
+          className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
           title="Zoom in"
         >
           <svg
-            className="w-4 h-4"
+            className="w-3.5 h-3.5"
             fill="none"
             stroke="currentColor"
             strokeWidth={2.5}
@@ -539,11 +539,11 @@ export const MapView: React.FC<MapViewProps> = ({
         </button>
         <button
           onClick={handleZoomOut}
-          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition-colors"
+          className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
           title="Zoom out"
         >
           <svg
-            className="w-4 h-4"
+            className="w-3.5 h-3.5"
             fill="none"
             stroke="currentColor"
             strokeWidth={2.5}
@@ -555,11 +555,11 @@ export const MapView: React.FC<MapViewProps> = ({
         <div className="h-px bg-gray-100 mx-1" />
         <button
           onClick={handleRecenter}
-          className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition-colors"
+          className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
           title="Recenter map"
         >
           <svg
-            className="w-4 h-4"
+            className="w-3.5 h-3.5"
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
