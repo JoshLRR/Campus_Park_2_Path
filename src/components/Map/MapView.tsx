@@ -2,7 +2,7 @@
  * Map view component.
  */
 
-import React, {useRef, useState, useCallback} from 'react';
+import React, {useRef, useState, useCallback, useMemo} from 'react';
 import TileSystem from './TileSystem';
 import {
   TransformWrapper,
@@ -130,22 +130,40 @@ export const MapView: React.FC<MapViewProps> = ({
     scale: 1,
   });
 
-  // Update viewport for tile culling optimization
+  // Update viewport for tile culling optimization. onTransformed can fire
+  // many times per frame during gestures — coalesce into one state update
+  // per animation frame so we don't queue up redundant re-renders of the
+  // (large) map tree faster than the browser can paint them.
+  const viewportRafRef = useRef<number | null>(null);
   const handleTransform = useCallback((ref: ReactZoomPanPinchRef) => {
-    const {state} = ref;
-    const container = containerRef.current;
+    if (viewportRafRef.current !== null) return;
 
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
+    viewportRafRef.current = requestAnimationFrame(() => {
+      viewportRafRef.current = null;
+      const {state} = ref;
+      const container = containerRef.current;
 
-      setViewport({
-        x: -state.positionX / state.scale,
-        y: -state.positionY / state.scale,
-        width: containerRect.width,
-        height: containerRect.height,
-        scale: state.scale,
-      });
-    }
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+
+        setViewport({
+          x: -state.positionX / state.scale,
+          y: -state.positionY / state.scale,
+          width: containerRect.width,
+          height: containerRect.height,
+          scale: state.scale,
+        });
+      }
+    });
+  }, []);
+
+  // Cancel any in-flight viewport update on unmount
+  React.useEffect(() => {
+    return () => {
+      if (viewportRafRef.current !== null) {
+        cancelAnimationFrame(viewportRafRef.current);
+      }
+    };
   }, []);
 
   // Initialize viewport on mount
@@ -223,28 +241,33 @@ export const MapView: React.FC<MapViewProps> = ({
     );
   }, [focusPoint]);
 
-  // Filter items based on current floor
-  const filterByFloor = <T extends {floor?: number}>(items: T[]): T[] => {
-    return items.filter(item => item.floor === currentFloor);
-  };
-
-  // Filter graph nodes by current floor
-  const currentFloorGraphNodes = graphNodes.filter(
-    node => node.position.floorNum === currentFloor,
+  // Filter graph nodes by current floor — memoized so this (potentially
+  // 1000+ node) scan only re-runs when the underlying data or floor changes,
+  // not on every viewport-driven re-render during pan/zoom
+  const currentFloorGraphNodes = useMemo(
+    () => graphNodes.filter(node => node.position.floorNum === currentFloor),
+    [graphNodes, currentFloor],
   );
 
   // Filter rooms by current floor
-  const currentFloorRooms = filterByFloor(rooms);
+  const currentFloorRooms = useMemo(
+    () => rooms.filter(room => room.floor === currentFloor),
+    [rooms, currentFloor],
+  );
 
   // Filter buildings that have rooms/content on current floor
-  const buildingsWithCurrentFloorContent = initialBuildings.filter(building => {
-    const hasRoomsOnFloor = currentFloorRooms.some(
-      room => room.buildingId === building.id,
-    );
-    const hasFloorsProperty =
-      building.floors && building.floors.includes(currentFloor);
-    return hasRoomsOnFloor || hasFloorsProperty || currentFloor === 1;
-  });
+  const buildingsWithCurrentFloorContent = useMemo(
+    () =>
+      initialBuildings.filter(building => {
+        const hasRoomsOnFloor = currentFloorRooms.some(
+          room => room.buildingId === building.id,
+        );
+        const hasFloorsProperty =
+          building.floors && building.floors.includes(currentFloor);
+        return hasRoomsOnFloor || hasFloorsProperty || currentFloor === 1;
+      }),
+    [initialBuildings, currentFloorRooms, currentFloor],
+  );
 
   // Handle room pointer down
   const handleRoomPointerDown = (e: React.PointerEvent<SVGRectElement>) => {

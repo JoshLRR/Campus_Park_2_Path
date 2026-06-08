@@ -42,7 +42,7 @@ interface GraphOverlayProps {
 
 const SCALE_FACTOR = 1 / 0.1445603396126786;
 
-export const GraphOverlay: React.FC<GraphOverlayProps> = ({
+const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
   nodes, //eslint-disable-next-line @typescript-eslint/no-unused-vars
   worldWidth, //eslint-disable-next-line @typescript-eslint/no-unused-vars
   worldHeight,
@@ -67,23 +67,47 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
     onNodeClick?.(nodeId);
   };
 
+  // O(1) neighbor lookups by id — avoids re-scanning the full node list
+  // (1000+ entries) for every edge/neighbor reference below
+  const nodeById = React.useMemo(() => {
+    const map = new Map<number, GraphNode>();
+    for (const node of nodes) map.set(node.id, node);
+    return map;
+  }, [nodes]);
+
   // Filter nodes based on visibility settings and current floor
-  const getVisibleNodes = () => {
-    return nodes.filter(node => {
-      // First filter by floor
-      if (node.position.floorNum !== currentFloor) return false;
+  const visibleNodes = React.useMemo(
+    () =>
+      nodes.filter(node => {
+        if (node.position.floorNum !== currentFloor) return false;
+        if (node.kind === 'path' && !showPathNodes) return false;
+        if (node.kind === 'room' && !showRoomNodes) return false;
+        return true;
+      }),
+    [nodes, currentFloor, showPathNodes, showRoomNodes],
+  );
 
-      // Then filter by visibility settings
-      if (node.kind === 'path' && !showPathNodes) return false;
-      if (node.kind === 'room' && !showRoomNodes) return false;
-      return true;
-    });
-  };
+  const visibleNodeIds = React.useMemo(
+    () => new Set(visibleNodes.map(node => node.id)),
+    [visibleNodes],
+  );
 
-  const visibleNodes = getVisibleNodes();
-
-  // Get all original nodes for neighbor lookup (including other floors for cross-floor edges)
-  const allNodes = nodes;
+  // Which nodes have at least one neighbor on a different floor — precomputed
+  // once per node-list change instead of re-scanning neighbors per render
+  const crossFloorNodeIds = React.useMemo(() => {
+    const ids = new Set<number>();
+    for (const node of nodes) {
+      const crossesFloor = node.neighbors.some(neighbor => {
+        const neighborNode = nodeById.get(neighbor.to);
+        return (
+          neighborNode &&
+          neighborNode.position.floorNum !== node.position.floorNum
+        );
+      });
+      if (crossesFloor) ids.add(node.id);
+    }
+    return ids;
+  }, [nodes, nodeById]);
 
   // Check if an edge should be visible based on its endpoints and connection type
   const isEdgeVisible = (sourceNode: GraphNode, targetNode: GraphNode) => {
@@ -97,8 +121,8 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
 
     // If either node is not visible due to settings, don't show the edge
     if (
-      !visibleNodes.includes(sourceNode) ||
-      !visibleNodes.includes(targetNode)
+      !visibleNodeIds.has(sourceNode.id) ||
+      !visibleNodeIds.has(targetNode.id)
     ) {
       return false;
     }
@@ -114,16 +138,8 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
     return true;
   };
 
-  // Check if a node has cross-floor connections
-  const hasCrossFloorConnection = (node: GraphNode) => {
-    return node.neighbors.some(neighbor => {
-      const neighborNode = allNodes.find(n => n.id === neighbor.to);
-      return (
-        neighborNode &&
-        neighborNode.position.floorNum !== node.position.floorNum
-      );
-    });
-  };
+  const hasCrossFloorConnection = (node: GraphNode) =>
+    crossFloorNodeIds.has(node.id);
 
   return (
     <g style={{zIndex: 3}}>
@@ -146,7 +162,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
         const nodePos = scalePosition(node.position);
 
         return node.neighbors.map(neighbor => {
-          const neighborNode = allNodes.find(n => n.id === neighbor.to);
+          const neighborNode = nodeById.get(neighbor.to);
           if (!neighborNode) return null;
 
           // Check if this edge should be visible
@@ -395,7 +411,7 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
             {/* Distance labels on edges - only show in debug mode or for selected nodes */}
             {(showDebugInfo || isSelected) &&
               node.neighbors.map(neighbor => {
-                const neighborNode = allNodes.find(n => n.id === neighbor.to);
+                const neighborNode = nodeById.get(neighbor.to);
                 if (!neighborNode) return null;
 
                 // Only show distance label if the edge is visible
@@ -429,3 +445,8 @@ export const GraphOverlay: React.FC<GraphOverlayProps> = ({
     </g>
   );
 };
+
+// Memoized — its props (notably the per-floor node list) are now stable
+// across viewport-driven re-renders during pan/zoom, so this skips
+// re-rendering hundreds of SVG nodes/edges on every frame of a gesture
+export const GraphOverlay = React.memo(GraphOverlayComponent);

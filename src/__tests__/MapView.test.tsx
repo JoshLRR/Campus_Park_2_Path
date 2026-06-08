@@ -259,6 +259,14 @@ describe('MapView', () => {
     });
     const ring = () =>
       container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
+
+    // The mount-centering effect's viewport sync is rAF-throttled, so the
+    // very first render still reflects the pre-sync default scale — wait for
+    // it to settle on the centered-on-306 value before using it as a baseline
+    const rawInitialTransform = ring()?.getAttribute('transform');
+    await waitFor(() => {
+      expect(ring()?.getAttribute('transform')).not.toBe(rawInitialTransform);
+    });
     const initialTransform = ring()?.getAttribute('transform');
 
     fireEvent.click(screen.getByTitle('Zoom in'));
