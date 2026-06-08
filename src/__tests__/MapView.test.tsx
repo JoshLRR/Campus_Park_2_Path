@@ -5,6 +5,7 @@ import {
   Building,
   NavigationPoint,
   Room,
+  DEFAULT_VIEW_NODE_ID,
 } from '../components/Map/MapView';
 import {GraphNode} from '../components/Map/GraphOverlay';
 import {PathResult} from '../components/Map/pathfinding';
@@ -242,8 +243,20 @@ describe('MapView', () => {
     });
   });
 
-  it('recenters the view when the recenter button is clicked', async () => {
-    const {container} = renderMap({selectedRoomId: 5});
+  it('recenters the view on the default node when the recenter button is clicked', async () => {
+    // MapView centers on DEFAULT_VIEW_NODE_ID both on mount and on recenter,
+    // so — given the same graph data and container size — clicking "Recenter
+    // map" should animate the transform back to the same value it started at.
+    const defaultViewNode: GraphNode = {
+      id: DEFAULT_VIEW_NODE_ID,
+      kind: 'path',
+      position: {x: 5, y: 5, floorNum: 1},
+      neighbors: [],
+    };
+    const {container} = renderMap({
+      selectedRoomId: 5,
+      graphNodes: [...graphNodes, defaultViewNode],
+    });
     const ring = () =>
       container.querySelector('circle[stroke="#f59e0b"]')?.parentElement;
     const initialTransform = ring()?.getAttribute('transform');
@@ -252,11 +265,10 @@ describe('MapView', () => {
     await waitFor(() => {
       expect(ring()?.getAttribute('transform')).not.toBe(initialTransform);
     });
-    const zoomedTransform = ring()?.getAttribute('transform');
 
     fireEvent.click(screen.getByTitle('Recenter map'));
     await waitFor(() => {
-      expect(ring()?.getAttribute('transform')).not.toBe(zoomedTransform);
+      expect(ring()?.getAttribute('transform')).toBe(initialTransform);
     });
   });
 

@@ -87,6 +87,11 @@ export const NODE_SCALE = 1 / 0.1445603396126786;
 export const NODE_OFFSET_X = 0;
 export const NODE_OFFSET_Y = 0;
 
+// Default landing view — the path node and scale the map opens on and
+// returns to when the recenter button is pressed
+export const DEFAULT_VIEW_NODE_ID = 306;
+const DEFAULT_VIEW_SCALE = 0.1;
+
 export const MapView: React.FC<MapViewProps> = ({
   initialBuildings,
   selectedRoomId,
@@ -174,6 +179,33 @@ export const MapView: React.FC<MapViewProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Default landing view — centers on path node 306 at the standard zoomed-out scale
+  const centerOnDefaultView = useCallback(
+    (animationTime = 0) => {
+      const container = containerRef.current;
+      const transform = transformRef.current;
+      const node = graphNodes.find(n => n.id === DEFAULT_VIEW_NODE_ID);
+      if (!container || !transform || !node) return;
+      const rect = container.getBoundingClientRect();
+      const targetX = node.position.x * NODE_SCALE - NODE_OFFSET_X;
+      const targetY = node.position.y * NODE_SCALE - NODE_OFFSET_Y;
+      const posX = rect.width / 2 - targetX * DEFAULT_VIEW_SCALE;
+      const posY = rect.height / 2 - targetY * DEFAULT_VIEW_SCALE;
+      transform.setTransform(posX, posY, DEFAULT_VIEW_SCALE, animationTime);
+    },
+    [graphNodes],
+  );
+
+  // Center on the default view once graph data has loaded
+  const hasCenteredOnLoad = useRef(false);
+  React.useEffect(() => {
+    if (hasCenteredOnLoad.current) return;
+    if (graphNodes.some(n => n.id === DEFAULT_VIEW_NODE_ID)) {
+      centerOnDefaultView();
+      hasCenteredOnLoad.current = true;
+    }
+  }, [graphNodes, centerOnDefaultView]);
+
   // Animate to a CSS world position when focusPoint changes
   React.useEffect(() => {
     if (!focusPoint || !transformRef.current || !containerRef.current) return;
@@ -228,7 +260,7 @@ export const MapView: React.FC<MapViewProps> = ({
   // Map zoom & recenter controls
   const handleZoomIn = () => transformRef.current?.zoomIn();
   const handleZoomOut = () => transformRef.current?.zoomOut();
-  const handleRecenter = () => transformRef.current?.resetTransform();
+  const handleRecenter = () => centerOnDefaultView(400);
 
   // Scale position function — must match GraphOverlay's formula
   const scalePosition = (pos: {x: number; y: number}) => ({
@@ -255,7 +287,7 @@ export const MapView: React.FC<MapViewProps> = ({
         minScale={0.05}
         maxScale={4}
         limitToBounds={false}
-        initialScale={0.1}
+        initialScale={DEFAULT_VIEW_SCALE}
         initialPositionX={176}
         initialPositionY={-432}
         onTransformed={handleTransform}
