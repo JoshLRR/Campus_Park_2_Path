@@ -20,7 +20,8 @@ export function useGraphData() {
   useEffect(() => {
     const loadGraphData = async () => {
       try {
-        const response = await fetch('/api/graph');
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+        const response = await fetch(`${apiBaseUrl}/api/graph`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch graph.json: ${response.status}`);
