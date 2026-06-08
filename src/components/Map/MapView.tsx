@@ -130,38 +130,68 @@ export const MapView: React.FC<MapViewProps> = ({
     scale: 1,
   });
 
-  // Update viewport for tile culling optimization. onTransformed can fire
-  // many times per frame during gestures — coalesce into one state update
-  // per animation frame so we don't queue up redundant re-renders of the
-  // (large) map tree faster than the browser can paint them.
-  const viewportRafRef = useRef<number | null>(null);
-  const handleTransform = useCallback((ref: ReactZoomPanPinchRef) => {
-    if (viewportRafRef.current !== null) return;
+  // Update viewport for tile culling optimization. onTransformed fires at
+  // pointer-move frequency during gestures — far more often than the tile
+  // culling actually needs, since TileSystem already renders a 1-tile buffer
+  // around the visible area. rAF-coalescing still let pan gestures (which
+  // emit a steady stream of events for the whole drag) push one state update
+  // — and the resulting re-render of the large map tree — every frame, which
+  // competes with the browser's own work for that same frame budget and
+  // shows up as pan jank. Throttle on a wall-clock interval instead so
+  // updates land at a fixed, gesture-independent cadence, with a trailing
+  // call so the viewport still settles on the final position once a gesture
+  // ends.
+  const VIEWPORT_UPDATE_INTERVAL_MS = 150;
+  const viewportThrottleRef = useRef<{
+    timeoutId: ReturnType<typeof setTimeout> | null;
+    lastRunAt: number;
+  }>({timeoutId: null, lastRunAt: 0});
 
-    viewportRafRef.current = requestAnimationFrame(() => {
-      viewportRafRef.current = null;
-      const {state} = ref;
-      const container = containerRef.current;
+  const applyViewportFromTransform = useCallback((ref: ReactZoomPanPinchRef) => {
+    const {state} = ref;
+    const container = containerRef.current;
+    if (!container) return;
 
-      if (container) {
-        const containerRect = container.getBoundingClientRect();
-
-        setViewport({
-          x: -state.positionX / state.scale,
-          y: -state.positionY / state.scale,
-          width: containerRect.width,
-          height: containerRect.height,
-          scale: state.scale,
-        });
-      }
+    const containerRect = container.getBoundingClientRect();
+    setViewport({
+      x: -state.positionX / state.scale,
+      y: -state.positionY / state.scale,
+      width: containerRect.width,
+      height: containerRect.height,
+      scale: state.scale,
     });
   }, []);
 
-  // Cancel any in-flight viewport update on unmount
+  const handleTransform = useCallback(
+    (ref: ReactZoomPanPinchRef) => {
+      const tracker = viewportThrottleRef.current;
+      const now = Date.now();
+      const elapsed = now - tracker.lastRunAt;
+
+      if (tracker.timeoutId !== null) {
+        clearTimeout(tracker.timeoutId);
+        tracker.timeoutId = null;
+      }
+
+      if (elapsed >= VIEWPORT_UPDATE_INTERVAL_MS) {
+        tracker.lastRunAt = now;
+        applyViewportFromTransform(ref);
+      } else {
+        tracker.timeoutId = setTimeout(() => {
+          tracker.lastRunAt = Date.now();
+          tracker.timeoutId = null;
+          applyViewportFromTransform(ref);
+        }, VIEWPORT_UPDATE_INTERVAL_MS - elapsed);
+      }
+    },
+    [applyViewportFromTransform],
+  );
+
+  // Cancel any pending trailing viewport update on unmount
   React.useEffect(() => {
     return () => {
-      if (viewportRafRef.current !== null) {
-        cancelAnimationFrame(viewportRafRef.current);
+      if (viewportThrottleRef.current.timeoutId !== null) {
+        clearTimeout(viewportThrottleRef.current.timeoutId);
       }
     };
   }, []);
