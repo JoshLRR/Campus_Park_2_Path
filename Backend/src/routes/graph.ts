@@ -33,6 +33,11 @@ type RoomFeatureRow = RowDataPacket & {
   featureId: number;
 };
 
+type PathFeatureRow = RowDataPacket & {
+  graphNodeId: number;
+  featureId: number;
+};
+
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const [nodeRows] = await pool.query<GraphNodeRow[]>(`
@@ -80,6 +85,21 @@ router.get('/', async (_req: Request, res: Response) => {
       featuresByRoomId.set(row.roomId, existingFeatures);
     }
 
+    const [pathFeatureRows] = await pool.query<PathFeatureRow[]>(`
+      SELECT
+        graph_node_id AS graphNodeId,
+        feature_id AS featureId
+      FROM path_feature_map;
+    `);
+
+    const featuresByPathNodeId = new Map<number, number[]>();
+
+    for (const row of pathFeatureRows) {
+      const existingFeatures = featuresByPathNodeId.get(row.graphNodeId) ?? [];
+      existingFeatures.push(row.featureId);
+      featuresByPathNodeId.set(row.graphNodeId, existingFeatures);
+    }
+
     const neighborsByNodeId = new Map<
       number,
       {to: number; distance: number}[]
@@ -106,7 +126,9 @@ router.get('/', async (_req: Request, res: Response) => {
         floorNum: Number(node.floorNum ?? 1),
       },
       neighbors: neighborsByNodeId.get(node.id) ?? [],
-      features: node.roomId ? (featuresByRoomId.get(node.roomId) ?? []) : [],
+      features: node.roomId
+        ? (featuresByRoomId.get(node.roomId) ?? [])
+        : (featuresByPathNodeId.get(node.id) ?? []),
       ...(node.roomNumber ? {roomNumber: node.roomNumber} : {}),
     }));
 

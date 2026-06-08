@@ -45,10 +45,24 @@ CREATE TABLE graph_nodes (
 
 CREATE TABLE path_nodes (
     graph_node_id INT PRIMARY KEY,
-    is_covered TINYINT(1) NOT NULL DEFAULT 0,
-    is_accessible TINYINT(1) NOT NULL DEFAULT 1,
     CONSTRAINT fk_pn_graph
         FOREIGN KEY (graph_node_id) REFERENCES graph_nodes(graph_node_id)
+);
+
+CREATE TABLE path_features (
+    feature_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255)
+);
+
+CREATE TABLE path_feature_map (
+    graph_node_id INT NOT NULL,
+    feature_id INT NOT NULL,
+    PRIMARY KEY (graph_node_id, feature_id),
+    CONSTRAINT fk_pfm_path_nodes
+        FOREIGN KEY (graph_node_id) REFERENCES path_nodes(graph_node_id),
+    CONSTRAINT fk_pfm_features
+        FOREIGN KEY (feature_id) REFERENCES path_features(feature_id)
 );
 
 CREATE TABLE room_nodes (
@@ -80,5 +94,6 @@ CREATE INDEX idx_rooms_building_floor ON rooms(building_id, floor);
 CREATE INDEX idx_rooms_code ON rooms(room_code);
 CREATE INDEX idx_graph_nodes_building_floor ON graph_nodes(building_id, floor);
 CREATE INDEX idx_rfm_feature ON room_feature_map(feature_id);
+CREATE INDEX idx_pfm_feature ON path_feature_map(feature_id);
 
 

@@ -25,6 +25,16 @@ type EdgeRow = RowDataPacket & {
   distance: number;
 };
 
+type RoomFeatureRow = RowDataPacket & {
+  roomId: number;
+  featureId: number;
+};
+
+type PathFeatureRow = RowDataPacket & {
+  graphNodeId: number;
+  featureId: number;
+};
+
 const noFields: FieldPacket[] = [];
 
 function nodeResult(rows: NodeRow[]): [NodeRow[], FieldPacket[]] {
@@ -35,15 +45,38 @@ function edgeResult(rows: EdgeRow[]): [EdgeRow[], FieldPacket[]] {
   return [rows, noFields];
 }
 
+function roomFeatureResult(
+  rows: RoomFeatureRow[] = [],
+): [RoomFeatureRow[], FieldPacket[]] {
+  return [rows, noFields];
+}
+
+function pathFeatureResult(
+  rows: PathFeatureRow[] = [],
+): [PathFeatureRow[], FieldPacket[]] {
+  return [rows, noFields];
+}
+
+function mockGraphQueries(
+  nodeRows: NodeRow[],
+  edgeRows: EdgeRow[] = [],
+  roomFeatureRows: RoomFeatureRow[] = [],
+  pathFeatureRows: PathFeatureRow[] = [],
+) {
+  mockQuery
+    .mockResolvedValueOnce(nodeResult(nodeRows))
+    .mockResolvedValueOnce(edgeResult(edgeRows))
+    .mockResolvedValueOnce(roomFeatureResult(roomFeatureRows))
+    .mockResolvedValueOnce(pathFeatureResult(pathFeatureRows));
+}
+
 describe('GET /api/graph', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('returns 200 with a nodes array', async () => {
-    mockQuery
-      .mockResolvedValueOnce(nodeResult([]))
-      .mockResolvedValueOnce(edgeResult([]));
+    mockGraphQueries([], []);
 
     const res = await request(app).get('/api/graph');
 
@@ -53,9 +86,7 @@ describe('GET /api/graph', () => {
   });
 
   it('returns empty nodes when database has no rows', async () => {
-    mockQuery
-      .mockResolvedValueOnce(nodeResult([]))
-      .mockResolvedValueOnce(edgeResult([]));
+    mockGraphQueries([], []);
 
     const res = await request(app).get('/api/graph');
 
@@ -74,9 +105,7 @@ describe('GET /api/graph', () => {
         roomNumber: null,
       } as NodeRow,
     ];
-    mockQuery
-      .mockResolvedValueOnce(nodeResult(nodeRows))
-      .mockResolvedValueOnce(edgeResult([]));
+    mockGraphQueries(nodeRows, []);
 
     const res = await request(app).get('/api/graph');
     const node = res.body.nodes[0];
@@ -103,9 +132,7 @@ describe('GET /api/graph', () => {
         roomNumber: 'B202',
       } as NodeRow,
     ];
-    mockQuery
-      .mockResolvedValueOnce(nodeResult(nodeRows))
-      .mockResolvedValueOnce(edgeResult([]));
+    mockGraphQueries(nodeRows, []);
 
     const res = await request(app).get('/api/graph');
     const node = res.body.nodes[0];
@@ -141,9 +168,7 @@ describe('GET /api/graph', () => {
     const edgeRows: EdgeRow[] = [
       {fromNodeId: 1, toNodeId: 2, distance: 10} as EdgeRow,
     ];
-    mockQuery
-      .mockResolvedValueOnce(nodeResult(nodeRows))
-      .mockResolvedValueOnce(edgeResult(edgeRows));
+    mockGraphQueries(nodeRows, edgeRows);
 
     const res = await request(app).get('/api/graph');
     const node1 = res.body.nodes.find((n: {id: number}) => n.id === 1);
@@ -184,9 +209,7 @@ describe('GET /api/graph', () => {
       {fromNodeId: 1, toNodeId: 2, distance: 10} as EdgeRow,
       {fromNodeId: 1, toNodeId: 3, distance: 10} as EdgeRow,
     ];
-    mockQuery
-      .mockResolvedValueOnce(nodeResult(nodeRows))
-      .mockResolvedValueOnce(edgeResult(edgeRows));
+    mockGraphQueries(nodeRows, edgeRows);
 
     const res = await request(app).get('/api/graph');
     const node1 = res.body.nodes.find((n: {id: number}) => n.id === 1);
@@ -207,12 +230,55 @@ describe('GET /api/graph', () => {
         roomNumber: null,
       } as NodeRow,
     ];
-    mockQuery
-      .mockResolvedValueOnce(nodeResult(nodeRows))
-      .mockResolvedValueOnce(edgeResult([]));
+    mockGraphQueries(nodeRows, []);
 
     const res = await request(app).get('/api/graph');
     expect(res.body.nodes[0].position.floorNum).toBe(1);
+  });
+
+  it('attaches room features from room_feature_map by roomId', async () => {
+    const nodeRows: NodeRow[] = [
+      {
+        id: 1,
+        x: 0,
+        y: 0,
+        floorNum: 1,
+        kind: 'room',
+        roomNumber: 'B202',
+        roomId: 7,
+      } as NodeRow,
+    ];
+    mockGraphQueries(nodeRows, [], [
+      {roomId: 7, featureId: 3} as RoomFeatureRow,
+      {roomId: 7, featureId: 8} as RoomFeatureRow,
+    ]);
+
+    const res = await request(app).get('/api/graph');
+    const node = res.body.nodes[0];
+
+    expect(node.features).toEqual([3, 8]);
+  });
+
+  it('attaches path features from path_feature_map by graphNodeId', async () => {
+    const nodeRows: NodeRow[] = [
+      {
+        id: 5,
+        x: 0,
+        y: 0,
+        floorNum: 1,
+        kind: 'path',
+        roomNumber: null,
+      } as NodeRow,
+    ];
+    mockGraphQueries(nodeRows, [], [], [
+      {graphNodeId: 5, featureId: 1} as PathFeatureRow,
+      {graphNodeId: 5, featureId: 4} as PathFeatureRow,
+    ]);
+
+    const res = await request(app).get('/api/graph');
+    const node = res.body.nodes[0];
+
+    expect(node.features).toEqual([1, 4]);
   });
 
   it('returns 500 when the database query fails', async () => {

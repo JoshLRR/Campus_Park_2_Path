@@ -19,9 +19,16 @@ export interface ReferenceRoomFeature {
   description?: string;
 }
 
+export interface ReferencePathFeature {
+  featureId: number;
+  name: string;
+  description?: string;
+}
+
 export interface ReferenceData {
   buildings?: ReferenceBuilding[];
   roomFeatures?: ReferenceRoomFeature[];
+  pathFeatures?: ReferencePathFeature[];
 }
 
 export function readReferenceData(referenceDataPath?: string): ReferenceData {
@@ -105,6 +112,14 @@ export function generateSeedSql(
     ),
   ].sort((a, b) => a - b);
 
+  const pathFeatureIds = [
+    ...new Set(
+      pathNodes
+        .flatMap(node => node.features ?? [])
+        .map(feature => Number(feature)),
+    ),
+  ].sort((a, b) => a - b);
+
   const roomsByCode = new Map<string, GraphNode[]>();
 
   for (const node of roomNodes) {
@@ -135,11 +150,13 @@ export function generateSeedSql(
   for (const table of [
     'edges',
     'room_feature_map',
+    'path_feature_map',
     'room_nodes',
     'path_nodes',
     'graph_nodes',
     'rooms',
     'room_features',
+    'path_features',
     'buildings',
   ]) {
     lines.push(`DELETE FROM ${table};`);
@@ -185,6 +202,33 @@ export function generateSeedSql(
     lines.push('');
   }
 
+  if (pathFeatureIds.length > 0) {
+    lines.push('-- Path feature reference data');
+
+    const referencePathFeaturesById = new Map<number, ReferencePathFeature>();
+
+    for (const feature of referenceData.pathFeatures ?? []) {
+      referencePathFeaturesById.set(Number(feature.featureId), feature);
+    }
+
+    const pathFeatureValues = pathFeatureIds.map(featureId => {
+      const referenceFeature = referencePathFeaturesById.get(featureId);
+
+      const name = referenceFeature?.name ?? `graph_feature_${featureId}`;
+      const description =
+        referenceFeature?.description ??
+        `Imported numeric feature id ${featureId} from graph.json`;
+
+      return `(${featureId}, ${sqlString(name)}, ${sqlString(description)})`;
+    });
+
+    lines.push(
+      'INSERT INTO path_features (feature_id, name, description) VALUES',
+    );
+    lines.push(`${pathFeatureValues.join(',\n')};`);
+    lines.push('');
+  }
+
   lines.push(
     '-- Base graph nodes. Explicit graph_node_id preserves graph.json node ids for pathfinding.',
   );
@@ -211,19 +255,33 @@ export function generateSeedSql(
 
   if (pathNodes.length > 0) {
     lines.push('-- Path nodes');
-    lines.push(
-      '-- graph.json currently has numeric features but no legend, so path metadata defaults to accessible/uncovered.',
-    );
-    const pathNodeValues = pathNodes
-      .slice()
-      .sort((a, b) => a.id - b.id)
-      .map(node => `(${node.id}, 0, 1)`);
+    const sortedPathNodes = pathNodes.slice().sort((a, b) => a.id - b.id);
+    const pathNodeValues = sortedPathNodes.map(node => `(${node.id})`);
 
-    lines.push(
-      'INSERT INTO path_nodes (graph_node_id, is_covered, is_accessible) VALUES',
-    );
+    lines.push('INSERT INTO path_nodes (graph_node_id) VALUES');
     lines.push(`${pathNodeValues.join(',\n')};`);
     lines.push('');
+
+    const pathFeatureMapValues: string[] = [];
+
+    for (const node of sortedPathNodes) {
+      const featureIds = [
+        ...new Set((node.features ?? []).map(feature => Number(feature))),
+      ].sort((a, b) => a - b);
+
+      for (const featureId of featureIds) {
+        pathFeatureMapValues.push(`(${node.id}, ${featureId})`);
+      }
+    }
+
+    if (pathFeatureMapValues.length > 0) {
+      lines.push('-- Path features');
+      lines.push(
+        'INSERT INTO path_feature_map (graph_node_id, feature_id) VALUES',
+      );
+      lines.push(`${pathFeatureMapValues.join(',\n')};`);
+      lines.push('');
+    }
   }
 
   if (roomsByCode.size > 0) {
@@ -330,6 +388,11 @@ export function generateSeedSql(
       `ALTER TABLE room_features AUTO_INCREMENT = ${Math.max(...roomFeatureIds) + 1};`,
     );
   }
+  if (pathFeatureIds.length > 0) {
+    lines.push(
+      `ALTER TABLE path_features AUTO_INCREMENT = ${Math.max(...pathFeatureIds) + 1};`,
+    );
+  }
   lines.push('ALTER TABLE rooms AUTO_INCREMENT = 1;');
   lines.push('ALTER TABLE edges AUTO_INCREMENT = 1;');
   lines.push('');
@@ -344,6 +407,8 @@ export function generateSeedSql(
     'room_feature_map',
     'graph_nodes',
     'path_nodes',
+    'path_features',
+    'path_feature_map',
     'room_nodes',
     'edges',
   ]) {

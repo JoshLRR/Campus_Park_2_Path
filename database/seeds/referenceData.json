@@ -159,5 +159,37 @@
 		"name" : "Other",
 		"description" : null
 	}
+],
+"pathFeatures": [
+	{
+		"featureId" : 1,
+		"name" : "Covered",
+		"description" : null
+	},
+	{
+		"featureId" : 2,
+		"name" : "Paved",
+		"description" : null
+	},
+	{
+		"featureId" : 3,
+		"name" : "Dirt",
+		"description" : null
+	},
+	{
+		"featureId" : 4,
+		"name" : "Stairs",
+		"description" : null
+	},
+	{
+		"featureId" : 5,
+		"name" : "ADA Access",
+		"description" : null
+	},
+	{
+		"featureId" : 6,
+		"name" : "Other",
+		"description" : null
+	}
 ]
 }
