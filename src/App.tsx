@@ -23,6 +23,7 @@ import {AccessibilityPanel} from './components/AccessibilityPanel';
 import {DirectionsPanel} from './components/DirectionsPanel';
 import {buildDirections} from './logic/buildDirections';
 import {createNavigationPointFromRoom} from './logic/createNavigationPoint';
+import {FEATURE_LABELS} from './logic/featureLabels';
 import {DistanceUnit} from './logic/formatDistance';
 import {getFloorStats} from './logic/getFloorStats';
 import {getSelectedGraphNode} from './logic/getSelectedItems';
@@ -168,7 +169,11 @@ export default function App() {
       return;
     }
 
-    setDestinationPoint(createNavigationPointFromRoom(room, []));
+    const featureLabel = FEATURE_LABELS[featureId];
+    const displayLabel = featureLabel
+      ? `${featureLabel} - ${room.name}`
+      : undefined;
+    setDestinationPoint(createNavigationPointFromRoom(room, [], displayLabel));
   };
 
   useRouteCalculation({

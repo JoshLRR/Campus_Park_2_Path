@@ -61,12 +61,14 @@ export function useNavigationSelection({
     setSelectedGraphNodeId(null);
   };
 
-  const handleSetStartPoint = (room: RoomWithId) => {
-    setStartPoint(createNavigationPointFromRoom(room, buildings));
+  const handleSetStartPoint = (room: RoomWithId, displayLabel?: string) => {
+    setStartPoint(createNavigationPointFromRoom(room, buildings, displayLabel));
   };
 
-  const handleSetDestination = (room: RoomWithId) => {
-    setDestinationPoint(createNavigationPointFromRoom(room, buildings));
+  const handleSetDestination = (room: RoomWithId, displayLabel?: string) => {
+    setDestinationPoint(
+      createNavigationPointFromRoom(room, buildings, displayLabel),
+    );
   };
 
   const handleSetStartPointFromNode = (node: GraphNode) => {

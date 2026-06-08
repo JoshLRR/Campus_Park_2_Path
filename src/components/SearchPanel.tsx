@@ -27,8 +27,8 @@ type SearchPanelProps = {
   destinationPoint: NavigationPoint | null;
   currentRoute: PathResult | null;
   distanceUnit: DistanceUnit;
-  onSetStartPoint: (room: SearchRoom) => void;
-  onSetDestination: (room: SearchRoom) => void;
+  onSetStartPoint: (room: SearchRoom, displayLabel?: string) => void;
+  onSetDestination: (room: SearchRoom, displayLabel?: string) => void;
   onRoomSelect: (roomId: number) => void;
   onFocusRoom: (room: {
     id: number;
@@ -85,14 +85,14 @@ export function SearchPanel({
     setShowResults(false);
   };
 
-  const handleSetStart = (room: SearchRoom) => {
-    onSetStartPoint(room);
+  const handleSetStart = (room: SearchRoom, displayLabel?: string) => {
+    onSetStartPoint(room, displayLabel);
     setSearchTerm('');
     setShowResults(false);
   };
 
-  const handleSetDest = (room: SearchRoom) => {
-    onSetDestination(room);
+  const handleSetDest = (room: SearchRoom, displayLabel?: string) => {
+    onSetDestination(room, displayLabel);
     setSearchTerm('');
     setShowResults(false);
   };
@@ -281,7 +281,7 @@ export function SearchPanel({
                           onMouseDown={e => e.preventDefault()}
                           onClick={e => {
                             e.stopPropagation();
-                            handleSetStart(room);
+                            handleSetStart(room, displayName);
                           }}
                           className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors font-medium"
                         >
@@ -291,7 +291,7 @@ export function SearchPanel({
                           onMouseDown={e => e.preventDefault()}
                           onClick={e => {
                             e.stopPropagation();
-                            handleSetDest(room);
+                            handleSetDest(room, displayName);
                           }}
                           className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full hover:bg-red-100 transition-colors font-medium"
                         >

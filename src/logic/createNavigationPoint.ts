@@ -21,13 +21,14 @@ type RoomWithId = Room & {
 export function createNavigationPointFromRoom(
   room: RoomWithId,
   buildings: BuildingWithId[],
+  displayLabel?: string,
 ): NavigationPoint {
   const position = getRoomPosition(room, buildings);
 
   return {
     x: position.x,
     y: position.y,
-    label: room.name,
+    label: displayLabel ?? room.name,
     roomId: room.id,
     floor: room.floor,
   };
