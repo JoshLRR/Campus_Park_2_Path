@@ -30,6 +30,8 @@ interface TileSystemProps {
   className?: string;
   viewport?: ViewportInfo;
   scale?: number;
+  intrinsicWidth?: number;
+  intrinsicHeight?: number;
 }
 
 const TileSystem: React.FC<TileSystemProps> = ({
@@ -37,6 +39,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
   className = '',
   viewport,
   scale = 1,
+  intrinsicWidth,
+  intrinsicHeight,
 }) => {
   // Automatically import all tile images using Vite's glob import
   const tiles = useMemo<TileData[]>(() => {
@@ -92,8 +96,8 @@ const TileSystem: React.FC<TileSystemProps> = ({
     height: number;
   } | null>(null);
 
-  const tileWidth = (tileNaturalSize?.width ?? tileSize) * scale;
-  const tileHeight = (tileNaturalSize?.height ?? tileSize) * scale;
+  const tileWidth = (intrinsicWidth ?? tileNaturalSize?.width ?? tileSize) * scale;
+  const tileHeight = (intrinsicHeight ?? tileNaturalSize?.height ?? tileSize) * scale;
 
   // Memoize grid calculations
   const gridInfo = useMemo(() => {
@@ -267,6 +271,13 @@ const TileSystem: React.FC<TileSystemProps> = ({
         const x = (col - gridInfo.minCol) * tileWidth;
         const y = (row - gridInfo.minRow) * tileHeight;
 
+        // Render the img at its natural pixel dimensions and scale up via CSS
+        // transform so iOS Safari's GPU backing store stays at source resolution
+        // (~40MB) rather than the large CSS display size (~645MB).
+        const srcWidth = tileNaturalSize?.width ?? tileSize;
+        const srcHeight = tileNaturalSize?.height ?? tileSize;
+        const imgScale = tileNaturalSize ? tileWidth / tileNaturalSize.width : 1;
+
         return (
           <div
             key={tileKey}
@@ -277,15 +288,17 @@ const TileSystem: React.FC<TileSystemProps> = ({
               width: tileWidth,
               height: tileHeight,
               backgroundColor: isLoaded ? 'transparent' : '#f0f0f0',
+              overflow: 'hidden',
             }}
           >
             <img
               src={src}
               alt={`Tile ${row},${col}`}
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'fill',
+                width: srcWidth,
+                height: srcHeight,
+                transform: `scale(${imgScale})`,
+                transformOrigin: '0 0',
                 opacity: isLoaded ? 1 : 0,
                 transition: 'opacity 0.3s ease-in-out',
                 display: 'block',

@@ -359,6 +359,8 @@ export const MapView: React.FC<MapViewProps> = ({
               tileSize={8192}
               className="tile-background"
               viewport={viewport}
+              intrinsicWidth={15552}
+              intrinsicHeight={10368}
             />
           </div>
 
@@ -560,7 +562,10 @@ export const MapView: React.FC<MapViewProps> = ({
       </TransformWrapper>
 
       {/* Zoom & recenter controls */}
-      <div className="absolute bottom-6 right-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1">
+      <div
+        className="absolute right-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1"
+        style={{bottom: 'calc(1.5rem + env(safe-area-inset-bottom))'}}
+      >
         <button
           onClick={handleZoomIn}
           className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -649,7 +654,10 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* Floor Selector */}
       {availableFloors.length > 1 && (
-        <div className="absolute bottom-6 right-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1.5">
+        <div
+          className="absolute right-4 flex flex-col gap-1 bg-white rounded-2xl shadow-xl p-1.5"
+          style={{bottom: 'calc(1.5rem + env(safe-area-inset-bottom))'}}
+        >
           {[...availableFloors].reverse().map(floor => (
             <button
               key={floor}
