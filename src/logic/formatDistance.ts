@@ -1,15 +1,14 @@
 /**
  * formatDistance.ts
  *
- * Formats route distances (stored in meters) for display, converting
- * to feet and appending the unit suffix when the user prefers `ft`.
+ * Formats route distances (stored in feet, per graph calibration) for display.
  */
 
 export type DistanceUnit = 'm' | 'ft';
 
-const METERS_TO_FEET = 3.28084;
+const FEET_TO_METERS = 1 / 3.28084;
 
-export function formatDistance(meters: number, unit: DistanceUnit): string {
-  const value = unit === 'ft' ? meters * METERS_TO_FEET : meters;
+export function formatDistance(feet: number, unit: DistanceUnit): string {
+  const value = unit === 'ft' ? feet : feet * FEET_TO_METERS;
   return `${value.toFixed(0)} ${unit}`;
 }
