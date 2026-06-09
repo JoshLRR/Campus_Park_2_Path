@@ -289,6 +289,7 @@ export default function App() {
             clearRoute={handleClearRoute}
             clearStartPoint={clearStartPoint}
             clearDestination={clearDestination}
+            onClearFocus={clearSelection}
           />
         )}
       </div>

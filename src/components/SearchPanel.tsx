@@ -41,6 +41,7 @@ type SearchPanelProps = {
   clearRoute: () => void;
   clearStartPoint: () => void;
   clearDestination: () => void;
+  onClearFocus?: () => void;
 };
 
 export function SearchPanel({
@@ -58,6 +59,7 @@ export function SearchPanel({
   clearRoute,
   clearStartPoint,
   clearDestination,
+  onClearFocus,
 }: SearchPanelProps) {
   const [mode, setMode] = useState<SearchMode>('directions');
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,12 +89,14 @@ export function SearchPanel({
 
   const handleSetStart = (room: SearchRoom, displayLabel?: string) => {
     onSetStartPoint(room, displayLabel);
+    onClearFocus?.();
     setSearchTerm('');
     setShowResults(false);
   };
 
   const handleSetDest = (room: SearchRoom, displayLabel?: string) => {
     onSetDestination(room, displayLabel);
+    onClearFocus?.();
     setSearchTerm('');
     setShowResults(false);
   };
@@ -152,9 +156,10 @@ export function SearchPanel({
           onChange={e => {
             setSearchTerm(e.target.value);
             setShowResults(true);
+            onClearFocus?.();
           }}
           onFocus={() => setShowResults(true)}
-          onBlur={() => setTimeout(() => setShowResults(false), 200)}
+          onBlur={() => setTimeout(() => { setShowResults(false); onClearFocus?.(); }, 200)}
           className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
         />
         {searchTerm && (
@@ -163,6 +168,7 @@ export function SearchPanel({
             onClick={() => {
               setSearchTerm('');
               setShowResults(false);
+              onClearFocus?.();
             }}
             className="text-gray-400 hover:text-gray-600 flex-shrink-0"
           >
