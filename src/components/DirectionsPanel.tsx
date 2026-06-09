@@ -131,6 +131,7 @@ export function DirectionsPanel({
   onFocusStep,
 }: DirectionsPanelProps) {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [minimized, setMinimized] = useState(false);
 
   if (steps.length === 0) return null;
 
@@ -139,8 +140,8 @@ export function DirectionsPanel({
 
   return (
     <div
-      className="w-80 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[calc(100vh-2rem)] flex flex-col"
-      style={{pointerEvents: 'auto'}}
+      className="w-80 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+      style={{pointerEvents: 'auto', maxHeight: minimized ? undefined : 'calc(100vh - 2rem)'}}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -164,6 +165,26 @@ export function DirectionsPanel({
           Back
         </button>
         <button
+          onClick={() => setMinimized(m => !m)}
+          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100"
+          title={minimized ? 'Show steps' : 'Hide steps'}
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d={minimized ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'}
+            />
+          </svg>
+          {minimized ? 'Expand' : 'Minimize'}
+        </button>
+        <button
           onClick={onClear}
           className="text-xs text-gray-400 hover:text-red-500 transition-colors"
         >
@@ -171,7 +192,7 @@ export function DirectionsPanel({
         </button>
       </div>
 
-      {/* From / To summary */}
+      {/* From / To summary — always visible */}
       <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
         <div className="flex items-center gap-2 text-sm">
           <span className="font-semibold text-gray-800 truncate flex-1 min-w-0">
@@ -206,98 +227,102 @@ export function DirectionsPanel({
         </div>
       </div>
 
-      {accessibilityWarning && (
-        <p className="px-4 py-2.5 border-b border-gray-100 text-xs text-amber-600 bg-amber-50">
-          {accessibilityWarning}
-        </p>
-      )}
+      {!minimized && (
+        <>
+          {accessibilityWarning && (
+            <p className="px-4 py-2.5 border-b border-gray-100 text-xs text-amber-600 bg-amber-50">
+              {accessibilityWarning}
+            </p>
+          )}
 
-      {/* Steps */}
-      <div className="overflow-y-auto flex-1">
-        {steps.map((step, i) => (
-          <div key={step.nodeId}>
-            {/* Step row */}
-            <button
-              onClick={() => {
-                setFocusedIndex(i);
-                const isLast = i === steps.length - 1;
-                const fromId = isLast ? steps[i - 1].nodeId : step.nodeId;
-                const toId = isLast ? step.nodeId : steps[i + 1].nodeId;
-                onFocusStep(step.position, fromId, toId);
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
-                focusedIndex === i ? 'bg-amber-50' : 'hover:bg-gray-50'
-              }`}
-            >
-              <StepIcon kind={step.kind} />
-              <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm font-medium truncate ${
-                    step.kind === 'start'
-                      ? 'text-blue-600'
-                      : step.kind === 'destination'
-                        ? 'text-red-600'
-                        : step.kind === 'turn-left' ||
-                            step.kind === 'turn-right'
-                          ? 'text-orange-600'
-                          : 'text-gray-600'
+          {/* Steps */}
+          <div className="overflow-y-auto flex-1">
+            {steps.map((step, i) => (
+              <div key={step.nodeId}>
+                {/* Step row */}
+                <button
+                  onClick={() => {
+                    setFocusedIndex(i);
+                    const isLast = i === steps.length - 1;
+                    const fromId = isLast ? steps[i - 1].nodeId : step.nodeId;
+                    const toId = isLast ? step.nodeId : steps[i + 1].nodeId;
+                    onFocusStep(step.position, fromId, toId);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
+                    focusedIndex === i ? 'bg-amber-50' : 'hover:bg-gray-50'
                   }`}
                 >
-                  {step.kind === 'start' || step.kind === 'destination' ? (
-                    <>
-                      {step.kind === 'start' ? 'Start' : 'Arrive'}
-                      <span className="text-gray-800 font-semibold ml-1">
-                        {step.label}
-                      </span>
-                    </>
-                  ) : step.kind === 'waypoint' ? (
-                    <>
-                      Pass
-                      <span className="text-gray-800 font-semibold ml-1">
-                        {step.label}
-                      </span>
-                    </>
-                  ) : (
-                    step.label
-                  )}
-                </p>
-              </div>
-              {/* Pan icon */}
-              <svg
-                className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-            </button>
+                  <StepIcon kind={step.kind} />
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-sm font-medium truncate ${
+                        step.kind === 'start'
+                          ? 'text-blue-600'
+                          : step.kind === 'destination'
+                            ? 'text-red-600'
+                            : step.kind === 'turn-left' ||
+                                step.kind === 'turn-right'
+                              ? 'text-orange-600'
+                              : 'text-gray-600'
+                      }`}
+                    >
+                      {step.kind === 'start' || step.kind === 'destination' ? (
+                        <>
+                          {step.kind === 'start' ? 'Start' : 'Arrive'}
+                          <span className="text-gray-800 font-semibold ml-1">
+                            {step.label}
+                          </span>
+                        </>
+                      ) : step.kind === 'waypoint' ? (
+                        <>
+                          Pass
+                          <span className="text-gray-800 font-semibold ml-1">
+                            {step.label}
+                          </span>
+                        </>
+                      ) : (
+                        step.label
+                      )}
+                    </p>
+                  </div>
+                  {/* Pan icon */}
+                  <svg
+                    className="w-3.5 h-3.5 text-gray-300 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                </button>
 
-            {/* Distance to next step */}
-            {i < steps.length - 1 && (
-              <div className="flex items-center gap-3 px-4 py-1">
-                <div className="w-4 flex justify-center flex-shrink-0">
-                  <div className="w-px h-6 bg-gray-200" />
-                </div>
-                <span className="text-xs text-gray-400">
-                  {formatDistance(steps[i + 1].distanceTo, distanceUnit)}
-                </span>
+                {/* Distance to next step */}
+                {i < steps.length - 1 && (
+                  <div className="flex items-center gap-3 px-4 py-1">
+                    <div className="w-4 flex justify-center flex-shrink-0">
+                      <div className="w-px h-6 bg-gray-200" />
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {formatDistance(steps[i + 1].distanceTo, distanceUnit)}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }

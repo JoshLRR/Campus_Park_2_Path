@@ -318,7 +318,8 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-stone-100 relative overflow-hidden"
+      className="w-full h-full relative overflow-hidden"
+      style={{backgroundColor: '#7c9f8d'}}
     >
       <TransformWrapper
         ref={transformRef}
