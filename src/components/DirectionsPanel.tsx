@@ -25,6 +25,8 @@ type DirectionsPanelProps = {
     fromNodeId: number,
     toNodeId: number,
   ) => void;
+  minimized: boolean;
+  onToggleMinimized: () => void;
 };
 
 function DistanceUnitToggle({
@@ -129,9 +131,10 @@ export function DirectionsPanel({
   onBack,
   onClear,
   onFocusStep,
+  minimized,
+  onToggleMinimized,
 }: DirectionsPanelProps) {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const [minimized, setMinimized] = useState(false);
 
   if (steps.length === 0) return null;
 
@@ -141,7 +144,7 @@ export function DirectionsPanel({
   return (
     <div
       className="w-80 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-      style={{pointerEvents: 'auto', maxHeight: minimized ? undefined : 'calc(100vh - 2rem)'}}
+      style={{pointerEvents: 'auto', maxHeight: minimized ? undefined : 'calc(100dvh - 2rem)'}}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -165,7 +168,7 @@ export function DirectionsPanel({
           Back
         </button>
         <button
-          onClick={() => setMinimized(m => !m)}
+          onClick={onToggleMinimized}
           className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100"
           title={minimized ? 'Show steps' : 'Hide steps'}
         >

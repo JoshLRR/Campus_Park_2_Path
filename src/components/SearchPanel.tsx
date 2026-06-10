@@ -160,7 +160,7 @@ export function SearchPanel({
           }}
           onFocus={() => setShowResults(true)}
           onBlur={() => setTimeout(() => { setShowResults(false); onClearFocus?.(); }, 200)}
-          className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+          className="flex-1 text-base sm:text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
         />
         {searchTerm && (
           <button
