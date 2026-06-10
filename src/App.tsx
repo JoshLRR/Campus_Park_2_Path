@@ -106,6 +106,16 @@ export default function App() {
     setHighlightedSegment({from: fromNodeId, to: toNodeId});
   };
 
+  const handlePanToRoom = (room: {x: number; y: number; floor: number}) => {
+    setCurrentFloor(room.floor);
+    setFocusPoint(prev => ({
+      x: room.x * NODE_SCALE - NODE_OFFSET_X,
+      y: room.y * NODE_SCALE - NODE_OFFSET_Y,
+      seq: (prev?.seq ?? 0) + 1,
+      targetScale: 0.6,
+    }));
+  };
+
   const handleFocusRoom = (room: {
     id: number;
     x: number;
@@ -114,13 +124,7 @@ export default function App() {
   }) => {
     setSelectedRoomId(room.id);
     setSelectedGraphNodeId(null);
-    setCurrentFloor(room.floor);
-    setFocusPoint(prev => ({
-      x: room.x * NODE_SCALE - NODE_OFFSET_X,
-      y: room.y * NODE_SCALE - NODE_OFFSET_Y,
-      seq: (prev?.seq ?? 0) + 1,
-      targetScale: 0.6,
-    }));
+    handlePanToRoom(room);
   };
 
   const handleFocusNavigationPoint = (point: NavigationPoint) => {
@@ -296,8 +300,8 @@ export default function App() {
             distanceUnit={distanceUnit}
             onSetStartPoint={handleSetStartPoint}
             onSetDestination={handleSetDestination}
-            onRoomSelect={handleRoomSelect}
             onFocusRoom={handleFocusRoom}
+            onPanToRoom={handlePanToRoom}
             onFindNearestFeature={handleFindNearestFeature}
             nearestFeatureMessage={nearestFeatureMessage}
             clearRoute={handleClearRoute}

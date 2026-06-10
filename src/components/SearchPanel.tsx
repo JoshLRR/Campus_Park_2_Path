@@ -29,13 +29,13 @@ type SearchPanelProps = {
   distanceUnit: DistanceUnit;
   onSetStartPoint: (room: SearchRoom, displayLabel?: string) => void;
   onSetDestination: (room: SearchRoom, displayLabel?: string) => void;
-  onRoomSelect: (roomId: number) => void;
   onFocusRoom: (room: {
     id: number;
     x: number;
     y: number;
     floor: number;
   }) => void;
+  onPanToRoom: (room: {x: number; y: number; floor: number}) => void;
   onFindNearestFeature: (featureId: number) => void;
   nearestFeatureMessage?: string | null;
   clearRoute: () => void;
@@ -52,8 +52,8 @@ export function SearchPanel({
   distanceUnit,
   onSetStartPoint,
   onSetDestination,
-  onRoomSelect,
   onFocusRoom,
+  onPanToRoom,
   onFindNearestFeature,
   nearestFeatureMessage,
   clearRoute,
@@ -79,11 +79,6 @@ export function SearchPanel({
   const handleSelectFeature = (featureId: number) => {
     onFindNearestFeature(featureId);
     setSearchTerm('');
-    setShowResults(false);
-  };
-
-  const handleSelectRoom = (room: SearchRoom) => {
-    onRoomSelect(room.id);
     setShowResults(false);
   };
 
@@ -213,7 +208,7 @@ export function SearchPanel({
                     <div className="flex items-start justify-between gap-2">
                       <div
                         className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => handleSelectRoom(room)}
+                        onClick={() => onPanToRoom(room)}
                       >
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {displayName}
