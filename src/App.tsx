@@ -54,6 +54,7 @@ export default function App() {
     {},
   );
   const [viewMode, setViewMode] = useState<'search' | 'directions'>('search');
+  const [directionsMinimized, setDirectionsMinimized] = useState(false);
   const [focusPoint, setFocusPoint] = useState<{
     x: number;
     y: number;
@@ -290,6 +291,8 @@ export default function App() {
             onBack={() => setViewMode('search')}
             onClear={handleClearRoute}
             onFocusStep={handleFocusStep}
+            minimized={directionsMinimized}
+            onToggleMinimized={() => setDirectionsMinimized(m => !m)}
           />
         ) : (
           <SearchPanel
