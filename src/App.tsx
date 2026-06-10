@@ -123,6 +123,16 @@ export default function App() {
     }));
   };
 
+  const handleFocusNavigationPoint = (point: NavigationPoint) => {
+    if (point.floor) setCurrentFloor(point.floor);
+    setFocusPoint(prev => ({
+      x: point.x * NODE_SCALE - NODE_OFFSET_X,
+      y: point.y * NODE_SCALE - NODE_OFFSET_Y,
+      seq: (prev?.seq ?? 0) + 1,
+      targetScale: 0.6,
+    }));
+  };
+
   const handleClearRoute = () => {
     clearRoute();
     setViewMode('search');
@@ -254,8 +264,12 @@ export default function App() {
           highlightedSegment={highlightedSegment}
           onRoomSelect={handleRoomSelect}
           onGraphNodeSelect={handleGraphNodeSelect}
-          onStartPointClear={clearStartPoint}
-          onDestinationPointClear={clearDestination}
+          onStartPointFocus={() =>
+            startPoint && handleFocusNavigationPoint(startPoint)
+          }
+          onDestinationPointFocus={() =>
+            destinationPoint && handleFocusNavigationPoint(destinationPoint)
+          }
           onFloorChange={handleFloorChange}
         />
       </div>

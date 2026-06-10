@@ -76,8 +76,8 @@ interface MapViewProps {
   highlightedSegment?: {from: number; to: number} | null;
   onRoomSelect?: (roomId: number) => void;
   onGraphNodeSelect?: (nodeId: number) => void;
-  onStartPointClear?: () => void;
-  onDestinationPointClear?: () => void;
+  onStartPointFocus?: () => void;
+  onDestinationPointFocus?: () => void;
   onFloorChange?: (floor: number) => void;
 }
 
@@ -114,8 +114,8 @@ export const MapView: React.FC<MapViewProps> = ({
   highlightedSegment,
   onRoomSelect,
   onGraphNodeSelect,
-  onStartPointClear,
-  onDestinationPointClear,
+  onStartPointFocus,
+  onDestinationPointFocus,
   onFloorChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -538,7 +538,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   y={0}
                   label={startPoint.label}
                   isAnimated={true}
-                  onClick={onStartPointClear}
+                  onClick={onStartPointFocus}
                 />
               </g>
             )}
@@ -554,7 +554,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   y={0}
                   label={destinationPoint.label}
                   isAnimated={true}
-                  onClick={onDestinationPointClear}
+                  onClick={onDestinationPointFocus}
                 />
               </g>
             )}
