@@ -229,7 +229,7 @@ export default function App() {
   const floorStats = getFloorStats(graphNodes, rooms, currentFloor);
 
   return (
-    <div className="w-full h-screen relative overflow-hidden">
+    <div className="app-shell w-full relative overflow-hidden">
       {/* Full-screen map */}
       <div className="w-full h-full">
         <MapView
@@ -326,7 +326,10 @@ export default function App() {
 
       {/* Accessibility panel — floats above the toggle column */}
       {accessibilityMode && (
-        <div className="absolute bottom-32 right-16 z-20">
+        <div
+          className="absolute right-16 z-20"
+          style={{bottom: 'calc(8rem + env(safe-area-inset-bottom))'}}
+        >
           <AccessibilityPanel
             onClose={() => setAccessibilityMode(false)}
             preferences={routePreferences}
@@ -336,7 +339,10 @@ export default function App() {
       )}
 
       {/* Mode toggles — bottom right, stacked to the left of the map's zoom controls */}
-      <div className="absolute bottom-6 right-16 z-20 flex flex-col items-end gap-2">
+      <div
+        className="absolute right-16 z-20 flex flex-col items-end gap-2"
+        style={{bottom: 'calc(1.5rem + env(safe-area-inset-bottom))'}}
+      >
         <button
           onClick={() => setDevMode(v => !v)}
           className={`flex items-center justify-center gap-2 w-32 px-3 py-2 rounded-xl text-xs font-semibold shadow-lg transition-all duration-200 ${
