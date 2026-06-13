@@ -30,8 +30,6 @@ type DevPanelProps = {
   setShowRoomConnections: (v: boolean) => void;
   showRoute: boolean;
   setShowRoute: (v: boolean) => void;
-  showGraphDebug: boolean;
-  setShowGraphDebug: (v: boolean) => void;
 
   graphNodes: GraphNode[];
   floorStats: FloorStats;
@@ -87,8 +85,6 @@ export function DevPanel({
   setShowRoomConnections,
   showRoute,
   setShowRoute,
-  showGraphDebug,
-  setShowGraphDebug,
   graphNodes,
   floorStats,
   currentFloor,
@@ -174,12 +170,6 @@ export function DevPanel({
             onChange={setShowRoute}
             color="bg-blue-600"
           />
-          <ToggleRow
-            label="Node Labels"
-            checked={showGraphDebug}
-            onChange={setShowGraphDebug}
-            color="bg-gray-600"
-          />
         </div>
 
         {/* Stats */}
@@ -225,13 +215,13 @@ export function DevPanel({
           <div className="space-y-1.5 text-xs text-gray-600">
             {showPathNodes && (
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
+                <div className="w-3 h-3 rounded-full bg-blue-500 ring-2 ring-blue-700 flex-shrink-0" />
                 <span>Path Node</span>
               </div>
             )}
             {showRoomNodes && (
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-400 flex-shrink-0" />
+                <div className="w-3 h-3 rounded-full bg-red-500 ring-2 ring-red-600 flex-shrink-0" />
                 <span>Room Node</span>
               </div>
             )}
@@ -254,11 +244,11 @@ export function DevPanel({
               </div>
             )}
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500 ring-2 ring-blue-200 flex-shrink-0" />
+              <div className="w-3 h-3 rounded-full bg-red-500 ring-2 ring-red-200 flex-shrink-0" />
               <span>Start point</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" />
+              <div className="w-3 h-3 rounded-full bg-green-500 ring-2 ring-green-200 flex-shrink-0" />
               <span>Destination</span>
             </div>
             <div className="flex items-center gap-2">

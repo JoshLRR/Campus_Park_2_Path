@@ -30,7 +30,6 @@ interface GraphOverlayProps {
   nodes: GraphNode[];
   worldWidth: number;
   worldHeight: number;
-  showDebugInfo?: boolean;
   selectedNodeId?: number | null;
   showPathNodes?: boolean;
   showPathEdges?: boolean;
@@ -46,7 +45,6 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
   nodes, //eslint-disable-next-line @typescript-eslint/no-unused-vars
   worldWidth, //eslint-disable-next-line @typescript-eslint/no-unused-vars
   worldHeight,
-  showDebugInfo = false,
   selectedNodeId = null,
   showPathNodes = true,
   showPathEdges = true,
@@ -179,9 +177,9 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
               y1={nodePos.y}
               x2={neighborPos.x}
               y2={neighborPos.y}
-              stroke={showDebugInfo ? '#ec4899' : '#4f46e5'}
-              strokeWidth={showDebugInfo ? 3 : 2}
-              opacity={showDebugInfo ? 0.8 : 0.6}
+              stroke="#4f46e5"
+              strokeWidth={2}
+              opacity={0.6}
               strokeDasharray={isPathToPath ? 'none' : '4,4'}
               style={{
                 transition: 'opacity 0.3s ease-in-out',
@@ -297,17 +295,13 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
             <circle
               cx={nodePos.x}
               cy={nodePos.y}
-              r={isRoom ? (showDebugInfo ? 10 : 8) : showDebugInfo ? 8 : 6}
+              r={isRoom ? 8 : 6}
               fill={
                 hasCrossFloor && !isSelected
                   ? '#f59e0b' // amber for cross-floor connections
                   : isRoom
-                    ? showDebugInfo
-                      ? '#dc2626'
-                      : '#ef4444'
-                    : showDebugInfo
-                      ? '#1d4ed8'
-                      : '#3b82f6'
+                    ? '#ef4444'
+                    : '#3b82f6'
               }
               stroke={
                 isSelected
@@ -320,15 +314,13 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
                       ? '#dc2626'
                       : '#1d4ed8'
               }
-              strokeWidth={isSelected ? 3 : showDebugInfo ? 3 : 2}
-              opacity={isSelected ? 1.0 : showDebugInfo ? 1.0 : 0.8}
+              strokeWidth={isSelected ? 3 : 2}
+              opacity={isSelected ? 1.0 : 0.8}
               style={{
                 cursor: 'pointer',
                 filter: isSelected
                   ? 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6))'
-                  : showDebugInfo
-                    ? 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))'
-                    : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                 transition: 'all 0.2s ease-in-out',
               }}
               onClick={e => handleNodeClick(node.id, e)}
@@ -337,15 +329,11 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
             {/* Node label */}
             <text
               x={nodePos.x}
-              y={nodePos.y - (showDebugInfo ? 15 : 12)}
+              y={nodePos.y - 12}
               textAnchor="middle"
-              fontSize={showDebugInfo ? 12 : 10}
-              fontWeight={
-                isSelected ? 'bold' : showDebugInfo ? 'bold' : 'normal'
-              }
-              fill={
-                isSelected ? '#000000' : showDebugInfo ? '#000000' : '#1f2937'
-              }
+              fontSize={10}
+              fontWeight={isSelected ? 'bold' : 'normal'}
+              fill={isSelected ? '#000000' : '#1f2937'}
               style={{
                 textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
                 pointerEvents: 'none',
@@ -372,40 +360,8 @@ const GraphOverlayComponent: React.FC<GraphOverlayProps> = ({
               </text>
             )}
 
-            {/* Debug: Show node ID, coordinates and floor */}
-            {showDebugInfo && (
-              <>
-                <text
-                  x={nodePos.x}
-                  y={nodePos.y + 20}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fill="#666666"
-                  style={{
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  ({node.position.x.toFixed(1)}, {node.position.y.toFixed(1)})
-                </text>
-                <text
-                  x={nodePos.x}
-                  y={nodePos.y + 30}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fill="#666666"
-                  style={{
-                    textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  Floor {node.position.floorNum}
-                </text>
-              </>
-            )}
-
-            {/* Distance labels on edges - only show in debug mode or for selected nodes */}
-            {(showDebugInfo || isSelected) &&
+            {/* Distance labels on edges - only show for the selected node */}
+            {isSelected &&
               node.neighbors.map(neighbor => {
                 const neighborNode = nodeById.get(neighbor.to);
                 if (!neighborNode) return null;

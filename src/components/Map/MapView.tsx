@@ -63,7 +63,6 @@ interface MapViewProps {
   startPoint?: NavigationPoint | null;
   destinationPoint?: NavigationPoint | null;
   graphNodes?: GraphNode[];
-  showGraphDebug?: boolean;
   showPathNodes?: boolean;
   showPathEdges?: boolean;
   showRoomConnections?: boolean;
@@ -101,7 +100,6 @@ export const MapView: React.FC<MapViewProps> = ({
   startPoint,
   destinationPoint,
   graphNodes = [],
-  showGraphDebug = false,
   showPathNodes = true,
   showPathEdges = true,
   showRoomConnections = true,
@@ -380,7 +378,6 @@ export const MapView: React.FC<MapViewProps> = ({
               nodes={currentFloorGraphNodes}
               worldWidth={WORLD_WIDTH}
               worldHeight={WORLD_HEIGHT}
-              showDebugInfo={showGraphDebug}
               selectedNodeId={selectedGraphNodeId}
               showPathNodes={showPathNodes}
               showPathEdges={showPathEdges}

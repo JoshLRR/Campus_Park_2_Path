@@ -75,7 +75,6 @@ export default function App() {
   const [showRoomConnections, setShowRoomConnections] = useState(false);
   const [showRoomNodes, setShowRoomNodes] = useState(false);
   const [showRoute, setShowRoute] = useState(true);
-  const [showGraphDebug, setShowGraphDebug] = useState(false);
 
   const pathfinder = usePathfinder(graphNodes);
 
@@ -256,7 +255,6 @@ export default function App() {
           startPoint={startPoint}
           destinationPoint={destinationPoint}
           graphNodes={graphNodes}
-          showGraphDebug={showGraphDebug}
           showPathNodes={showPathNodes}
           showPathEdges={showPathEdges}
           showRoomConnections={showRoomConnections}
@@ -330,8 +328,6 @@ export default function App() {
             setShowRoomConnections={setShowRoomConnections}
             showRoute={showRoute}
             setShowRoute={setShowRoute}
-            showGraphDebug={showGraphDebug}
-            setShowGraphDebug={setShowGraphDebug}
             graphNodes={graphNodes}
             floorStats={floorStats}
             currentFloor={currentFloor}
